@@ -3,14 +3,13 @@
 import { useEdgeStore } from "@/hooks/use-edge-store";
 import { EdgeCard } from "@/components/edge-card";
 import { Button } from "@/components/ui/button";
-import { Download, Upload } from "lucide-react";
-import { useRef } from "react";
+import { LogOut } from "lucide-react";
 
 export default function Home() {
-  const { edges, addLog, exportData, importData, isLoaded } = useEdgeStore();
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  // Grab the user and logout function from our store
+  const { edges, addLog, isLoaded, logout, user } = useEdgeStore();
 
-  if (!isLoaded) return null; // Avoid hydration mismatch
+  if (!isLoaded) return null; // Wait for data to load
 
   return (
     <main className="min-h-screen bg-black text-zinc-100 p-8">
@@ -18,25 +17,26 @@ export default function Home() {
       <div className="max-w-6xl mx-auto mb-8 flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-zinc-500 bg-clip-text text-transparent">
-            EdgeTracker V1
+            EdgeTracker V2
           </h1>
-          <p className="text-zinc-500">Local-First Trading Journal</p>
+          <p className="text-zinc-500">Cloud-Synced Trading Journal</p>
         </div>
 
-        <div className="flex gap-3">
-          <Button variant="outline" className="text-zinc-900 border-zinc-700 hover:bg-zinc-800 hover:text-white" onClick={exportData}>
-            <Download className="w-4 h-4 mr-2" /> Backup Data
+        {/* User Profile & Logout */}
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-zinc-500 font-medium hidden md:inline-block">
+            {/* @ts-ignore */}
+            {user?.email}
+          </span>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="text-zinc-400 hover:text-red-400 hover:bg-zinc-900 transition-colors"
+            onClick={logout}
+            title="Log out"
+          >
+            <LogOut className="w-5 h-5" />
           </Button>
-          <Button variant="secondary" onClick={() => fileInputRef.current?.click()}>
-            <Upload className="w-4 h-4 mr-2" /> Restore
-          </Button>
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={(e) => e.target.files?.[0] && importData(e.target.files[0])}
-            className="hidden"
-            accept=".json"
-          />
         </div>
       </div>
 

@@ -2,78 +2,112 @@
 
 import { useState, useEffect } from "react";
 import { Edge, TradeLog } from "@/lib/types";
+import { createClient } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
 
-const STORAGE_KEY = "edge-tracker-v1";
-
-const DEFAULT_EDGES: Edge[] = [
-  { id: "1", name: "RTH Gap Model", description: "Trade the 09:30 NY Opening Range Gap.", logs: [] },
-  { id: "2", name: "First Presented FVG", description: "First FVG after 09:30 open.", logs: [] },
-  { id: "3", name: "Silver Bullet", description: "10:00-11:00 AM NY liquidity sweep.", logs: [] },
+// Hardcoded definitions for the edges (since we only store LOGS in the DB now)
+const EDGE_DEFINITIONS = [
+  { id: "1", name: "RTH Gap Model", description: "Trade the 09:30 NY Opening Range Gap." },
+  { id: "2", name: "First Presented FVG", description: "First FVG after 09:30 open." },
+  { id: "3", name: "Silver Bullet", description: "10:00-11:00 AM NY liquidity sweep." },
 ];
 
 export function useEdgeStore() {
-  const [edges, setEdges] = useState<Edge[]>(DEFAULT_EDGES);
+  const [edges, setEdges] = useState<Edge[]>(EDGE_DEFINITIONS.map(e => ({ ...e, logs: [] })));
   const [isLoaded, setIsLoaded] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const supabase = createClient();
+  const router = useRouter();
 
-  // Load from LocalStorage on mount
+  // 1. Check Auth & Fetch Data on Mount
   useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      try {
-        setEdges(JSON.parse(saved));
-      } catch (e) {
-        console.error("Failed to parse data", e);
+    async function init() {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        router.push('/login');
+        return;
       }
+      
+      setUser(user);
+      fetchLogs();
     }
-    setIsLoaded(true);
+    init();
   }, []);
 
-  // Save to LocalStorage whenever edges change
-  useEffect(() => {
-    if (isLoaded) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(edges));
+  // 2. Fetch Logs from Supabase
+  const fetchLogs = async () => {
+    const { data, error } = await supabase
+      .from('logs')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+   if (error) {
+      console.error('Error fetching logs:', error);
+      // Don't return here! Let the app load anyway (with empty data) so you can see the UI.
+      setIsLoaded(true); 
+      return;
     }
-  }, [edges, isLoaded]);
 
-  const addLog = (edgeId: string, log: Omit<TradeLog, "id" | "date">) => {
-    setEdges((prev) =>
-      prev.map((edge) => {
-        if (edge.id !== edgeId) return edge;
-        const newLog: TradeLog = {
-          ...log,
-          id: crypto.randomUUID(),
-          date: new Date().toISOString(),
-        };
-        return { ...edge, logs: [newLog, ...edge.logs] };
-      })
-    );
+    // Merge DB logs into our Edge structure
+    const newEdges = EDGE_DEFINITIONS.map(def => ({
+      ...def,
+      logs: data
+        .filter((log: any) => log.edge_id === def.id)
+        .map((log: any) => ({
+          id: log.id,
+          date: log.created_at,
+          result: log.result,
+          note: log.note,
+          dayOfWeek: log.day_of_week,
+          durationMinutes: log.duration_minutes
+        }))
+    }));
+
+    setEdges(newEdges);
+    setIsLoaded(true);
   };
 
-  const exportData = () => {
-    const dataStr = JSON.stringify(edges, null, 2);
-    const blob = new Blob([dataStr], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `edge-tracker-backup-${new Date().toISOString().split("T")[0]}.json`;
-    a.click();
-  };
-
-  const importData = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const json = JSON.parse(e.target?.result as string);
-        if (Array.isArray(json)) {
-          setEdges(json);
-          alert("Data imported successfully!");
-        }
-      } catch (err) {
-        alert("Invalid JSON file");
-      }
+  // 3. Add Log (Push to Supabase)
+  const addLog = async (edgeId: string, logData: any) => {
+    // Optimistic Update (Show it immediately)
+    const tempId = crypto.randomUUID();
+    const newLogLocal = { 
+      ...logData, 
+      id: tempId, 
+      date: new Date().toISOString() 
     };
-    reader.readAsText(file);
+
+    setEdges(prev => prev.map(edge => {
+      if (edge.id !== edgeId) return edge;
+      return { ...edge, logs: [newLogLocal, ...edge.logs] };
+    }));
+
+    // Send to DB
+    const { error } = await supabase.from('logs').insert({
+      edge_id: edgeId,
+      result: logData.result,
+      note: logData.note,
+      day_of_week: logData.dayOfWeek,
+      duration_minutes: logData.durationMinutes,
+      // user_id is handled automatically by the DB default
+    });
+
+    if (error) {
+      alert("Failed to save log to cloud!");
+      console.error(error);
+      // Revert changes if needed (omitted for simplicity)
+    } else {
+      // Refresh to get the real ID from server
+      fetchLogs();
+    }
   };
 
-  return { edges, addLog, exportData, importData, isLoaded };
+  // 4. Logout Function
+  const logout = async () => {
+    await supabase.auth.signOut();
+    router.push('/login');
+  };
+
+  return { edges, addLog, isLoaded, logout, user }; // Removed export/import as DB handles it
 }
