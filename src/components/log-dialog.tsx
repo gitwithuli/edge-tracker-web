@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -9,16 +9,37 @@ import { Plus } from "lucide-react";
 import { ResultType } from "@/lib/types";
 
 interface LogDialogProps {
-  edgeName: string;
-  onSave: (data: { result: ResultType; note: string; dayOfWeek: string; durationMinutes: number }) => void;
+  edgeName?: string;
+  initialData?: any;
+  trigger?: React.ReactNode;
+  onSave: (data: any) => void;
 }
 
-export function LogDialog({ edgeName, onSave }: LogDialogProps) {
+export function LogDialog({ edgeName, initialData, trigger, onSave }: LogDialogProps) {
   const [open, setOpen] = useState(false);
-  const [result, setResult] = useState<ResultType>("WIN");
-  const [day, setDay] = useState("Tuesday");
-  const [duration, setDuration] = useState("15");
-  const [note, setNote] = useState("");
+
+  // Initialize state
+  const [result, setResult] = useState<ResultType>(initialData?.result || "WIN");
+  const [day, setDay] = useState(initialData?.dayOfWeek || "Tuesday");
+  const [duration, setDuration] = useState(initialData?.durationMinutes?.toString() || "15");
+  const [note, setNote] = useState(initialData?.note || "");
+
+  // Update form fields when the dialog opens or initialData changes
+  useEffect(() => {
+    if (open) {
+      if (initialData) {
+        setResult(initialData.result);
+        setDay(initialData.dayOfWeek);
+        setDuration(initialData.durationMinutes?.toString());
+        setNote(initialData.note);
+      } else {
+        setResult("WIN");
+        setDay("Tuesday");
+        setDuration("15");
+        setNote("");
+      }
+    }
+  }, [open, initialData]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,30 +50,37 @@ export function LogDialog({ edgeName, onSave }: LogDialogProps) {
       durationMinutes: parseInt(duration) || 0,
     });
     setOpen(false);
-    setNote(""); // Reset note
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" className="w-full gap-2">
-          <Plus className="w-4 h-4" /> Log Trade
-        </Button>
+        {trigger ? (
+          trigger
+        ) : (
+          <Button size="sm" className="w-full gap-2">
+            <Plus className="w-4 h-4" /> Log Trade
+          </Button>
+        )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      
+      <DialogContent className="sm:max-w-[425px] bg-zinc-950 border-zinc-800 text-zinc-100">
         <DialogHeader>
-          <DialogTitle>Log Trade for {edgeName}</DialogTitle>
+          <DialogTitle className="text-zinc-100">
+            {initialData ? "Edit Log" : `Log Trade for ${edgeName}`}
+          </DialogTitle>
         </DialogHeader>
+        
         <form onSubmit={handleSubmit} className="grid gap-4 py-4">
-          
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Result</Label>
+              <Label className="text-zinc-400">Result</Label>
               <Select value={result} onValueChange={(v) => setResult(v as ResultType)}>
-                <SelectTrigger>
+                <SelectTrigger className="bg-zinc-900 border-zinc-700 text-zinc-100">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                {/* FIX: Added text-zinc-100 here */}
+                <SelectContent className="bg-zinc-900 border-zinc-700 text-zinc-100">
                   <SelectItem value="WIN">Win</SelectItem>
                   <SelectItem value="LOSS">Loss</SelectItem>
                   <SelectItem value="BE">Break Even</SelectItem>
@@ -61,12 +89,13 @@ export function LogDialog({ edgeName, onSave }: LogDialogProps) {
             </div>
             
             <div className="space-y-2">
-              <Label>Day of Week</Label>
+              <Label className="text-zinc-400">Day of Week</Label>
               <Select value={day} onValueChange={setDay}>
-                <SelectTrigger>
+                <SelectTrigger className="bg-zinc-900 border-zinc-700 text-zinc-100">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                {/* FIX: Added text-zinc-100 here */}
+                <SelectContent className="bg-zinc-900 border-zinc-700 text-zinc-100">
                   {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].map((d) => (
                     <SelectItem key={d} value={d}>{d}</SelectItem>
                   ))}
@@ -76,25 +105,29 @@ export function LogDialog({ edgeName, onSave }: LogDialogProps) {
           </div>
 
           <div className="space-y-2">
-            <Label>Duration (Minutes)</Label>
+            <Label className="text-zinc-400">Duration (Minutes)</Label>
             <Input 
               type="number" 
               value={duration} 
               onChange={(e) => setDuration(e.target.value)} 
               min="1"
+              className="bg-zinc-900 border-zinc-700 text-zinc-100"
             />
           </div>
 
           <div className="space-y-2">
-            <Label>Note</Label>
+            <Label className="text-zinc-400">Note</Label>
             <Textarea 
               value={note} 
               onChange={(e) => setNote(e.target.value)} 
               placeholder="What did you see?"
+              className="bg-zinc-900 border-zinc-700 text-zinc-100 min-h-[100px]"
             />
           </div>
 
-          <Button type="submit">Save Log</Button>
+          <Button type="submit" className="w-full bg-white text-black hover:bg-zinc-200">
+            {initialData ? "Update Log" : "Save Log"}
+          </Button>
         </form>
       </DialogContent>
     </Dialog>

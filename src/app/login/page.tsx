@@ -1,74 +1,40 @@
-"use client"
+"use client";
+import { useEdgeStore } from "@/hooks/use-edge-store";
+import { EdgeCard } from "@/components/edge-card";
+import { Button } from "@/components/ui/button";
+import { LogOut } from "lucide-react";
 
-import { useState } from 'react'
-import { createClient } from '@/lib/supabase'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { useRouter } from 'next/navigation'
+export default function Home() {
+  const { edges, addLog, deleteLog, updateLog, isLoaded, logout, user } = useEdgeStore();
 
-export default function LoginPage() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const router = useRouter()
-  const supabase = createClient()
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    
-    // Try to sign in
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    
-    if (error) {
-      // If sign in fails, try to sign up automatically
-      const { error: signUpError } = await supabase.auth.signUp({ email, password })
-      if (signUpError) {
-        alert(error.message)
-      } else {
-        alert('Account created! Please check your email to verify.')
-      }
-    } else {
-      router.push('/')
-      router.refresh()
-    }
-    setLoading(false)
-  }
+  if (!isLoaded) return null; 
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black p-4">
-      <Card className="w-full max-w-md bg-zinc-900 border-zinc-800 text-zinc-100">
-        <CardHeader>
-          <CardTitle className="text-center">Edge Tracker Login</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
-            <Input 
-              type="email" 
-              placeholder="Email" 
-              value={email} 
-              onChange={(e) => setEmail(e.target.value)}
-              className="bg-zinc-950 border-zinc-800"
-              required
-            />
-            <Input 
-              type="password" 
-              placeholder="Password" 
-              value={password} 
-              onChange={(e) => setPassword(e.target.value)}
-              className="bg-zinc-950 border-zinc-800"
-              required
-            />
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Loading...' : 'Sign In / Sign Up'}
-            </Button>
-            <p className="text-xs text-center text-zinc-500">
-              New here? Entering details will auto-create an account.
-            </p>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
-  )
+    <main className="min-h-screen bg-black text-zinc-100 p-8">
+      <div className="max-w-6xl mx-auto mb-8 flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-zinc-500 bg-clip-text text-transparent">EdgeTracker V2</h1>
+          <p className="text-zinc-500">Cloud-Synced Trading Journal</p>
+        </div>
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-zinc-500">{user?.email}</span>
+          <Button variant="ghost" size="icon" onClick={logout} className="text-zinc-400 hover:text-red-400">
+            <LogOut className="w-5 h-5" />
+          </Button>
+        </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
+        {edges.map((edge) => (
+          <EdgeCard
+            key={edge.id}
+            edge={edge}
+            onAddLog={(data) => addLog(edge.id, data)}
+            onDeleteLog={deleteLog}
+            onUpdateLog={updateLog}
+          />
+        ))}
+      </div>
+    </main>
+  );
 }

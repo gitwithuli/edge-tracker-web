@@ -6,14 +6,13 @@ import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 
 export default function Home() {
-  // Grab the user and logout function from our store
-  const { edges, addLog, isLoaded, logout, user } = useEdgeStore();
+  // 1. MUST extract deleteLog and updateLog here
+  const { edges, addLog, deleteLog, updateLog, isLoaded, logout, user } = useEdgeStore();
 
-  if (!isLoaded) return null; // Wait for data to load
+  if (!isLoaded) return null;
 
   return (
     <main className="min-h-screen bg-black text-zinc-100 p-8">
-      {/* Header */}
       <div className="max-w-6xl mx-auto mb-8 flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-zinc-500 bg-clip-text text-transparent">
@@ -22,7 +21,6 @@ export default function Home() {
           <p className="text-zinc-500">Cloud-Synced Trading Journal</p>
         </div>
 
-        {/* User Profile & Logout */}
         <div className="flex items-center gap-4">
           <span className="text-sm text-zinc-500 font-medium hidden md:inline-block">
             {/* @ts-ignore */}
@@ -40,13 +38,15 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Grid */}
       <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {edges.map((edge) => (
           <EdgeCard
             key={edge.id}
             edge={edge}
             onAddLog={(logData) => addLog(edge.id, logData)}
+            // 2. CRITICAL FIX: Pass these functions down the chain
+            onDeleteLog={deleteLog}
+            onUpdateLog={updateLog}
           />
         ))}
       </div>
