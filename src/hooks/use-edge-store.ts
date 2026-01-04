@@ -17,119 +17,67 @@ export const useEdgeStore = () => {
 
   const fetchLogs = async () => {
     try {
-      // 1. Get the user
       const { data: { user: currentUser } } = await supabase.auth.getUser();
       setUser(currentUser);
+      const path = typeof window !== 'undefined' ? window.location.pathname : "";
 
-      // 2. If no user, handle redirection but DON'T hang
-      if (!currentUser) {
-        if (typeof window !== 'undefined' && window.location.pathname !== "/login") {
-          router.push("/login");
-        }
-        return; // finally block will still run
-      }
-
-      // 3. Fetch logs from DB
-      const { data, error } = await supabase
-        .from("logs")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        console.error("Supabase error:", error);
+      if (!currentUser && path.startsWith("/dashboard")) {
+        router.push("/");
         return;
       }
 
-      // 4. Update the UI state
-      const newEdges = initialEdges.map((edge) => ({
-        ...edge,
-        logs: data
-          .filter((log: any) => log.edge_id === edge.id)
-          .map((log: any) => ({
-            id: log.id,
-            date: log.created_at,
-            result: log.result,
-            note: log.note,
-            dayOfWeek: log.day_of_week,
-            durationMinutes: log.duration_minutes,
-          })),
-      }));
-      setEdges(newEdges);
+      if (currentUser && (path === "/" || path === "/login")) {
+        router.push("/dashboard");
+        return;
+      }
 
+      if (currentUser) {
+        const { data, error } = await supabase.from("logs").select("*").order("created_at", { ascending: false });
+        if (error) throw error;
+        if (data) {
+          const newEdges = initialEdges.map((edge) => ({
+            ...edge,
+            logs: data.filter((log: any) => log.edge_id === edge.id).map((log: any) => ({
+              id: log.id, date: log.created_at, result: log.result, note: log.note, dayOfWeek: log.day_of_week, durationMinutes: log.duration_minutes,
+            })),
+          }));
+          setEdges(newEdges);
+        }
+      }
     } catch (err) {
-      console.error("Initialization failed:", err);
+      console.error(err);
     } finally {
-      // ✅ CRITICAL FIX: Guaranteed to run, clearing the white screen
       setIsLoaded(true);
     }
   };
 
-  useEffect(() => {
-    fetchLogs();
-  }, []);
+  useEffect(() => { fetchLogs(); }, []);
 
   const addLog = async (edgeId: string, logData: any) => {
-    const { data: { user: currentUser } } = await supabase.auth.getUser();
-    if (!currentUser) return;
-
-    const tempId = crypto.randomUUID();
-    const newLogLocal = { ...logData, id: tempId, date: new Date().toISOString() };
-
-    setEdges((prev) => prev.map((edge) => edge.id === edgeId ? { ...edge, logs: [newLogLocal, ...edge.logs] } : edge));
-
-    const { data, error } = await supabase.from("logs").insert({
-      user_id: currentUser.id,
-      edge_id: edgeId,
-      result: logData.result,
-      note: logData.note,
-      day_of_week: logData.dayOfWeek,
-      duration_minutes: logData.durationMinutes,
-    }).select().single();
-
-    if (error) {
-      console.error("Add log error:", error);
-      fetchLogs();
-    } else {
-      setEdges((prev) => prev.map((edge) => edge.id === edgeId ? {
-        ...edge,
-        logs: edge.logs.map(log => log.id === tempId ? { ...log, id: data.id } : log)
-      } : edge));
-    }
+    if (!user) return;
+    await supabase.from("logs").insert({
+      user_id: user.id, edge_id: edgeId, result: logData.result, note: logData.note, day_of_week: logData.dayOfWeek, duration_minutes: logData.durationMinutes,
+    });
+    await fetchLogs();
   };
 
   const deleteLog = async (logId: string | number) => {
-    // Instant UI update
-    setEdges((prev) => prev.map((edge) => ({
-      ...edge, 
-      logs: edge.logs.filter((log) => String(log.id) !== String(logId))
-    })));
-
-    // Database sync
-    const { error } = await supabase.from("logs").delete().eq("id", logId);
-    if (error) {
-      console.error("Delete failed:", error);
-      fetchLogs();
-    }
+    await supabase.from("logs").delete().eq("id", logId);
+    await fetchLogs();
   };
 
-  const updateLog = async (logId: string, updatedData: any) => {
-    setEdges((prev) => prev.map((edge) => ({
-      ...edge, 
-      logs: edge.logs.map((log) => String(log.id) === String(logId) ? { ...log, ...updatedData } : log)
-    })));
-
+  const updateLog = async (logId: string, logData: any) => {
     await supabase.from("logs").update({
-      result: updatedData.result,
-      note: updatedData.note,
-      day_of_week: updatedData.dayOfWeek,
-      duration_minutes: updatedData.durationMinutes,
+      result: logData.result, note: logData.note, day_of_week: logData.dayOfWeek, duration_minutes: logData.durationMinutes,
     }).eq("id", logId);
+    await fetchLogs();
   };
 
   const logout = async () => {
     await supabase.auth.signOut();
-    router.push("/login");
+    setUser(null);
+    router.push("/");
   };
 
-  return { edges, addLog, deleteLog, updateLog, isLoaded, logout, user };
+  return { edges, isLoaded, logout, user, addLog, deleteLog, updateLog };
 };
