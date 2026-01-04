@@ -16,64 +16,99 @@ export const useEdgeStore = () => {
   const router = useRouter();
 
   const fetchLogs = async () => {
-    const { data: { user: currentUser } } = await supabase.auth.getUser();
-    setUser(currentUser);
-    if (!currentUser) { router.push("/login"); return; }
+    try {
+      // 1. Get the user
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      setUser(currentUser);
 
-    const { data, error } = await supabase.from("logs").select("*").order("created_at", { ascending: false });
-    if (error) { console.error(error); setIsLoaded(true); return; }
+      // 2. If no user, handle redirection but DON'T hang
+      if (!currentUser) {
+        if (typeof window !== 'undefined' && window.location.pathname !== "/login") {
+          router.push("/login");
+        }
+        return; // finally block will still run
+      }
 
-    const newEdges = initialEdges.map((edge) => ({
-      ...edge,
-      logs: data.filter((log: any) => log.edge_id === edge.id).map((log: any) => ({
-        id: log.id,
-        date: log.created_at,
-        result: log.result,
-        note: log.note,
-        dayOfWeek: log.day_of_week,
-        durationMinutes: log.duration_minutes,
-      })),
-    }));
-    setEdges(newEdges);
-    setIsLoaded(true);
+      // 3. Fetch logs from DB
+      const { data, error } = await supabase
+        .from("logs")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Supabase error:", error);
+        return;
+      }
+
+      // 4. Update the UI state
+      const newEdges = initialEdges.map((edge) => ({
+        ...edge,
+        logs: data
+          .filter((log: any) => log.edge_id === edge.id)
+          .map((log: any) => ({
+            id: log.id,
+            date: log.created_at,
+            result: log.result,
+            note: log.note,
+            dayOfWeek: log.day_of_week,
+            durationMinutes: log.duration_minutes,
+          })),
+      }));
+      setEdges(newEdges);
+
+    } catch (err) {
+      console.error("Initialization failed:", err);
+    } finally {
+      // ✅ CRITICAL FIX: Guaranteed to run, clearing the white screen
+      setIsLoaded(true);
+    }
   };
 
-  useEffect(() => { fetchLogs(); }, []);
+  useEffect(() => {
+    fetchLogs();
+  }, []);
 
   const addLog = async (edgeId: string, logData: any) => {
     const { data: { user: currentUser } } = await supabase.auth.getUser();
     if (!currentUser) return;
+
     const tempId = crypto.randomUUID();
     const newLogLocal = { ...logData, id: tempId, date: new Date().toISOString() };
 
     setEdges((prev) => prev.map((edge) => edge.id === edgeId ? { ...edge, logs: [newLogLocal, ...edge.logs] } : edge));
 
     const { data, error } = await supabase.from("logs").insert({
-      user_id: currentUser.id, edge_id: edgeId, result: logData.result, note: logData.note,
-      day_of_week: logData.dayOfWeek, duration_minutes: logData.durationMinutes,
+      user_id: currentUser.id,
+      edge_id: edgeId,
+      result: logData.result,
+      note: logData.note,
+      day_of_week: logData.dayOfWeek,
+      duration_minutes: logData.durationMinutes,
     }).select().single();
 
-    if (error) { fetchLogs(); } 
-    else {
+    if (error) {
+      console.error("Add log error:", error);
+      fetchLogs();
+    } else {
       setEdges((prev) => prev.map((edge) => edge.id === edgeId ? {
-        ...edge, logs: edge.logs.map(log => log.id === tempId ? { ...log, id: data.id } : log)
+        ...edge,
+        logs: edge.logs.map(log => log.id === tempId ? { ...log, id: data.id } : log)
       } : edge));
     }
   };
 
   const deleteLog = async (logId: string | number) => {
-    // 1. UI UPDATE FIRST (Forces automatic refresh in UI)
+    // Instant UI update
     setEdges((prev) => prev.map((edge) => ({
       ...edge, 
       logs: edge.logs.filter((log) => String(log.id) !== String(logId))
     })));
 
-    // 2. DATABASE DELETE
+    // Database sync
     const { error } = await supabase.from("logs").delete().eq("id", logId);
-    
     if (error) {
-      console.error("Database Delete Error:", error);
-      fetchLogs(); // Revert UI if DB fails
+      console.error("Delete failed:", error);
+      fetchLogs();
     }
   };
 
