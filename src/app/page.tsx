@@ -27,12 +27,10 @@ export default function LandingPage() {
         </div>
         <div className="flex gap-4">
           <Link href="/login">
-            <Button variant="ghost" className="text-zinc-400 hover:text-white hover:bg-zinc-900 transition-colors">
-              Login
-            </Button>
+            <Button variant="ghost" className="text-zinc-400 hover:text-white hover:bg-zinc-900">Login</Button>
           </Link>
           <Link href="/login">
-            <Button className="bg-white text-black hover:bg-zinc-200 hover:text-black font-bold px-6">
+            <Button className="bg-white text-black hover:bg-zinc-200 hover:text-black font-bold px-6 shadow-[0_0_20px_rgba(255,255,255,0.1)]">
               Get Started
             </Button>
           </Link>
