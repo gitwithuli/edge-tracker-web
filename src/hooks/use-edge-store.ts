@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { supabase } from '@/lib/supabase';
-import { Edge, Log } from '@/lib/types';
-
+import { Edge, TradeLog } from '@/lib/types';
 interface EdgeStore {
   edges: Edge[];
   logs: Log[];
