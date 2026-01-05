@@ -1,108 +1,76 @@
-import { useEffect, useState } from "react";
-import { Edge } from "@/lib/types";
-import { supabase } from "@/lib/supabase";
-import { useRouter } from "next/navigation";
+import { create } from 'zustand';
+import { supabase } from '@/lib/supabase';
+import { Edge, Log } from '@/lib/types';
 
-const initialEdges: Edge[] = [
-  { id: "rth-gap", name: "RTH Gap Model", description: "Trade the 09:30 NY Opening Range Gap.", logs: [] },
-  { id: "first-fvg", name: "First Presented FVG", description: "First FVG after 09:30 open.", logs: [] },
-  { id: "silver-bullet", name: "Silver Bullet", description: "10:00-11:00 AM NY liquidity sweep.", logs: [] },
-];
+interface EdgeStore {
+  edges: Edge[];
+  logs: Log[];
+  user: any;
+  isLoaded: boolean;
+  setEdges: (edges: Edge[]) => void;
+  setUser: (user: any) => void;
+  fetchEdges: () => Promise<void>;
+  fetchLogs: () => Promise<void>;
+  addLog: (edgeId: string, logData: any) => Promise<void>;
+  deleteLog: (logId: string | number) => Promise<void>;
+  updateLog: (logId: string, logData: any) => Promise<void>;
+}
 
-export const useEdgeStore = () => {
-  const [edges, setEdges] = useState<Edge[]>(initialEdges);
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [user, setUser] = useState<any>(null);
-  const router = useRouter();
+export const useEdgeStore = create<EdgeStore>((set, get) => ({
+  edges: [],
+  logs: [],
+  user: null,
+  isLoaded: false,
 
-  const fetchLogs = async () => {
-    try {
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
-      setUser(currentUser);
-      const path = typeof window !== 'undefined' ? window.location.pathname : "";
+  setEdges: (edges) => set({ edges }),
+  setUser: (user) => set({ user, isLoaded: true }),
 
-      if (!currentUser && path.startsWith("/dashboard")) {
-        router.push("/");
-        return;
-      }
+  fetchEdges: async () => {
+    const { data, error } = await supabase.from('edges').select('*');
+    if (data) set({ edges: data });
+  },
 
-      if (currentUser && (path === "/" || path === "/login")) {
-        router.push("/dashboard");
-        return;
-      }
-
-      if (currentUser) {
-        const { data, error } = await supabase.from("logs").select("*").order("created_at", { ascending: false });
-        if (error) throw error;
-        if (data) {
-          const newEdges = initialEdges.map((edge) => ({
-            ...edge,
-            logs: data.filter((log: any) => log.edge_id === edge.id).map((log: any) => ({
-              id: log.id, 
-              date: log.created_at, 
-              result: log.result, 
-              note: log.note, 
-              dayOfWeek: log.day_of_week, 
-              durationMinutes: log.duration_minutes,
-              tvLink: log.tv_link, // 👈 FETCH: Added mapping for the chart link
-            })),
-          }));
-          setEdges(newEdges);
-        }
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsLoaded(true);
-    }
-  };
-
-  useEffect(() => { fetchLogs(); }, []);
-
-  const addLog = async (edgeId: string, logData: any) => {
+  fetchLogs: async () => {
+    const { user } = get();
     if (!user) return;
-    await supabase.from("logs").insert({
-      user_id: user.id, 
-      edge_id: edgeId, 
-      result: logData.result, 
-      note: logData.note, 
-      day_of_week: logData.dayOfWeek, 
-      duration_minutes: logData.durationMinutes,
-      tv_link: logData.tvLink, // 👈 INSERT: Added field to save to DB
-    });
-    await fetchLogs();
-  };
 
-  const deleteLog = async (logId: string | number) => {
-    await supabase.from("logs").delete().eq("id", logId);
-    await fetchLogs();
-  };
+    const { data, error } = await supabase
+      .from('logs')
+      .select('*')
+      .eq('user_id', user.id);
 
-  const updateLog = async (logId: string, logData: any) => {
-    await supabase.from("logs").update({
-      result: logData.result, 
-      note: logData.note, 
-      day_of_week: logData.dayOfWeek, 
-      duration_minutes: logData.durationMinutes,
-      tv_link: logData.tvLink, // 👈 UPDATE: Added field for edits
-    }).eq("id", logId);
-    await fetchLogs();
-  };
+    if (data) {
+      // KRİTİK MAPPING: DB (tv_link) -> Frontend (tvLink)
+      const formattedLogs = data.map((log) => ({
+        ...log,
+        tvLink: log.tv_link, 
+      }));
+      set({ logs: formattedLogs });
+    }
+  },
 
-  const logout = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    router.push("/");
-  };
+  addLog: async (edgeId, logData) => {
+    const { user } = get();
+    if (!user) return;
 
-  return { 
-    edges, 
-    isLoaded, 
-    logout, 
-    user, 
-    addLog, 
-    deleteLog, 
-    updateLog, 
-    fetchLogs 
-  };
-};
+    const { data, error } = await supabase
+      .from('logs')
+      .insert([{ ...logData, edge_id: edgeId, user_id: user.id, tv_link: logData.tvLink }])
+      .select();
+
+    if (data) await get().fetchLogs();
+  },
+
+  deleteLog: async (logId) => {
+    const { error } = await supabase.from('logs').delete().eq('id', logId);
+    if (!error) await get().fetchLogs();
+  },
+
+  updateLog: async (logId, logData) => {
+    const { error } = await supabase
+      .from('logs')
+      .update({ ...logData, tv_link: logData.tvLink })
+      .eq('id', logId);
+    if (!error) await get().fetchLogs();
+  },
+}));
