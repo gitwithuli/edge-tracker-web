@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Edge } from "@/lib/types";
-// SearchPlus çıkarıldı, ZoomIn ve Maximize2 eklendi
+import { getTVImageUrl } from "@/lib/utils";
 import { History, MoreHorizontal, Pencil, Trash2, Maximize2, Minimize2, ExternalLink, ZoomIn } from "lucide-react";
 import { LogDialog } from "./log-dialog";
 import { cn } from "@/lib/utils"; 
@@ -18,17 +18,6 @@ interface HistorySheetProps {
   onDeleteLog: (id: string | number) => void;
   onUpdateLog: (id: string, data: any) => void;
 }
-
-const getTradingViewImageUrl = (url: string) => {
-  if (!url) return null;
-  const match = url.match(/\/x\/([a-zA-Z0-9]+)\//);
-  if (match && match[1]) {
-    const id = match[1];
-    const firstChar = id.charAt(0).toLowerCase();
-    return `https://s3.tradingview.com/snapshots/${firstChar}/${id}.png`;
-  }
-  return null;
-};
 
 export function HistorySheet({ edge, onDeleteLog, onUpdateLog }: HistorySheetProps) {
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -43,7 +32,7 @@ export function HistorySheet({ edge, onDeleteLog, onUpdateLog }: HistorySheetPro
       
       <SheetContent className={cn("bg-zinc-950 border-zinc-800 text-zinc-100 p-0", isFullScreen ? "w-screen max-w-none" : "w-[400px] sm:w-[540px]")}>
        <SheetHeader className="p-6 border-b border-zinc-800 flex flex-row items-center justify-start gap-4">
-          <Button variant="ghost" size="icon" onClick={() => setIsFullScreen(!isFullScreen)} className="text-zinc-500 hover:text-white transition-colors">
+          <Button variant="ghost" size="icon" onClick={() => setIsFullScreen(!isFullScreen)} className="text-zinc-500 hover:text-white">
             {isFullScreen ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
           </Button>
           <SheetTitle className="text-zinc-100 text-xl font-bold tracking-tighter">{edge.name} History</SheetTitle>
@@ -55,7 +44,7 @@ export function HistorySheet({ edge, onDeleteLog, onUpdateLog }: HistorySheetPro
               <p className="text-center text-zinc-500 py-10 italic">No trades logged yet.</p>
             ) : (
               edge.logs.map((log) => {
-                const imageUrl = getTradingViewImageUrl(log.tvLink || "");
+                const imageUrl = getTVImageUrl(log.tvLink || "");
                 
                 return (
                   <div key={log.id} className="relative pl-6 border-l border-zinc-800">
@@ -95,7 +84,6 @@ export function HistorySheet({ edge, onDeleteLog, onUpdateLog }: HistorySheetPro
                         </DropdownMenu>
                       </div>
 
-                      {/* CHART PREVIEW CARD */}
                       {imageUrl && (
                         <div className="mt-2 mb-3 group relative overflow-hidden rounded-md border border-zinc-800 bg-zinc-950 shadow-lg">
                           <Dialog>
@@ -115,18 +103,14 @@ export function HistorySheet({ edge, onDeleteLog, onUpdateLog }: HistorySheetPro
                             </DialogTrigger>
                             <DialogContent className="max-w-[95vw] max-h-[90vh] p-0 bg-transparent border-none flex items-center justify-center shadow-none">
                               <div className="relative w-full h-full flex flex-col items-center justify-center gap-4">
-                                <img 
-                                  src={imageUrl} 
-                                  alt="Full Scale ICT Markup" 
-                                  className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl border border-zinc-800" 
-                                />
+                                <img src={imageUrl} alt="Full Scale" className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl border border-zinc-800" />
                                 <a 
                                   href={log.tvLink} 
                                   target="_blank" 
                                   rel="noopener noreferrer" 
-                                  className="bg-white text-black px-6 py-2 rounded-full text-xs font-bold flex items-center gap-2 hover:bg-zinc-200 transition-transform active:scale-95"
+                                  className="bg-white text-black px-6 py-2 rounded-full text-xs font-bold flex items-center gap-2 hover:bg-zinc-200"
                                 >
-                                  Open in TradingView <ExternalLink className="w-3 h-3" />
+                                  Open Original <ExternalLink className="w-3 h-3" />
                                 </a>
                               </div>
                             </DialogContent>
@@ -134,7 +118,7 @@ export function HistorySheet({ edge, onDeleteLog, onUpdateLog }: HistorySheetPro
                         </div>
                       )}
 
-                      <div className="text-[10px] text-zinc-600 font-mono font-bold uppercase tracking-widest">{log.dayOfWeek} • {log.durationMinutes}m duration</div>
+                      <div className="text-[10px] text-zinc-600 font-mono font-bold uppercase tracking-widest">{log.dayOfWeek} • {log.durationMinutes}m</div>
                       {log.note && <p className="text-sm text-zinc-400 mt-2 leading-relaxed italic border-l-2 border-zinc-800 pl-3">"{log.note}"</p>}
                     </div>
                   </div>
