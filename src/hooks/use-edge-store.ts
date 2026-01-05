@@ -79,5 +79,18 @@ export const useEdgeStore = () => {
     router.push("/");
   };
 
-  return { edges, isLoaded, logout, user, addLog, deleteLog, updateLog };
+  // ... mevcut kodlarınız ...
+
+return { 
+  edges, 
+  isLoaded, 
+  logout, 
+  user, 
+  addLog, 
+  deleteLog, 
+  updateLog, 
+  fetchLogs // 👈 KRİTİK: TypeScript hatasını çözen satır burası
+};
+
+  
 };
