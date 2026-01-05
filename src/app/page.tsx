@@ -1,5 +1,8 @@
 "use client";
 
+// FORCE DYNAMIC: This prevents Vercel from caching the old version
+export const dynamic = "force-dynamic";
+
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useEdgeStore } from "@/hooks/use-edge-store";
@@ -12,7 +15,6 @@ export default function LandingPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // If user is already logged in, get them out of the landing page
     if (isLoaded && user) {
       router.push("/dashboard");
     }
@@ -28,7 +30,7 @@ export default function LandingPage() {
         </div>
         <div className="flex gap-4">
           <Link href="/login"><Button variant="ghost">Login</Button></Link>
-          <Link href="/login"><Button className="bg-white text-black">Get Started</Button></Link>
+          <Link href="/login"><Button className="bg-white text-black font-bold">Get Started</Button></Link>
         </div>
       </nav>
       <main className="max-w-6xl mx-auto px-6 pt-24 text-center">
@@ -36,7 +38,7 @@ export default function LandingPage() {
           Track Your Edge <br/> With Surgical Precision.
         </h1>
         <Link href="/login">
-          <Button size="lg" className="bg-white text-black hover:bg-zinc-200 px-10 py-7 text-lg">
+          <Button size="lg" className="bg-white text-black hover:bg-zinc-200 px-10 py-7 text-lg font-bold">
             Start Your Journal <ChevronRight className="ml-2 w-5 h-5" />
           </Button>
         </Link>
