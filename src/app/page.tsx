@@ -1,10 +1,26 @@
 "use client";
 
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useEdgeStore } from "@/hooks/use-edge-store";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Trophy, Shield, Zap, TrendingUp, ChevronRight } from "lucide-react";
 
 export default function LandingPage() {
+  const { user, isLoaded } = useEdgeStore(); //
+  const router = useRouter();
+
+  // AUTH BRIDGE: Automatically redirect if session exists
+  useEffect(() => {
+    if (isLoaded && user) {
+      router.push("/dashboard");
+    }
+  }, [isLoaded, user, router]);
+
+  // Prevent "flicker" while checking auth state
+  if (!isLoaded) return null;
+
   return (
     <div className="min-h-screen bg-black text-white selection:bg-zinc-800 font-sans">
       {/* Navigation */}
