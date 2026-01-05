@@ -5,6 +5,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+// İsmi tam olarak bu şekilde güncelleyin
 export function getTVImageUrl(url: string) {
   if (!url) return null;
   const match = url.match(/\/x\/([a-zA-Z0-9]+)\//);

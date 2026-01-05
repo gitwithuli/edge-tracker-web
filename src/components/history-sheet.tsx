@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Edge } from "@/lib/types";
-import { getTradingViewImageUrl } from "@/lib/utils";
+import { getTVImageUrl } from "@/lib/utils"; // getTradingViewImageUrl yerine bunu yazın
 import { History, MoreHorizontal, Pencil, Trash2, Maximize2, Minimize2, ExternalLink, ZoomIn } from "lucide-react";
 import { LogDialog } from "./log-dialog";
 import { cn } from "@/lib/utils"; 
@@ -45,7 +45,7 @@ export function HistorySheet({ edge, onDeleteLog, onUpdateLog }: HistorySheetPro
               <p className="text-center text-zinc-500 py-10 italic font-mono uppercase text-[10px] tracking-widest">No trades logged yet.</p>
             ) : (
               edge.logs.map((log) => {
-                const imageUrl = getTradingViewImageUrl(log.tvLink || "");
+                const imageUrl = getTVImageUrl(log.tvLink || ""); // Burada da ismi güncelleyin
                 
                 return (
                   <div key={log.id} className="relative pl-6 border-l border-zinc-800">
