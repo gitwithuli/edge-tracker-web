@@ -1,12 +1,13 @@
 export type ResultType = "WIN" | "LOSS" | "BE";
 
 export interface TradeLog {
-  id: string;
-  date: string; // ISO string
+  id: string | number;
+  date: string;
   result: ResultType;
   note: string;
-  dayOfWeek: string; // "Monday", "Tuesday", etc.
+  dayOfWeek: string;
   durationMinutes: number;
+  tvLink?: string; // 👈 KRİTİK: TypeScript hatasını çözen satır
 }
 
 export interface Edge {
