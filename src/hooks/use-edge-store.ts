@@ -38,7 +38,13 @@ export const useEdgeStore = () => {
           const newEdges = initialEdges.map((edge) => ({
             ...edge,
             logs: data.filter((log: any) => log.edge_id === edge.id).map((log: any) => ({
-              id: log.id, date: log.created_at, result: log.result, note: log.note, dayOfWeek: log.day_of_week, durationMinutes: log.duration_minutes,
+              id: log.id, 
+              date: log.created_at, 
+              result: log.result, 
+              note: log.note, 
+              dayOfWeek: log.day_of_week, 
+              durationMinutes: log.duration_minutes,
+              tvLink: log.tv_link, // 👈 FETCH: Added mapping for the chart link
             })),
           }));
           setEdges(newEdges);
@@ -56,7 +62,13 @@ export const useEdgeStore = () => {
   const addLog = async (edgeId: string, logData: any) => {
     if (!user) return;
     await supabase.from("logs").insert({
-      user_id: user.id, edge_id: edgeId, result: logData.result, note: logData.note, day_of_week: logData.dayOfWeek, duration_minutes: logData.durationMinutes,
+      user_id: user.id, 
+      edge_id: edgeId, 
+      result: logData.result, 
+      note: logData.note, 
+      day_of_week: logData.dayOfWeek, 
+      duration_minutes: logData.durationMinutes,
+      tv_link: logData.tvLink, // 👈 INSERT: Added field to save to DB
     });
     await fetchLogs();
   };
@@ -68,7 +80,11 @@ export const useEdgeStore = () => {
 
   const updateLog = async (logId: string, logData: any) => {
     await supabase.from("logs").update({
-      result: logData.result, note: logData.note, day_of_week: logData.dayOfWeek, duration_minutes: logData.durationMinutes,
+      result: logData.result, 
+      note: logData.note, 
+      day_of_week: logData.dayOfWeek, 
+      duration_minutes: logData.durationMinutes,
+      tv_link: logData.tvLink, // 👈 UPDATE: Added field for edits
     }).eq("id", logId);
     await fetchLogs();
   };
@@ -79,18 +95,14 @@ export const useEdgeStore = () => {
     router.push("/");
   };
 
-  // ... mevcut kodlarınız ...
-
-return { 
-  edges, 
-  isLoaded, 
-  logout, 
-  user, 
-  addLog, 
-  deleteLog, 
-  updateLog, 
-  fetchLogs // 👈 KRİTİK: TypeScript hatasını çözen satır burası
-};
-
-  
+  return { 
+    edges, 
+    isLoaded, 
+    logout, 
+    user, 
+    addLog, 
+    deleteLog, 
+    updateLog, 
+    fetchLogs 
+  };
 };
