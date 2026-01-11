@@ -1,39 +1,55 @@
--- EdgeTracker V3 Schema Migration
--- Run this in Supabase SQL Editor
+-- EdgeTracker V3 - ALTER existing tables migration
+-- Run this if tables already exist
 
--- Drop existing tables if starting fresh (CAUTION: loses data)
--- DROP TABLE IF EXISTS logs CASCADE;
--- DROP TABLE IF EXISTS edges CASCADE;
+-- Add user_id to edges if it doesn't exist
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'edges' AND column_name = 'user_id'
+  ) THEN
+    ALTER TABLE edges ADD COLUMN user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE;
+  END IF;
+END $$;
 
--- Edges table (user-owned trading strategies)
-CREATE TABLE IF NOT EXISTS edges (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  name TEXT NOT NULL,
-  description TEXT DEFAULT '',
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
+-- Add created_at to edges if it doesn't exist
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'edges' AND column_name = 'created_at'
+  ) THEN
+    ALTER TABLE edges ADD COLUMN created_at TIMESTAMPTZ DEFAULT NOW();
+  END IF;
+END $$;
 
--- Logs table (trade entries linked to edges)
-CREATE TABLE IF NOT EXISTS logs (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  edge_id UUID NOT NULL REFERENCES edges(id) ON DELETE CASCADE,
-  result TEXT NOT NULL CHECK (result IN ('OCCURRED', 'NO_SETUP')),
-  day_of_week TEXT NOT NULL CHECK (day_of_week IN ('Monday','Tuesday','Wednesday','Thursday','Friday')),
-  duration_minutes INTEGER NOT NULL DEFAULT 0 CHECK (duration_minutes >= 0 AND duration_minutes <= 1440),
-  note TEXT DEFAULT '',
-  tv_link TEXT,
-  date DATE DEFAULT CURRENT_DATE,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
+-- Add updated_at to edges if it doesn't exist
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'edges' AND column_name = 'updated_at'
+  ) THEN
+    ALTER TABLE edges ADD COLUMN updated_at TIMESTAMPTZ DEFAULT NOW();
+  END IF;
+END $$;
+
+-- Add edge_id to logs if it doesn't exist
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'logs' AND column_name = 'edge_id'
+  ) THEN
+    ALTER TABLE logs ADD COLUMN edge_id UUID REFERENCES edges(id) ON DELETE CASCADE;
+  END IF;
+END $$;
 
 -- Enable Row Level Security
 ALTER TABLE edges ENABLE ROW LEVEL SECURITY;
 ALTER TABLE logs ENABLE ROW LEVEL SECURITY;
 
--- RLS Policies for edges
+-- RLS Policies for edges (drop first if exists, then create)
 DROP POLICY IF EXISTS "Users can view their own edges" ON edges;
 CREATE POLICY "Users can view their own edges"
   ON edges FOR SELECT
@@ -75,7 +91,7 @@ CREATE POLICY "Users can delete their own logs"
   ON logs FOR DELETE
   USING (auth.uid() = user_id);
 
--- Indexes for performance
+-- Indexes (IF NOT EXISTS)
 CREATE INDEX IF NOT EXISTS idx_edges_user ON edges(user_id);
 CREATE INDEX IF NOT EXISTS idx_logs_user_edge ON logs(user_id, edge_id);
 CREATE INDEX IF NOT EXISTS idx_logs_user_date ON logs(user_id, date DESC);

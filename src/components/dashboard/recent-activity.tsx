@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Activity, ExternalLink, ImageIcon } from "lucide-react";
+import { Activity, ExternalLink, Check, X } from "lucide-react";
 import type { TradeLog, EdgeWithLogs } from "@/lib/types";
 import { getTVImageUrl } from "@/lib/utils";
 
@@ -23,7 +23,7 @@ export function RecentActivity({ logs, edgesWithLogs, limit = 5 }: RecentActivit
     return logs.slice(0, limit).map(log => ({
       ...log,
       edgeName: edgeNames[log.edgeId] || "Unknown Edge",
-      hasImage: !!log.tvLink && !!getTVImageUrl(log.tvLink),
+      imageUrl: log.tvLink ? getTVImageUrl(log.tvLink) : null,
     }));
   }, [logs, edgesWithLogs, limit]);
 
@@ -50,77 +50,72 @@ export function RecentActivity({ logs, edgesWithLogs, limit = 5 }: RecentActivit
       <CardContent>
         {recentLogs.length === 0 ? (
           <p className="text-zinc-600 text-sm italic py-4">
-            No trades logged yet. Log your first trade to see activity.
+            No days logged yet. Log your first day to see activity.
           </p>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {recentLogs.map((log) => (
               <div
                 key={log.id}
-                className="flex items-start gap-3 p-2 rounded-lg hover:bg-zinc-900/50 transition-colors"
+                className="p-3 rounded-lg bg-zinc-900/50 hover:bg-zinc-900 transition-colors"
               >
-                {/* Result indicator */}
-                <div
-                  className={`w-2 h-2 rounded-full mt-2 ${
-                    log.result === "WIN"
-                      ? "bg-green-500"
-                      : log.result === "LOSS"
-                      ? "bg-red-500"
-                      : "bg-yellow-500"
-                  }`}
-                />
-
-                {/* Content */}
-                <div className="flex-1 min-w-0">
+                {/* Header */}
+                <div className="flex items-start justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <span className="font-medium text-white text-sm">
-                      {log.edgeName}
-                    </span>
-                    <span
-                      className={`text-xs font-semibold ${
-                        log.result === "WIN"
-                          ? "text-green-500"
-                          : log.result === "LOSS"
-                          ? "text-red-500"
-                          : "text-yellow-500"
-                      }`}
-                    >
-                      {log.result}
-                    </span>
-                    <span className="text-xs text-zinc-600">
-                      {log.dayOfWeek.slice(0, 3)}
-                    </span>
-                  </div>
-
-                  {log.note && (
-                    <p className="text-xs text-zinc-500 mt-0.5 line-clamp-1">
-                      &ldquo;{log.note}&rdquo;
-                    </p>
-                  )}
-
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="text-xs text-zinc-600">
-                      {formatDate(log.date)}
-                    </span>
-                    {log.hasImage && (
-                      <span className="text-xs text-zinc-600 flex items-center gap-1">
-                        <ImageIcon className="w-3 h-3" />
-                        Chart
-                      </span>
+                    {log.result === "OCCURRED" ? (
+                      <div className="w-6 h-6 rounded-full bg-emerald-900/50 flex items-center justify-center">
+                        <Check className="w-3 h-3 text-emerald-500" />
+                      </div>
+                    ) : (
+                      <div className="w-6 h-6 rounded-full bg-zinc-800 flex items-center justify-center">
+                        <X className="w-3 h-3 text-zinc-500" />
+                      </div>
                     )}
+                    <div>
+                      <span className="font-medium text-white text-sm">
+                        {log.edgeName}
+                      </span>
+                      <div className="flex items-center gap-2 text-xs text-zinc-500">
+                        <span>{log.dayOfWeek.slice(0, 3)}</span>
+                        <span>•</span>
+                        <span>{formatDate(log.date)}</span>
+                      </div>
+                    </div>
                   </div>
+                  {log.tvLink && (
+                    <a
+                      href={log.tvLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-zinc-600 hover:text-zinc-400 transition-colors"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
+                  )}
                 </div>
 
-                {/* TV Link */}
-                {log.tvLink && (
+                {/* Inline TradingView Preview */}
+                {log.imageUrl && (
                   <a
-                    href={log.tvLink}
+                    href={log.tvLink || "#"}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-zinc-600 hover:text-zinc-400 transition-colors"
+                    className="block mt-2 mb-2 rounded-lg overflow-hidden border border-zinc-800 hover:border-zinc-700 transition-colors"
                   >
-                    <ExternalLink className="w-4 h-4" />
+                    <img
+                      src={log.imageUrl}
+                      alt="Chart snapshot"
+                      className="w-full h-32 object-cover opacity-80 hover:opacity-100 transition-opacity"
+                      loading="lazy"
+                    />
                   </a>
+                )}
+
+                {/* Note */}
+                {log.note && (
+                  <p className="text-xs text-zinc-500 line-clamp-2 mt-2">
+                    &ldquo;{log.note}&rdquo;
+                  </p>
                 )}
               </div>
             ))}

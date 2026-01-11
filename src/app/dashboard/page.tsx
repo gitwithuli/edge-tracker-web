@@ -11,7 +11,7 @@ import { LogDialog } from "@/components/log-dialog";
 import Link from "next/link";
 
 export default function DashboardPage() {
-  const { logs, isLoaded, logout, user, addLog, getEdgesWithLogs } = useEdgeStore();
+  const { logs, isLoaded, logout, user, addLog, deleteLog, updateLog, getEdgesWithLogs } = useEdgeStore();
 
   if (!isLoaded || !user) {
     return null;
@@ -40,7 +40,7 @@ export default function DashboardPage() {
                 trigger={
                   <Button size="sm" className="bg-white text-black hover:bg-zinc-200 font-semibold">
                     <Plus className="w-4 h-4 sm:mr-2" />
-                    <span className="hidden sm:inline">Log Trade</span>
+                    <span className="hidden sm:inline">Log Day</span>
                   </Button>
                 }
               />
@@ -65,7 +65,7 @@ export default function DashboardPage() {
         <div className="mb-6 sm:mb-8">
           <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">Dashboard</h2>
           <p className="text-zinc-500 text-sm sm:text-base">
-            Track your ICT edges and find your winning patterns.
+            Track when your setups appear and find your best trading days.
           </p>
         </div>
 
@@ -80,7 +80,7 @@ export default function DashboardPage() {
           {/* Left Column - Chart + Activity */}
           <div className="lg:col-span-2 space-y-6 sm:space-y-8">
             <DayChart logs={logs} />
-            <EdgeGrid edgesWithLogs={edgesWithLogs} onAddLog={addLog} />
+            <EdgeGrid edgesWithLogs={edgesWithLogs} onAddLog={addLog} onDeleteLog={deleteLog} onUpdateLog={updateLog} />
           </div>
 
           {/* Right Column - Recent Activity */}

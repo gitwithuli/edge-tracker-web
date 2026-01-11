@@ -1,4 +1,4 @@
-export const RESULT_TYPES = ["WIN", "LOSS", "BE"] as const;
+export const RESULT_TYPES = ["OCCURRED", "NO_SETUP"] as const;
 export type ResultType = (typeof RESULT_TYPES)[number];
 
 export const TRADING_DAYS = [
@@ -11,7 +11,7 @@ export const TRADING_DAYS = [
 export type TradingDay = (typeof TRADING_DAYS)[number];
 
 export const DEFAULT_LOG_VALUES = {
-  result: "WIN" as ResultType,
+  result: "OCCURRED" as ResultType,
   dayOfWeek: "Tuesday" as TradingDay,
   durationMinutes: 15,
   note: "",

@@ -6,11 +6,10 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import type { EdgeWithLogs, TradeLogInput } from "@/lib/types";
 import { getTVImageUrl } from "@/lib/utils";
-import { History, MoreHorizontal, Pencil, Trash2, Maximize2, Minimize2, ExternalLink, ZoomIn } from "lucide-react";
+import { History, MoreHorizontal, Pencil, Trash2, Maximize2, Minimize2, ExternalLink, ZoomIn, Check, X } from "lucide-react";
 import { LogDialog } from "./log-dialog";
 import { cn } from "@/lib/utils";
 
@@ -35,8 +34,8 @@ export const HistorySheet = memo(function HistorySheet({ edge, onDeleteLog, onUp
     <>
       <Sheet>
         <SheetTrigger asChild>
-          <Button variant="secondary" size="sm" className="w-full gap-2 bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-white transition-all">
-            <History className="w-4 h-4" /> View History
+          <Button variant="outline" size="sm" className="flex-1 border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-900">
+            <History className="w-4 h-4 mr-1" /> History
           </Button>
         </SheetTrigger>
 
@@ -45,41 +44,87 @@ export const HistorySheet = memo(function HistorySheet({ edge, onDeleteLog, onUp
             <Button variant="ghost" size="icon" onClick={() => setIsFullScreen(!isFullScreen)} className="text-zinc-500 hover:text-white transition-colors">
               {isFullScreen ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
             </Button>
-            <SheetTitle className="text-zinc-100 text-xl font-bold tracking-tighter">{edge.name} History</SheetTitle>
+            <SheetTitle className="text-zinc-100 text-xl font-bold tracking-tighter">{edge.name}</SheetTitle>
           </SheetHeader>
 
           <ScrollArea className="h-[calc(100vh-80px)]">
-            <div className="p-6 space-y-6">
+            <div className="p-6 space-y-4">
               {edge.logs.length === 0 ? (
-                <p className="text-center text-zinc-500 py-10 italic font-mono uppercase text-[10px] tracking-widest">No trades logged yet.</p>
+                <p className="text-center text-zinc-500 py-10 italic">No days logged yet.</p>
               ) : (
                 edge.logs.map((log) => {
                   const imageUrl = getTVImageUrl(log.tvLink || "");
+                  const isOccurred = log.result === "OCCURRED";
 
                   return (
-                    <div key={log.id} className="relative pl-6 border-l border-zinc-800">
-                      <div className={cn(
-                        "absolute left-[-5px] top-0 w-2.5 h-2.5 rounded-full",
-                        log.result === "WIN"
-                          ? "bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)]"
-                          : log.result === "LOSS"
-                            ? "bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.3)]"
-                            : "bg-zinc-500"
-                      )} />
-                      <div className="bg-zinc-900/40 p-4 rounded-lg border border-zinc-800/50 hover:bg-zinc-900/60 transition-all group">
+                    <div key={log.id} className="rounded-lg border border-zinc-800 overflow-hidden bg-zinc-900/30">
+                      {/* Inline Preview - Show prominently at top */}
+                      {imageUrl && (
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <div className="cursor-zoom-in relative group">
+                              <img
+                                src={imageUrl}
+                                alt="Chart snapshot"
+                                loading="lazy"
+                                decoding="async"
+                                className="w-full h-48 object-cover opacity-90 group-hover:opacity-100 transition-opacity"
+                              />
+                              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30">
+                                <div className="bg-zinc-900/90 p-2 rounded-full border border-zinc-700">
+                                  <ZoomIn className="w-4 h-4 text-white" />
+                                </div>
+                              </div>
+                            </div>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-[95vw] max-h-[90vh] p-0 bg-transparent border-none flex items-center justify-center shadow-none">
+                            <div className="relative w-full h-full flex flex-col items-center justify-center gap-4">
+                              <img
+                                src={imageUrl}
+                                alt="Full Scale Chart"
+                                className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-zinc-800"
+                              />
+                              {log.tvLink && (
+                                <a
+                                  href={log.tvLink}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="bg-white text-black px-6 py-2 rounded-full text-xs font-bold flex items-center gap-2 hover:bg-zinc-200 transition-all"
+                                >
+                                  Open in TradingView <ExternalLink className="w-3 h-3" />
+                                </a>
+                              )}
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                      )}
+
+                      {/* Log Content */}
+                      <div className="p-4">
                         <div className="flex justify-between items-start mb-3">
-                          <Badge variant="outline" className={cn(
-                            "px-2 py-0.5 font-bold text-[10px] tracking-tighter",
-                            log.result === "WIN" ? "text-green-400 border-green-900/50" :
-                            log.result === "LOSS" ? "text-red-400 border-red-900/50" :
-                            "text-zinc-400 border-zinc-700"
-                          )}>
-                            {log.result}
-                          </Badge>
+                          <div className="flex items-center gap-2">
+                            {isOccurred ? (
+                              <div className="w-8 h-8 rounded-full bg-emerald-900/50 flex items-center justify-center">
+                                <Check className="w-4 h-4 text-emerald-500" />
+                              </div>
+                            ) : (
+                              <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center">
+                                <X className="w-4 h-4 text-zinc-500" />
+                              </div>
+                            )}
+                            <div>
+                              <p className="text-sm font-medium text-white">
+                                {isOccurred ? "Setup Occurred" : "No Setup"}
+                              </p>
+                              <p className="text-xs text-zinc-500">
+                                {log.dayOfWeek} {log.durationMinutes > 0 && `• ${log.durationMinutes}m`}
+                              </p>
+                            </div>
+                          </div>
 
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" className="h-6 w-6 p-0 hover:bg-zinc-800 hover:text-white transition-colors">
+                              <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-zinc-800">
                                 <MoreHorizontal className="w-4 h-4 text-zinc-500" />
                               </Button>
                             </DropdownMenuTrigger>
@@ -103,54 +148,21 @@ export const HistorySheet = memo(function HistorySheet({ edge, onDeleteLog, onUp
                           </DropdownMenu>
                         </div>
 
-                        {imageUrl && (
-                          <div className="mt-2 mb-3 group/image relative overflow-hidden rounded-md border border-zinc-800 bg-zinc-950 shadow-2xl">
-                            <Dialog>
-                              <DialogTrigger asChild>
-                                <div className="cursor-zoom-in relative aspect-video">
-                                  <img
-                                    src={imageUrl}
-                                    alt="Trade Setup Preview"
-                                    loading="lazy"
-                                    decoding="async"
-                                    className="w-full h-full object-cover opacity-70 group-hover/image:opacity-100 transition-all duration-500"
-                                  />
-                                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/image:opacity-100 transition-opacity bg-black/40">
-                                    <div className="bg-zinc-900/90 p-2 rounded-full border border-zinc-700 shadow-xl">
-                                      <ZoomIn className="w-4 h-4 text-white" />
-                                    </div>
-                                  </div>
-                                </div>
-                              </DialogTrigger>
-                              <DialogContent className="max-w-[95vw] max-h-[90vh] p-0 bg-transparent border-none flex items-center justify-center shadow-none">
-                                <div className="relative w-full h-full flex flex-col items-center justify-center gap-4">
-                                  <img
-                                    src={imageUrl}
-                                    alt="Full Scale ICT Markup"
-                                    className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-zinc-800"
-                                  />
-                                  <a
-                                    href={log.tvLink}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="bg-white text-black px-6 py-2 rounded-full text-[10px] font-bold flex items-center gap-2 hover:bg-zinc-200 transition-all active:scale-95 shadow-lg uppercase tracking-widest"
-                                  >
-                                    Open Original in TradingView <ExternalLink className="w-3 h-3" />
-                                  </a>
-                                </div>
-                              </DialogContent>
-                            </Dialog>
-                          </div>
+                        {log.note && (
+                          <p className="text-sm text-zinc-400 leading-relaxed border-l-2 border-zinc-700 pl-3 py-1">
+                            {log.note}
+                          </p>
                         )}
 
-                        <div className="text-[9px] text-zinc-600 font-mono font-bold uppercase tracking-[0.2em] mb-1">
-                          {log.dayOfWeek} • {log.durationMinutes}m duration
-                        </div>
-
-                        {log.note && (
-                          <p className="text-xs text-zinc-400 leading-relaxed italic border-l-2 border-zinc-800 pl-3 py-1">
-                            "{log.note}"
-                          </p>
+                        {log.tvLink && !imageUrl && (
+                          <a
+                            href={log.tvLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-white mt-2"
+                          >
+                            <ExternalLink className="w-3 h-3" /> View on TradingView
+                          </a>
                         )}
                       </div>
                     </div>
@@ -165,9 +177,9 @@ export const HistorySheet = memo(function HistorySheet({ edge, onDeleteLog, onUp
       <AlertDialog open={deleteLogId !== null} onOpenChange={(open) => !open && setDeleteLogId(null)}>
         <AlertDialogContent className="bg-zinc-950 border-zinc-800">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-zinc-100">Delete Trade Log</AlertDialogTitle>
+            <AlertDialogTitle className="text-zinc-100">Delete Log</AlertDialogTitle>
             <AlertDialogDescription className="text-zinc-400">
-              This action cannot be undone. This will permanently delete the trade log from your journal.
+              This will permanently delete this log entry. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

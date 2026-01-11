@@ -4,9 +4,8 @@ import { memo, useMemo } from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Trophy, Clock, CalendarCheck, Plus } from "lucide-react";
+import { Calendar, Clock, CalendarCheck, Plus, Check, X } from "lucide-react";
 import type { EdgeWithLogs, TradeLogInput } from "@/lib/types";
-import { WIN_RATE_THRESHOLD } from "@/lib/constants";
 import { LogDialog } from "./log-dialog";
 import { HistorySheet } from "./history-sheet";
 
@@ -19,15 +18,15 @@ interface EdgeCardProps {
 
 export const EdgeCard = memo(function EdgeCard({ edge, onAddLog, onDeleteLog, onUpdateLog }: EdgeCardProps) {
   const stats = useMemo(() => {
-    const totalTrades = edge.logs.length;
-    const wins = edge.logs.filter((l) => l.result === "WIN").length;
-    const winRate = totalTrades > 0 ? Math.round((wins / totalTrades) * 100) : 0;
+    const totalDays = edge.logs.length;
+    const occurrences = edge.logs.filter((l) => l.result === "OCCURRED").length;
+    const occurrenceRate = totalDays > 0 ? Math.round((occurrences / totalDays) * 100) : 0;
 
-    const totalDuration = edge.logs.reduce((acc, log) => acc + log.durationMinutes, 0);
-    const avgDuration = totalTrades > 0 ? Math.round(totalDuration / totalTrades) : 0;
+    const totalDuration = edge.logs.filter(l => l.result === "OCCURRED").reduce((acc, log) => acc + log.durationMinutes, 0);
+    const avgDuration = occurrences > 0 ? Math.round(totalDuration / occurrences) : 0;
 
     const dayCounts: Record<string, number> = {};
-    edge.logs.filter(l => l.result === "WIN").forEach(l => {
+    edge.logs.filter(l => l.result === "OCCURRED").forEach(l => {
       dayCounts[l.dayOfWeek] = (dayCounts[l.dayOfWeek] || 0) + 1;
     });
 
@@ -35,7 +34,7 @@ export const EdgeCard = memo(function EdgeCard({ edge, onAddLog, onDeleteLog, on
       ? Object.keys(dayCounts).reduce((a, b) => dayCounts[a] > dayCounts[b] ? a : b)
       : "N/A";
 
-    return { totalTrades, wins, winRate, avgDuration, bestDay };
+    return { totalDays, occurrences, occurrenceRate, avgDuration, bestDay };
   }, [edge.logs]);
 
   const recentLogs = useMemo(() => edge.logs.slice(0, 2), [edge.logs]);
@@ -50,11 +49,8 @@ export const EdgeCard = memo(function EdgeCard({ edge, onAddLog, onDeleteLog, on
               {edge.description}
             </p>
           </div>
-          <Badge
-            variant={stats.winRate >= WIN_RATE_THRESHOLD ? "default" : "destructive"}
-            className={`${stats.winRate >= WIN_RATE_THRESHOLD ? "bg-green-600 hover:bg-green-500" : "bg-red-600 hover:bg-red-500"} transition-colors`}
-          >
-            {stats.winRate}% WR
+          <Badge className="bg-emerald-600 hover:bg-emerald-500 transition-colors">
+            {stats.occurrenceRate}%
           </Badge>
         </div>
       </CardHeader>
@@ -62,9 +58,9 @@ export const EdgeCard = memo(function EdgeCard({ edge, onAddLog, onDeleteLog, on
       <CardContent className="flex-grow">
         <div className="grid grid-cols-3 gap-2 mb-6">
           <div className="bg-zinc-900/50 p-3 rounded-lg text-center border border-zinc-800/50">
-            <Trophy className="w-4 h-4 mx-auto mb-1 text-zinc-500" />
-            <div className="text-lg font-bold">{stats.totalTrades}</div>
-            <div className="text-[10px] text-zinc-600 uppercase font-semibold">Trades</div>
+            <Calendar className="w-4 h-4 mx-auto mb-1 text-zinc-500" />
+            <div className="text-lg font-bold">{stats.totalDays}</div>
+            <div className="text-[10px] text-zinc-600 uppercase font-semibold">Days</div>
           </div>
           <div className="bg-zinc-900/50 p-3 rounded-lg text-center border border-zinc-800/50">
             <Clock className="w-4 h-4 mx-auto mb-1 text-zinc-500" />
@@ -85,11 +81,18 @@ export const EdgeCard = memo(function EdgeCard({ edge, onAddLog, onDeleteLog, on
           {recentLogs.length > 0 ? (
             recentLogs.map((log) => (
               <div key={log.id} className="flex justify-between items-center text-xs bg-black/40 p-2 rounded border border-zinc-900/50">
-                <span className={log.result === "WIN" ? "text-green-500 font-bold" : "text-red-500 font-bold"}>
-                  {log.result}
+                <span className="flex items-center gap-1">
+                  {log.result === "OCCURRED" ? (
+                    <Check className="w-3 h-3 text-emerald-500" />
+                  ) : (
+                    <X className="w-3 h-3 text-zinc-500" />
+                  )}
+                  <span className={log.result === "OCCURRED" ? "text-emerald-500 font-bold" : "text-zinc-500 font-bold"}>
+                    {log.result === "OCCURRED" ? "Occurred" : "No Setup"}
+                  </span>
                 </span>
                 <span className="text-zinc-500 font-mono">
-                  {log.dayOfWeek.slice(0,3)} • {log.durationMinutes}m
+                  {log.dayOfWeek.slice(0,3)} {log.durationMinutes > 0 && `• ${log.durationMinutes}m`}
                 </span>
               </div>
             ))
@@ -105,7 +108,7 @@ export const EdgeCard = memo(function EdgeCard({ edge, onAddLog, onDeleteLog, on
           onSave={onAddLog}
           trigger={
             <Button className="w-full gap-2 bg-white text-black hover:bg-zinc-200 font-bold tracking-tight">
-              <Plus className="w-4 h-4" /> Log Trade
+              <Plus className="w-4 h-4" /> Log Day
             </Button>
           }
         />

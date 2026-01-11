@@ -1,42 +1,45 @@
 "use client";
 
 import { useMemo } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Target, Plus, ChevronRight } from "lucide-react";
+import { Target, Plus } from "lucide-react";
 import type { EdgeWithLogs, TradeLogInput } from "@/lib/types";
 import { LogDialog } from "@/components/log-dialog";
+import { HistorySheet } from "@/components/history-sheet";
 import Link from "next/link";
 
 interface EdgeGridProps {
   edgesWithLogs: EdgeWithLogs[];
   onAddLog: (edgeId: string, data: TradeLogInput) => void;
+  onDeleteLog: (id: string) => void;
+  onUpdateLog: (id: string, data: TradeLogInput) => void;
 }
 
 interface EdgeCardData {
   edge: EdgeWithLogs;
-  winRate: number;
-  totalTrades: number;
+  occurrenceRate: number;
+  totalLogs: number;
   bestDay: string | null;
 }
 
-export function EdgeGrid({ edgesWithLogs, onAddLog }: EdgeGridProps) {
+export function EdgeGrid({ edgesWithLogs, onAddLog, onDeleteLog, onUpdateLog }: EdgeGridProps) {
   const edgeData = useMemo(() => {
     return edgesWithLogs.map((edge): EdgeCardData => {
-      const wins = edge.logs.filter(l => l.result === "WIN").length;
+      const occurred = edge.logs.filter(l => l.result === "OCCURRED").length;
       const total = edge.logs.length;
-      const winRate = total > 0 ? Math.round((wins / total) * 100) : 0;
+      const occurrenceRate = total > 0 ? Math.round((occurred / total) * 100) : 0;
 
-      // Find best day for this edge
-      const dayWins: Record<string, number> = {};
-      edge.logs.filter(l => l.result === "WIN").forEach(log => {
-        dayWins[log.dayOfWeek] = (dayWins[log.dayOfWeek] || 0) + 1;
+      // Find best day for this edge (most occurrences)
+      const dayOccurrences: Record<string, number> = {};
+      edge.logs.filter(l => l.result === "OCCURRED").forEach(log => {
+        dayOccurrences[log.dayOfWeek] = (dayOccurrences[log.dayOfWeek] || 0) + 1;
       });
-      const bestDay = Object.keys(dayWins).length > 0
-        ? Object.keys(dayWins).reduce((a, b) => dayWins[a] > dayWins[b] ? a : b)
+      const bestDay = Object.keys(dayOccurrences).length > 0
+        ? Object.keys(dayOccurrences).reduce((a, b) => dayOccurrences[a] > dayOccurrences[b] ? a : b)
         : null;
 
-      return { edge, winRate, totalTrades: total, bestDay };
+      return { edge, occurrenceRate, totalLogs: total, bestDay };
     });
   }, [edgesWithLogs]);
 
@@ -76,7 +79,7 @@ export function EdgeGrid({ edgesWithLogs, onAddLog }: EdgeGridProps) {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {edgeData.map(({ edge, winRate, totalTrades, bestDay }) => (
+        {edgeData.map(({ edge, occurrenceRate, totalLogs, bestDay }) => (
           <Card key={edge.id} className="bg-zinc-950 border-zinc-800 hover:border-zinc-700 transition-colors">
             <CardContent className="p-4">
               <div className="flex items-start justify-between mb-3">
@@ -88,27 +91,20 @@ export function EdgeGrid({ edgesWithLogs, onAddLog }: EdgeGridProps) {
                     </p>
                   )}
                 </div>
-                <Link href={`/edge/${edge.id}`}>
-                  <Button variant="ghost" size="sm" className="text-zinc-500 hover:text-white p-1 h-auto">
-                    <ChevronRight className="w-4 h-4" />
-                  </Button>
-                </Link>
               </div>
 
-              {/* Win rate bar */}
+              {/* Occurrence rate bar */}
               <div className="mb-3">
                 <div className="flex items-center justify-between text-xs mb-1">
-                  <span className="text-zinc-500">Win Rate</span>
-                  <span className={`font-medium ${winRate >= 50 ? "text-green-500" : "text-red-500"}`}>
-                    {winRate}%
+                  <span className="text-zinc-500">Occurrence Rate</span>
+                  <span className="font-medium text-zinc-300">
+                    {occurrenceRate}%
                   </span>
                 </div>
                 <div className="h-2 bg-zinc-900 rounded-full overflow-hidden">
                   <div
-                    className={`h-full transition-all duration-500 ${
-                      winRate >= 60 ? "bg-green-500" : winRate >= 50 ? "bg-green-600" : "bg-red-500"
-                    }`}
-                    style={{ width: `${winRate}%` }}
+                    className="h-full transition-all duration-500 bg-emerald-600"
+                    style={{ width: `${occurrenceRate}%` }}
                   />
                 </div>
               </div>
@@ -116,11 +112,11 @@ export function EdgeGrid({ edgesWithLogs, onAddLog }: EdgeGridProps) {
               {/* Stats row */}
               <div className="flex items-center justify-between text-xs mb-4">
                 <span className="text-zinc-500">
-                  {totalTrades} trade{totalTrades !== 1 ? "s" : ""}
+                  {totalLogs} day{totalLogs !== 1 ? "s" : ""} logged
                 </span>
                 {bestDay && (
                   <span className="text-zinc-500">
-                    Best: <span className="text-zinc-400">{bestDay.slice(0, 3)}</span>
+                    Most active: <span className="text-zinc-400">{bestDay.slice(0, 3)}</span>
                   </span>
                 )}
               </div>
@@ -137,11 +133,11 @@ export function EdgeGrid({ edgesWithLogs, onAddLog }: EdgeGridProps) {
                     </Button>
                   }
                 />
-                <Link href={`/edge/${edge.id}`} className="flex-1">
-                  <Button size="sm" variant="outline" className="w-full border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-900">
-                    View
-                  </Button>
-                </Link>
+                <HistorySheet
+                  edge={edge}
+                  onDeleteLog={onDeleteLog}
+                  onUpdateLog={onUpdateLog}
+                />
               </div>
             </CardContent>
           </Card>

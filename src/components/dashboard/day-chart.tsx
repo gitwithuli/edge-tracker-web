@@ -13,32 +13,31 @@ interface DayChartProps {
 interface DayStats {
   day: string;
   shortDay: string;
-  wins: number;
+  occurrences: number;
   total: number;
-  winRate: number;
+  occurrenceRate: number;
 }
 
 export function DayChart({ logs }: DayChartProps) {
   const dayStats = useMemo(() => {
     const stats: DayStats[] = TRADING_DAYS.map(day => {
       const dayLogs = logs.filter(l => l.dayOfWeek === day);
-      const wins = dayLogs.filter(l => l.result === "WIN").length;
+      const occurrences = dayLogs.filter(l => l.result === "OCCURRED").length;
       const total = dayLogs.length;
       return {
         day,
         shortDay: day.slice(0, 3),
-        wins,
+        occurrences,
         total,
-        winRate: total > 0 ? Math.round((wins / total) * 100) : 0,
+        occurrenceRate: total > 0 ? Math.round((occurrences / total) * 100) : 0,
       };
     });
 
-    // Find best and worst days for highlighting
+    // Find best day for highlighting
     const validStats = stats.filter(s => s.total > 0);
-    const maxRate = Math.max(...validStats.map(s => s.winRate), 0);
-    const minRate = Math.min(...validStats.map(s => s.winRate), 100);
+    const maxRate = Math.max(...validStats.map(s => s.occurrenceRate), 0);
 
-    return { stats, maxRate, minRate };
+    return { stats, maxRate };
   }, [logs]);
 
   const hasData = dayStats.stats.some(s => s.total > 0);
@@ -48,19 +47,18 @@ export function DayChart({ logs }: DayChartProps) {
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium text-zinc-400 flex items-center gap-2">
           <BarChart3 className="w-4 h-4" />
-          WIN RATE BY DAY
+          OCCURRENCE BY DAY
         </CardTitle>
       </CardHeader>
       <CardContent>
         {!hasData ? (
           <p className="text-zinc-600 text-sm italic py-4">
-            No trades logged yet. Start tracking to see patterns.
+            No days logged yet. Start tracking to see patterns.
           </p>
         ) : (
           <div className="space-y-3">
-            {dayStats.stats.map(({ day, shortDay, wins, total, winRate }) => {
-              const isBest = total > 0 && winRate === dayStats.maxRate && winRate > 0;
-              const isWorst = total > 0 && winRate === dayStats.minRate && winRate < dayStats.maxRate;
+            {dayStats.stats.map(({ day, shortDay, occurrences, total, occurrenceRate }) => {
+              const isBest = total > 0 && occurrenceRate === dayStats.maxRate && occurrenceRate > 0;
 
               return (
                 <div key={day} className="flex items-center gap-3">
@@ -71,24 +69,17 @@ export function DayChart({ logs }: DayChartProps) {
                     {total > 0 && (
                       <div
                         className={`h-full transition-all duration-500 ${
-                          winRate >= 60
-                            ? "bg-green-600"
-                            : winRate >= 50
-                            ? "bg-green-700"
-                            : winRate >= 40
-                            ? "bg-yellow-600"
-                            : "bg-red-600"
+                          isBest ? "bg-emerald-500" : "bg-emerald-700"
                         }`}
-                        style={{ width: `${winRate}%` }}
+                        style={{ width: `${occurrenceRate}%` }}
                       />
                     )}
                     <span className="absolute inset-0 flex items-center px-2 text-xs font-medium text-white">
-                      {total > 0 ? `${winRate}% (${wins}/${total})` : "—"}
+                      {total > 0 ? `${occurrenceRate}% (${occurrences}/${total})` : "—"}
                     </span>
                   </div>
-                  <span className="w-24 text-xs text-zinc-600 text-right">
-                    {isBest && "Your best day"}
-                    {isWorst && winRate < 50 && "Consider skip"}
+                  <span className="w-20 text-xs text-zinc-600 text-right">
+                    {isBest && "Most active"}
                   </span>
                 </div>
               );

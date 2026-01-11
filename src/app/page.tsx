@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { useEdgeStore } from "@/hooks/use-edge-store";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { TrendingUp, ChevronRight, BarChart3, Target, ShieldCheck } from "lucide-react";
+import { ArrowRight, Calendar, BarChart2, Eye } from "lucide-react";
 
 export default function LandingPage() {
   const { user, isLoaded } = useEdgeStore();
@@ -20,72 +20,115 @@ export default function LandingPage() {
   if (!isLoaded) return null;
 
   return (
-    <div className="min-h-screen bg-[#000000] text-white selection:bg-zinc-800 font-sans relative overflow-hidden">
-      {/* Background Decor */}
-      <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_0%,rgba(24,24,27,1)_0%,rgba(0,0,0,1)_100%)] pointer-events-none" />
-      <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-zinc-800 to-transparent" />
-
-      <nav className="relative z-10 max-w-7xl mx-auto px-6 py-8 flex justify-between items-center border-b border-zinc-900/50">
-        <div className="text-xl font-bold tracking-tighter flex items-center gap-2">
-           <TrendingUp className="w-6 h-6 text-white" /> EdgeTracker <span className="text-zinc-500">V2</span>
+    <div className="min-h-screen bg-[#FAFAF9] text-[#1C1917] selection:bg-stone-200 font-sans">
+      {/* Navigation */}
+      <nav className="max-w-5xl mx-auto px-6 py-8 flex justify-between items-center">
+        <div className="text-lg font-medium tracking-tight">
+          EdgeTracker
         </div>
-        <div className="flex gap-4">
+        <div className="flex gap-3">
           <Link href="/login">
-            <Button variant="ghost" className="text-zinc-400 hover:text-white hover:bg-zinc-900 transition-colors">
-              Login
+            <Button variant="ghost" className="text-stone-500 hover:text-stone-900 hover:bg-stone-100">
+              Sign in
             </Button>
           </Link>
           <Link href="/login">
-            <Button className="bg-white text-black hover:bg-zinc-200 hover:text-black font-bold px-6 shadow-[0_0_20px_rgba(255,255,255,0.1)]">
+            <Button className="bg-[#1C1917] text-white hover:bg-[#292524] rounded-full px-6">
               Get Started
             </Button>
           </Link>
         </div>
       </nav>
 
-      <main className="relative z-10 max-w-6xl mx-auto px-6 pt-32 pb-48 text-center">
-        <div className="space-y-12">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900/50 border border-zinc-800 text-zinc-500 text-[10px] font-bold uppercase tracking-widest animate-fade-in">
-             <span className="flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
-             The Standard for ICT Traders
-          </div>
-          
-          <h1 className="text-7xl md:text-[120px] font-extrabold tracking-tighter leading-[0.9] bg-gradient-to-b from-white via-white to-zinc-700 bg-clip-text text-transparent pb-4">
-            Track Your Edge <br/> With Surgical Precision.
-          </h1>
-          
-          <p className="text-lg md:text-xl text-zinc-400 max-w-2xl mx-auto leading-relaxed">
-            A dynamic journaling system built specifically for SMC enthusiasts. Track RTH Gaps, Silver Bullets, and FVG models across Backtesting and Forward Testing.
+      {/* Hero */}
+      <main className="max-w-5xl mx-auto px-6 pt-24 pb-32">
+        <div className="max-w-3xl">
+          <p className="text-stone-400 text-sm font-medium tracking-wide uppercase mb-6">
+            Trading Journal
           </p>
-          
-          <div className="flex justify-center pt-8">
-            <Link href="/login">
-              <Button size="lg" className="px-12 py-8 text-lg bg-white text-black hover:bg-zinc-200 hover:text-black rounded-2xl transition-all font-bold hover:scale-[1.02] active:scale-95 shadow-2xl">
-                Start Your Journal <ChevronRight className="ml-2 w-5 h-5" />
-              </Button>
-            </Link>
+
+          <h1 className="text-5xl md:text-6xl font-semibold tracking-tight leading-[1.1] text-[#1C1917] mb-8">
+            Know when your
+            <br />
+            edge appears.
+          </h1>
+
+          <p className="text-xl text-stone-500 leading-relaxed mb-12 max-w-xl">
+            Track the occurrence of your trading setups. Understand which days
+            your edge shows up, and which days to step aside.
+          </p>
+
+          <Link href="/login">
+            <Button size="lg" className="bg-[#1C1917] text-white hover:bg-[#292524] rounded-full px-8 py-6 text-base font-medium group">
+              Start tracking
+              <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </Button>
+          </Link>
+        </div>
+
+        {/* Feature Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-32">
+          <div className="p-8 rounded-2xl bg-white border border-stone-200 hover:border-stone-300 transition-colors">
+            <div className="w-10 h-10 rounded-full bg-stone-100 flex items-center justify-center mb-6">
+              <Calendar className="w-5 h-5 text-stone-600" />
+            </div>
+            <h3 className="text-lg font-medium mb-3">Daily Occurrence</h3>
+            <p className="text-stone-500 text-sm leading-relaxed">
+              Log whether your setup appeared today. Track days with no setup to see the full picture.
+            </p>
+          </div>
+
+          <div className="p-8 rounded-2xl bg-white border border-stone-200 hover:border-stone-300 transition-colors">
+            <div className="w-10 h-10 rounded-full bg-stone-100 flex items-center justify-center mb-6">
+              <BarChart2 className="w-5 h-5 text-stone-600" />
+            </div>
+            <h3 className="text-lg font-medium mb-3">Frequency Patterns</h3>
+            <p className="text-stone-500 text-sm leading-relaxed">
+              See which weekdays your edge appears most. Find your highest probability windows.
+            </p>
+          </div>
+
+          <div className="p-8 rounded-2xl bg-white border border-stone-200 hover:border-stone-300 transition-colors">
+            <div className="w-10 h-10 rounded-full bg-stone-100 flex items-center justify-center mb-6">
+              <Eye className="w-5 h-5 text-stone-600" />
+            </div>
+            <h3 className="text-lg font-medium mb-3">Visual Snapshots</h3>
+            <p className="text-stone-500 text-sm leading-relaxed">
+              Attach TradingView charts to your logs. Review setups at a glance without clicking through.
+            </p>
           </div>
         </div>
 
-        {/* Feature Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-40">
-           <div className="p-8 rounded-3xl bg-zinc-950 border border-zinc-900 hover:border-zinc-800 transition-colors text-left group">
-              <Target className="w-8 h-8 mb-4 text-zinc-500 group-hover:text-white transition-colors" />
-              <h3 className="text-lg font-bold mb-2">Model Specific</h3>
-              <p className="text-zinc-500 text-sm leading-relaxed">Dedicated tracking for ICT models including Silver Bullets and RTH Gaps.</p>
-           </div>
-           <div className="p-8 rounded-3xl bg-zinc-950 border border-zinc-900 hover:border-zinc-800 transition-colors text-left group">
-              <BarChart3 className="w-8 h-8 mb-4 text-zinc-500 group-hover:text-white transition-colors" />
-              <h3 className="text-lg font-bold mb-2">Dual Performance</h3>
-              <p className="text-zinc-500 text-sm leading-relaxed">Compare your Backtest data against live Forward Testing results instantly.</p>
-           </div>
-           <div className="p-8 rounded-3xl bg-zinc-950 border border-zinc-900 hover:border-zinc-800 transition-colors text-left group">
-              <ShieldCheck className="w-8 h-8 mb-4 text-zinc-500 group-hover:text-white transition-colors" />
-              <h3 className="text-lg font-bold mb-2">Clean Metrics</h3>
-              <p className="text-zinc-500 text-sm leading-relaxed">Filter logs by day, duration, or result to find your highest probability setups.</p>
-           </div>
+        {/* Simple Stats Preview */}
+        <div className="mt-32 p-12 rounded-3xl bg-white border border-stone-200">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+            <div>
+              <p className="text-4xl font-semibold text-[#1C1917]">72%</p>
+              <p className="text-sm text-stone-400 mt-2">Occurrence rate</p>
+            </div>
+            <div>
+              <p className="text-4xl font-semibold text-[#1C1917]">Tue</p>
+              <p className="text-sm text-stone-400 mt-2">Most active day</p>
+            </div>
+            <div>
+              <p className="text-4xl font-semibold text-[#1C1917]">3.2</p>
+              <p className="text-sm text-stone-400 mt-2">Setups per week</p>
+            </div>
+            <div>
+              <p className="text-4xl font-semibold text-[#1C1917]">24</p>
+              <p className="text-sm text-stone-400 mt-2">Days tracked</p>
+            </div>
+          </div>
         </div>
       </main>
+
+      {/* Footer */}
+      <footer className="border-t border-stone-200 py-8">
+        <div className="max-w-5xl mx-auto px-6 flex justify-between items-center text-sm text-stone-400">
+          <span>EdgeTracker</span>
+          <span>Built for ICT traders</span>
+        </div>
+      </footer>
     </div>
   );
 }
