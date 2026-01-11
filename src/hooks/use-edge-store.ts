@@ -78,6 +78,7 @@ function mapDbToLog(row: Record<string, unknown>): TradeLog {
     id: row.id as string,
     edgeId: row.edge_id as string,
     result: row.result as TradeLog['result'],
+    logType: (row.log_type as TradeLog['logType']) || 'FRONTTEST',
     dayOfWeek: row.day_of_week as TradeLog['dayOfWeek'],
     durationMinutes: row.duration_minutes as number,
     note: (row.note as string) || '',
@@ -322,12 +323,18 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
     set({ loadingStates: { ...get().loadingStates, addingLog: true }, error: null });
 
     const tempId = `temp-${Date.now()}`;
-    const today = new Date().toISOString().split('T')[0];
+    const logDate = logData.date || new Date().toISOString().split('T')[0];
+    const logType = logData.logType || 'FRONTTEST';
     const optimisticLog: TradeLog = {
       id: tempId,
       edgeId,
-      date: today,
-      ...logData,
+      date: logDate,
+      logType,
+      result: logData.result,
+      dayOfWeek: logData.dayOfWeek,
+      durationMinutes: logData.durationMinutes,
+      note: logData.note || '',
+      tvLink: logData.tvLink,
     };
 
     set({ logs: [optimisticLog, ...logs] });
@@ -338,11 +345,12 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
         user_id: user.id,
         edge_id: edgeId,
         result: logData.result,
+        log_type: logType,
         day_of_week: logData.dayOfWeek,
         duration_minutes: logData.durationMinutes,
         note: logData.note || '',
         tv_link: logData.tvLink || null,
-        date: today,
+        date: logDate,
       }])
       .select()
       .single();
@@ -405,17 +413,24 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
       return;
     }
 
-    const updatedLog: TradeLog = { ...originalLog, ...logData };
+    const updatedLog: TradeLog = {
+      ...originalLog,
+      ...logData,
+      logType: logData.logType || originalLog.logType,
+      date: logData.date || originalLog.date,
+    };
     set({ logs: logs.map(l => l.id === logId ? updatedLog : l) });
 
     const { error } = await supabase
       .from('logs')
       .update({
         result: logData.result,
+        log_type: logData.logType || originalLog.logType,
         day_of_week: logData.dayOfWeek,
         duration_minutes: logData.durationMinutes,
         note: logData.note || '',
         tv_link: logData.tvLink || null,
+        date: logData.date || originalLog.date,
       })
       .eq('id', logId);
 
