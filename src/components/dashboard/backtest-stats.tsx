@@ -1,9 +1,15 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import type { TradeLog, EdgeWithLogs } from "@/lib/types";
 import { TRADING_DAYS } from "@/lib/constants";
 import { Calendar, TrendingUp, Clock, Target } from "lucide-react";
+import {
+  DateRangeFilter,
+  filterLogsByDateRange,
+  getDefaultDateRange,
+  type DateRange,
+} from "./date-range-filter";
 
 interface BacktestStatsProps {
   logs: TradeLog[];
@@ -11,20 +17,34 @@ interface BacktestStatsProps {
 }
 
 export function BacktestStats({ logs, edgesWithLogs }: BacktestStatsProps) {
+  const [dateRange, setDateRange] = useState<DateRange>(getDefaultDateRange);
+
+  const filteredLogs = useMemo(
+    () => filterLogsByDateRange(logs, dateRange),
+    [logs, dateRange]
+  );
+
+  const filteredEdgesWithLogs = useMemo(() => {
+    return edgesWithLogs.map((edge) => ({
+      ...edge,
+      logs: filterLogsByDateRange(edge.logs, dateRange),
+    }));
+  }, [edgesWithLogs, dateRange]);
+
   const stats = useMemo(() => {
     const occurrencesByDay: Record<string, { occurred: number; total: number }> = {};
     const occurrencesByEdge: Record<string, { name: string; occurred: number; total: number }> = {};
-    const dateRange = { min: '', max: '' };
+    const computedDateRange = { min: '', max: '' };
 
     TRADING_DAYS.forEach(day => {
       occurrencesByDay[day] = { occurred: 0, total: 0 };
     });
 
-    edgesWithLogs.forEach(edge => {
+    filteredEdgesWithLogs.forEach(edge => {
       occurrencesByEdge[edge.id] = { name: edge.name, occurred: 0, total: 0 };
     });
 
-    logs.forEach(log => {
+    filteredLogs.forEach(log => {
       if (occurrencesByDay[log.dayOfWeek]) {
         occurrencesByDay[log.dayOfWeek].total++;
         if (log.result === 'OCCURRED') {
@@ -40,17 +60,17 @@ export function BacktestStats({ logs, edgesWithLogs }: BacktestStatsProps) {
       }
 
       if (log.date) {
-        if (!dateRange.min || log.date < dateRange.min) dateRange.min = log.date;
-        if (!dateRange.max || log.date > dateRange.max) dateRange.max = log.date;
+        if (!computedDateRange.min || log.date < computedDateRange.min) computedDateRange.min = log.date;
+        if (!computedDateRange.max || log.date > computedDateRange.max) computedDateRange.max = log.date;
       }
     });
 
-    const totalOccurred = logs.filter(l => l.result === 'OCCURRED').length;
-    const totalLogs = logs.length;
+    const totalOccurred = filteredLogs.filter(l => l.result === 'OCCURRED').length;
+    const totalLogs = filteredLogs.length;
     const occurrenceRate = totalLogs > 0 ? Math.round((totalOccurred / totalLogs) * 100) : 0;
 
-    const avgDuration = logs.length > 0
-      ? Math.round(logs.reduce((sum, l) => sum + (l.durationMinutes || 0), 0) / logs.length)
+    const avgDuration = filteredLogs.length > 0
+      ? Math.round(filteredLogs.reduce((sum, l) => sum + (l.durationMinutes || 0), 0) / filteredLogs.length)
       : 0;
 
     const bestDay = Object.entries(occurrencesByDay)
@@ -72,7 +92,7 @@ export function BacktestStats({ logs, edgesWithLogs }: BacktestStatsProps) {
     return {
       occurrencesByDay,
       occurrencesByEdge,
-      dateRange,
+      dateRange: computedDateRange,
       totalOccurred,
       totalLogs,
       occurrenceRate,
@@ -80,7 +100,7 @@ export function BacktestStats({ logs, edgesWithLogs }: BacktestStatsProps) {
       bestDay: bestDay ? { day: bestDay[0], ...bestDay[1] } : null,
       bestEdge: bestEdge ? { id: bestEdge[0], ...bestEdge[1] } : null,
     };
-  }, [logs, edgesWithLogs]);
+  }, [filteredLogs, filteredEdgesWithLogs]);
 
   const formatDateRange = () => {
     if (!stats.dateRange.min || !stats.dateRange.max) return 'No data';
@@ -91,6 +111,16 @@ export function BacktestStats({ logs, edgesWithLogs }: BacktestStatsProps) {
 
   return (
     <div className="space-y-6">
+      {/* Date Range Filter */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <DateRangeFilter value={dateRange} onChange={setDateRange} />
+        {filteredLogs.length !== logs.length && (
+          <span className="text-xs text-[#0F0F0F]/40">
+            Showing {filteredLogs.length} of {logs.length} entries
+          </span>
+        )}
+      </div>
+
       {/* Summary Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="bg-white/50 border border-[#0F0F0F]/5 rounded-2xl p-4">
