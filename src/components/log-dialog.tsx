@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { memo, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -8,16 +8,16 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Link as LinkIcon } from "lucide-react"; // Renamed Link to avoid confusion
-import { ResultType } from "@/lib/types";
+import { ResultType, TradeLog, TradeLogInput } from "@/lib/types";
 
 interface LogDialogProps {
   edgeName?: string;
-  initialData?: any;
+  initialData?: TradeLog;
   trigger?: React.ReactNode;
-  onSave: (data: any) => void;
+  onSave: (data: TradeLogInput) => void;
 }
 
-export function LogDialog({ edgeName, initialData, trigger, onSave }: LogDialogProps) {
+export const LogDialog = memo(function LogDialog({ edgeName, initialData, trigger, onSave }: LogDialogProps) {
   const [open, setOpen] = useState(false);
 
   // Initialize state including tvLink
@@ -145,4 +145,4 @@ export function LogDialog({ edgeName, initialData, trigger, onSave }: LogDialogP
       </DialogContent>
     </Dialog>
   );
-}
+});

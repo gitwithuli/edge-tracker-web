@@ -16,3 +16,11 @@ export interface Edge {
   description: string;
   logs: TradeLog[];
 }
+
+export interface TradeLogInput {
+  result: ResultType;
+  note: string;
+  dayOfWeek: string;
+  durationMinutes: number;
+  tvLink?: string;
+}

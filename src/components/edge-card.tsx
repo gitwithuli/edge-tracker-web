@@ -1,40 +1,43 @@
 "use client";
 
+import { memo, useMemo } from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Trophy, Clock, CalendarCheck, Plus } from "lucide-react";
-import { Edge } from "@/lib/types";
+import { Edge, TradeLogInput } from "@/lib/types";
 import { LogDialog } from "./log-dialog";
 import { HistorySheet } from "./history-sheet";
 
 interface EdgeCardProps {
   edge: Edge;
-  onAddLog: (data: any) => void;
-  // Note: These will be connected in the next SaaS migration step
+  onAddLog: (data: TradeLogInput) => void;
   onDeleteLog?: (id: string | number) => void;
-  onUpdateLog?: (id: string, data: any) => void;
+  onUpdateLog?: (id: string, data: TradeLogInput) => void;
 }
 
-export function EdgeCard({ edge, onAddLog, onDeleteLog, onUpdateLog }: EdgeCardProps) {
-  // --- Stats Logic ---
-  const totalTrades = edge.logs.length;
-  const wins = edge.logs.filter((l) => l.result === "WIN").length;
-  const winRate = totalTrades > 0 ? Math.round((wins / totalTrades) * 100) : 0;
-  
-  const totalDuration = edge.logs.reduce((acc, log) => acc + log.durationMinutes, 0);
-  const avgDuration = totalTrades > 0 ? Math.round(totalDuration / totalTrades) : 0;
-  
-  const dayCounts: Record<string, number> = {};
-  edge.logs.filter(l => l.result === "WIN").forEach(l => {
-    dayCounts[l.dayOfWeek] = (dayCounts[l.dayOfWeek] || 0) + 1;
-  });
-  
-  const bestDay = Object.keys(dayCounts).reduce((a, b) => 
-    dayCounts[a] > dayCounts[b] ? a : b, "N/A"
-  );
-  
-  const recentLogs = edge.logs.slice(0, 2);
+export const EdgeCard = memo(function EdgeCard({ edge, onAddLog, onDeleteLog, onUpdateLog }: EdgeCardProps) {
+  const stats = useMemo(() => {
+    const totalTrades = edge.logs.length;
+    const wins = edge.logs.filter((l) => l.result === "WIN").length;
+    const winRate = totalTrades > 0 ? Math.round((wins / totalTrades) * 100) : 0;
+
+    const totalDuration = edge.logs.reduce((acc, log) => acc + log.durationMinutes, 0);
+    const avgDuration = totalTrades > 0 ? Math.round(totalDuration / totalTrades) : 0;
+
+    const dayCounts: Record<string, number> = {};
+    edge.logs.filter(l => l.result === "WIN").forEach(l => {
+      dayCounts[l.dayOfWeek] = (dayCounts[l.dayOfWeek] || 0) + 1;
+    });
+
+    const bestDay = Object.keys(dayCounts).length > 0
+      ? Object.keys(dayCounts).reduce((a, b) => dayCounts[a] > dayCounts[b] ? a : b)
+      : "N/A";
+
+    return { totalTrades, wins, winRate, avgDuration, bestDay };
+  }, [edge.logs]);
+
+  const recentLogs = useMemo(() => edge.logs.slice(0, 2), [edge.logs]);
 
   return (
     <Card className="bg-zinc-950 border-zinc-800 text-zinc-100 flex flex-col h-full shadow-lg">
@@ -46,38 +49,36 @@ export function EdgeCard({ edge, onAddLog, onDeleteLog, onUpdateLog }: EdgeCardP
               {edge.description}
             </p>
           </div>
-          <Badge 
-            variant={winRate >= 50 ? "default" : "destructive"} 
-            className={`${winRate >= 50 ? "bg-green-600 hover:bg-green-500" : "bg-red-600 hover:bg-red-500"} transition-colors`}
+          <Badge
+            variant={stats.winRate >= 50 ? "default" : "destructive"}
+            className={`${stats.winRate >= 50 ? "bg-green-600 hover:bg-green-500" : "bg-red-600 hover:bg-red-500"} transition-colors`}
           >
-            {winRate}% WR
+            {stats.winRate}% WR
           </Badge>
         </div>
       </CardHeader>
 
       <CardContent className="flex-grow">
-        {/* Stats Grid */}
         <div className="grid grid-cols-3 gap-2 mb-6">
           <div className="bg-zinc-900/50 p-3 rounded-lg text-center border border-zinc-800/50">
             <Trophy className="w-4 h-4 mx-auto mb-1 text-zinc-500" />
-            <div className="text-lg font-bold">{totalTrades}</div>
+            <div className="text-lg font-bold">{stats.totalTrades}</div>
             <div className="text-[10px] text-zinc-600 uppercase font-semibold">Trades</div>
           </div>
           <div className="bg-zinc-900/50 p-3 rounded-lg text-center border border-zinc-800/50">
             <Clock className="w-4 h-4 mx-auto mb-1 text-zinc-500" />
-            <div className="text-lg font-bold">{avgDuration}m</div>
+            <div className="text-lg font-bold">{stats.avgDuration}m</div>
             <div className="text-[10px] text-zinc-600 uppercase font-semibold">Avg Time</div>
           </div>
           <div className="bg-zinc-900/50 p-3 rounded-lg text-center border border-zinc-800/50">
             <CalendarCheck className="w-4 h-4 mx-auto mb-1 text-zinc-500" />
             <div className="text-sm font-bold pt-1 uppercase tracking-wider">
-              {bestDay.slice(0, 3)}
+              {stats.bestDay.slice(0, 3)}
             </div>
             <div className="text-[10px] text-zinc-600 uppercase font-semibold">Best Day</div>
           </div>
         </div>
 
-        {/* Recent Activity Mini-Feed */}
         <div className="space-y-2">
           <p className="text-[10px] text-zinc-600 uppercase font-bold tracking-widest px-1">Recent Logs</p>
           {recentLogs.length > 0 ? (
@@ -98,26 +99,24 @@ export function EdgeCard({ edge, onAddLog, onDeleteLog, onUpdateLog }: EdgeCardP
       </CardContent>
 
       <CardFooter className="flex flex-col gap-3 pt-4 border-t border-zinc-900/50">
-        {/* CRITICAL FIX: onSave prop now correctly drills down to the dialog */}
-        <LogDialog 
-          edgeName={edge.name} 
-          onSave={onAddLog} 
+        <LogDialog
+          edgeName={edge.name}
+          onSave={onAddLog}
           trigger={
             <Button className="w-full gap-2 bg-white text-black hover:bg-zinc-200 font-bold tracking-tight">
               <Plus className="w-4 h-4" /> Log Trade
             </Button>
-          } 
+          }
         />
-        
-        {/* History Sheet Component */}
+
         {onDeleteLog && onUpdateLog && (
-           <HistorySheet 
-             edge={edge} 
-             onDeleteLog={onDeleteLog} 
-             onUpdateLog={onUpdateLog} 
+           <HistorySheet
+             edge={edge}
+             onDeleteLog={onDeleteLog}
+             onUpdateLog={onUpdateLog}
            />
         )}
       </CardFooter>
     </Card>
   );
-}
+});

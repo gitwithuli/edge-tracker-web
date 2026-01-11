@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { memo, useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import { Edge } from "@/lib/types";
+import { Edge, TradeLogInput } from "@/lib/types";
 import { getTVImageUrl } from "@/lib/utils"; // getTradingViewImageUrl yerine bunu yazın
 import { History, MoreHorizontal, Pencil, Trash2, Maximize2, Minimize2, ExternalLink, ZoomIn } from "lucide-react";
 import { LogDialog } from "./log-dialog";
@@ -16,10 +16,10 @@ import { cn } from "@/lib/utils";
 interface HistorySheetProps {
   edge: Edge;
   onDeleteLog: (id: string | number) => void;
-  onUpdateLog: (id: string, data: any) => void;
+  onUpdateLog: (id: string, data: TradeLogInput) => void;
 }
 
-export function HistorySheet({ edge, onDeleteLog, onUpdateLog }: HistorySheetProps) {
+export const HistorySheet = memo(function HistorySheet({ edge, onDeleteLog, onUpdateLog }: HistorySheetProps) {
   const [isFullScreen, setIsFullScreen] = useState(false);
 
   return (
@@ -91,9 +91,11 @@ export function HistorySheet({ edge, onDeleteLog, onUpdateLog }: HistorySheetPro
                           <Dialog>
                             <DialogTrigger asChild>
                               <div className="cursor-zoom-in relative aspect-video">
-                                <img 
-                                  src={imageUrl} 
-                                  alt="Trade Setup Preview" 
+                                <img
+                                  src={imageUrl}
+                                  alt="Trade Setup Preview"
+                                  loading="lazy"
+                                  decoding="async"
                                   className="w-full h-full object-cover opacity-70 group-hover/image:opacity-100 transition-all duration-500"
                                 />
                                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/image:opacity-100 transition-opacity bg-black/40">
@@ -143,4 +145,4 @@ export function HistorySheet({ edge, onDeleteLog, onUpdateLog }: HistorySheetPro
       </SheetContent>
     </Sheet>
   );
-}
+});
