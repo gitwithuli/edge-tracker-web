@@ -1,26 +1,6 @@
-export type ResultType = "WIN" | "LOSS" | "BE";
+// Re-export types from schemas for backwards compatibility
+export type { TradeLog, TradeLogInput, Edge } from "./schemas";
+export type { ResultType, TradingDay } from "./constants";
 
-export interface TradeLog {
-  id: string | number;
-  date: string;
-  result: ResultType;
-  note: string;
-  dayOfWeek: string;
-  durationMinutes: number;
-  tvLink?: string; // 👈 KRİTİK: TypeScript hatasını çözen satır
-}
-
-export interface Edge {
-  id: string;
-  name: string;
-  description: string;
-  logs: TradeLog[];
-}
-
-export interface TradeLogInput {
-  result: ResultType;
-  note: string;
-  dayOfWeek: string;
-  durationMinutes: number;
-  tvLink?: string;
-}
+// Legacy export - prefer importing from constants directly
+export { RESULT_TYPES as ResultTypes } from "./constants";

@@ -5,7 +5,8 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Trophy, Clock, CalendarCheck, Plus } from "lucide-react";
-import { Edge, TradeLogInput } from "@/lib/types";
+import type { Edge, TradeLogInput } from "@/lib/types";
+import { WIN_RATE_THRESHOLD } from "@/lib/constants";
 import { LogDialog } from "./log-dialog";
 import { HistorySheet } from "./history-sheet";
 
@@ -50,8 +51,8 @@ export const EdgeCard = memo(function EdgeCard({ edge, onAddLog, onDeleteLog, on
             </p>
           </div>
           <Badge
-            variant={stats.winRate >= 50 ? "default" : "destructive"}
-            className={`${stats.winRate >= 50 ? "bg-green-600 hover:bg-green-500" : "bg-red-600 hover:bg-red-500"} transition-colors`}
+            variant={stats.winRate >= WIN_RATE_THRESHOLD ? "default" : "destructive"}
+            className={`${stats.winRate >= WIN_RATE_THRESHOLD ? "bg-green-600 hover:bg-green-500" : "bg-red-600 hover:bg-red-500"} transition-colors`}
           >
             {stats.winRate}% WR
           </Badge>

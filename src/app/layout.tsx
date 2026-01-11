@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/components/auth-provider";
+import { ErrorBoundary } from "@/components/error-boundary";
+import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,7 +17,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "EdgeTracker",
-  description: "Track your trading edges",
+  description: "Track your trading edges with surgical precision",
 };
 
 export default function RootLayout({
@@ -28,7 +30,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <AuthProvider>{children}</AuthProvider>
+        <ErrorBoundary>
+          <AuthProvider>{children}</AuthProvider>
+        </ErrorBoundary>
+        <Toaster position="bottom-right" theme="dark" richColors />
       </body>
     </html>
   );

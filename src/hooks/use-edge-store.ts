@@ -1,7 +1,8 @@
 import { create } from 'zustand';
+import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import type { User } from '@supabase/supabase-js';
-import { Edge, TradeLog, TradeLogInput } from '@/lib/types';
+import type { Edge, TradeLog, TradeLogInput } from '@/lib/types';
 
 interface LoadingStates {
   fetchingEdges: boolean;
@@ -55,25 +56,30 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
   clearError: () => set({ error: null }),
 
   initializeAuth: async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
 
-    if (session?.user) {
-      set({ user: session.user, isLoaded: true });
-      await get().fetchEdges();
-      await get().fetchLogs();
-    } else {
-      set({ isLoaded: true });
-    }
-
-    supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        set({ user: session.user });
+      if (session?.user) {
+        set({ user: session.user, isLoaded: true });
         await get().fetchEdges();
         await get().fetchLogs();
-      } else if (event === 'SIGNED_OUT') {
-        set({ user: null, logs: [], edges: [] });
+      } else {
+        set({ isLoaded: true });
       }
-    });
+
+      supabase.auth.onAuthStateChange(async (event, session) => {
+        if (event === 'SIGNED_IN' && session) {
+          set({ user: session.user });
+          await get().fetchEdges();
+          await get().fetchLogs();
+        } else if (event === 'SIGNED_OUT') {
+          set({ user: null, logs: [], edges: [] });
+        }
+      });
+    } catch (err) {
+      console.error('Auth initialization failed:', err);
+      set({ isLoaded: true });
+    }
   },
 
   fetchEdges: async () => {
@@ -82,10 +88,12 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
     const { data, error } = await supabase.from('edges').select('*');
 
     if (error) {
+      const message = `Failed to fetch edges: ${error.message}`;
       set({
-        error: `Failed to fetch edges: ${error.message}`,
+        error: message,
         loadingStates: { ...get().loadingStates, fetchingEdges: false }
       });
+      toast.error(message);
       return;
     }
 
@@ -104,18 +112,21 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
     const { data, error } = await supabase
       .from('logs')
       .select('*')
-      .eq('user_id', user.id);
+      .eq('user_id', user.id)
+      .order('date', { ascending: false });
 
     if (error) {
+      const message = `Failed to fetch logs: ${error.message}`;
       set({
-        error: `Failed to fetch logs: ${error.message}`,
+        error: message,
         loadingStates: { ...get().loadingStates, fetchingLogs: false }
       });
+      toast.error(message);
       return;
     }
 
     if (data) {
-      const formattedLogs = data.map((log) => ({
+      const formattedLogs: TradeLog[] = data.map((log) => ({
         ...log,
         tvLink: log.tv_link,
       }));
@@ -147,18 +158,20 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
         ...logData,
         edge_id: edgeId,
         user_id: user.id,
-        tv_link: logData.tvLink,
+        tv_link: logData.tvLink || null,
         date: new Date().toISOString()
       }])
       .select()
       .single();
 
     if (error) {
+      const message = `Failed to add log: ${error.message}`;
       set({
         logs: logs.filter(l => l.id !== tempId),
-        error: `Failed to add log: ${error.message}`,
+        error: message,
         loadingStates: { ...get().loadingStates, addingLog: false }
       });
+      toast.error(message);
       return;
     }
 
@@ -168,6 +181,7 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
         logs: get().logs.map(l => l.id === tempId ? newLog : l),
         loadingStates: { ...get().loadingStates, addingLog: false }
       });
+      toast.success('Trade logged successfully');
     }
   },
 
@@ -182,15 +196,18 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
     const { error } = await supabase.from('logs').delete().eq('id', logId);
 
     if (error) {
+      const message = `Failed to delete log: ${error.message}`;
       set({
         logs: deletedLog ? [...logs] : logs,
-        error: `Failed to delete log: ${error.message}`,
+        error: message,
         loadingStates: { ...get().loadingStates, deletingLogId: null }
       });
+      toast.error(message);
       return;
     }
 
     set({ loadingStates: { ...get().loadingStates, deletingLogId: null } });
+    toast.success('Trade log deleted');
   },
 
   updateLog: async (logId, logData) => {
@@ -199,8 +216,14 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
     set({ loadingStates: { ...get().loadingStates, updatingLogId: logId }, error: null });
 
     const originalLog = logs.find(l => l.id === logId);
+    if (!originalLog) {
+      toast.error('Log not found');
+      set({ loadingStates: { ...get().loadingStates, updatingLogId: null } });
+      return;
+    }
+
     const updatedLog: TradeLog = {
-      ...originalLog!,
+      ...originalLog,
       ...logData
     };
 
@@ -208,19 +231,22 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
 
     const { error } = await supabase
       .from('logs')
-      .update({ ...logData, tv_link: logData.tvLink })
+      .update({ ...logData, tv_link: logData.tvLink || null })
       .eq('id', logId);
 
     if (error) {
+      const message = `Failed to update log: ${error.message}`;
       set({
-        logs: originalLog ? logs : get().logs,
-        error: `Failed to update log: ${error.message}`,
+        logs: logs,
+        error: message,
         loadingStates: { ...get().loadingStates, updatingLogId: null }
       });
+      toast.error(message);
       return;
     }
 
     set({ loadingStates: { ...get().loadingStates, updatingLogId: null } });
+    toast.success('Trade log updated');
   },
 
   logout: async () => {
