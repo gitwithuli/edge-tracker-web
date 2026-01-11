@@ -6,7 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Link as LinkIcon, Loader2, Check, X, Calendar, Clock, Rewind, Play } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Plus, Link as LinkIcon, Loader2, Check, X, Calendar as CalendarIcon, Clock, Rewind, Play } from "lucide-react";
+import { format } from "date-fns";
 import type { TradeLog, TradeLogInput, ResultType, TradingDay, LogType } from "@/lib/types";
 import { RESULT_TYPES, TRADING_DAYS, LOG_TYPES, DEFAULT_LOG_VALUES } from "@/lib/constants";
 import { useEdgeStore } from "@/hooks/use-edge-store";
@@ -21,6 +24,7 @@ interface LogDialogProps {
 
 export const LogDialog = memo(function LogDialog({ edgeName, initialData, trigger, defaultLogType, onSave }: LogDialogProps) {
   const [open, setOpen] = useState(false);
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const { loadingStates } = useEdgeStore();
   const isLoading = loadingStates.addingLog || loadingStates.updatingLogId !== null;
 
@@ -31,6 +35,8 @@ export const LogDialog = memo(function LogDialog({ edgeName, initialData, trigge
   const [note, setNote] = useState(initialData?.note || DEFAULT_LOG_VALUES.note);
   const [tvLink, setTvLink] = useState(initialData?.tvLink || DEFAULT_LOG_VALUES.tvLink);
   const [date, setDate] = useState(initialData?.date || new Date().toISOString().split('T')[0]);
+
+  const selectedDate = date ? new Date(date + 'T12:00:00') : undefined;
 
   // Auto-detect day of week when date changes
   useEffect(() => {
@@ -178,15 +184,56 @@ export const LogDialog = memo(function LogDialog({ edgeName, initialData, trigge
           {/* Date Picker */}
           <div className="space-y-2">
             <Label className="text-[#0F0F0F]/40 text-xs uppercase tracking-[0.15em] flex items-center gap-2">
-              <Calendar className="w-3 h-3" /> Date
+              <CalendarIcon className="w-3 h-3" /> Date
             </Label>
-            <Input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              max={logType === "FRONTTEST" ? new Date().toISOString().split('T')[0] : undefined}
-              className="bg-white border-[#0F0F0F]/10 text-[#0F0F0F] rounded-xl h-11 focus:border-[#C45A3B] focus:ring-[#C45A3B]/20"
-            />
+            <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  className={`w-full h-11 px-3 text-sm bg-white border border-[#0F0F0F]/10 rounded-xl hover:border-[#0F0F0F]/20 transition-colors flex items-center gap-2 ${
+                    selectedDate ? "text-[#0F0F0F]" : "text-[#0F0F0F]/40"
+                  }`}
+                >
+                  <CalendarIcon className="w-4 h-4 text-[#0F0F0F]/40" />
+                  {selectedDate ? format(selectedDate, "EEEE, MMMM d, yyyy") : "Select date"}
+                </button>
+              </PopoverTrigger>
+              <PopoverContent
+                className="w-auto p-0 bg-[#FAF7F2] border-[#0F0F0F]/10 rounded-xl shadow-xl"
+                align="start"
+              >
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={(newDate) => {
+                    if (newDate) {
+                      setDate(newDate.toISOString().split('T')[0]);
+                    }
+                    setCalendarOpen(false);
+                  }}
+                  disabled={(dateToCheck) => {
+                    if (logType === "FRONTTEST" && dateToCheck > new Date()) return true;
+                    return false;
+                  }}
+                  initialFocus
+                  className="rounded-xl"
+                  classNames={{
+                    months: "flex flex-col",
+                    month: "space-y-4",
+                    caption_label: "text-sm font-medium text-[#0F0F0F]",
+                    nav: "flex items-center gap-1",
+                    button_previous: "size-7 bg-transparent hover:bg-[#0F0F0F]/5 rounded-full p-0 text-[#0F0F0F]/60 hover:text-[#0F0F0F]",
+                    button_next: "size-7 bg-transparent hover:bg-[#0F0F0F]/5 rounded-full p-0 text-[#0F0F0F]/60 hover:text-[#0F0F0F]",
+                    weekday: "text-[#0F0F0F]/40 text-xs font-medium w-8",
+                    day: "w-8 h-8",
+                    today: "bg-[#C45A3B]/10 text-[#C45A3B] rounded-full",
+                    selected: "bg-[#0F0F0F] text-[#FAF7F2] rounded-full hover:bg-[#0F0F0F]",
+                    outside: "text-[#0F0F0F]/20",
+                    disabled: "text-[#0F0F0F]/20",
+                  }}
+                />
+              </PopoverContent>
+            </Popover>
           </div>
 
           {/* Day Selection */}

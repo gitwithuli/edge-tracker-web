@@ -1,17 +1,32 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
+import { env } from '@/lib/env';
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get('code');
+  const error = requestUrl.searchParams.get('error');
+  const errorDescription = requestUrl.searchParams.get('error_description');
   const origin = requestUrl.origin;
 
-  if (code) {
+  if (error) {
+    const loginUrl = new URL('/login', origin);
+    loginUrl.searchParams.set('error', errorDescription ?? error);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  if (!code) {
+    const loginUrl = new URL('/login', origin);
+    loginUrl.searchParams.set('error', 'Missing authorization code');
+    return NextResponse.redirect(loginUrl);
+  }
+
+  try {
     const cookieStore = await cookies();
     const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      env.NEXT_PUBLIC_SUPABASE_URL,
+      env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       {
         cookies: {
           getAll() {
@@ -26,8 +41,20 @@ export async function GET(request: Request) {
       }
     );
 
-    await supabase.auth.exchangeCodeForSession(code);
-  }
+    const { error: sessionError } = await supabase.auth.exchangeCodeForSession(code);
 
-  return NextResponse.redirect(`${origin}/dashboard`);
+    if (sessionError) {
+      const loginUrl = new URL('/login', origin);
+      loginUrl.searchParams.set('error', 'Authentication failed. Please try again.');
+      return NextResponse.redirect(loginUrl);
+    }
+
+    const redirectTo = requestUrl.searchParams.get('redirect') ?? '/dashboard';
+    const safeRedirect = redirectTo.startsWith('/') ? redirectTo : '/dashboard';
+    return NextResponse.redirect(`${origin}${safeRedirect}`);
+  } catch {
+    const loginUrl = new URL('/login', origin);
+    loginUrl.searchParams.set('error', 'An unexpected error occurred');
+    return NextResponse.redirect(loginUrl);
+  }
 }
