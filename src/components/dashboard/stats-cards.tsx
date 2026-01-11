@@ -1,10 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { Card } from "@/components/ui/card";
-import { Calendar, TrendingUp, BarChart2, Flame } from "lucide-react";
 import type { TradeLog, EdgeWithLogs } from "@/lib/types";
-import { TRADING_DAYS } from "@/lib/constants";
 
 interface StatsCardsProps {
   logs: TradeLog[];
@@ -15,7 +12,7 @@ export function StatsCards({ logs, edgesWithLogs }: StatsCardsProps) {
   const stats = useMemo(() => {
     const now = new Date();
     const startOfWeek = new Date(now);
-    startOfWeek.setDate(now.getDate() - now.getDay() + 1); // Monday
+    startOfWeek.setDate(now.getDate() - now.getDay() + 1);
     startOfWeek.setHours(0, 0, 0, 0);
 
     const weekLogs = logs.filter(log => {
@@ -23,12 +20,10 @@ export function StatsCards({ logs, edgesWithLogs }: StatsCardsProps) {
       return logDate >= startOfWeek;
     });
 
-    // Occurrence stats
     const totalDaysLogged = weekLogs.length;
     const occurrences = weekLogs.filter(l => l.result === "OCCURRED").length;
     const occurrenceRate = totalDaysLogged > 0 ? Math.round((occurrences / totalDaysLogged) * 100) : 0;
 
-    // Calculate previous week for comparison
     const prevWeekStart = new Date(startOfWeek);
     prevWeekStart.setDate(prevWeekStart.getDate() - 7);
     const prevWeekLogs = logs.filter(log => {
@@ -40,7 +35,6 @@ export function StatsCards({ logs, edgesWithLogs }: StatsCardsProps) {
     const prevWeekRate = prevWeekTotal > 0 ? Math.round((prevWeekOccurrences / prevWeekTotal) * 100) : 0;
     const rateDiff = occurrenceRate - prevWeekRate;
 
-    // Best day (most occurrences all time)
     const dayOccurrences: Record<string, number> = {};
     logs.filter(l => l.result === "OCCURRED").forEach(log => {
       dayOccurrences[log.dayOfWeek] = (dayOccurrences[log.dayOfWeek] || 0) + 1;
@@ -49,7 +43,6 @@ export function StatsCards({ logs, edgesWithLogs }: StatsCardsProps) {
       ? Object.keys(dayOccurrences).reduce((a, b) => dayOccurrences[a] > dayOccurrences[b] ? a : b)
       : null;
 
-    // Average setups per week
     const allWeekNumbers = new Set<string>();
     logs.forEach(log => {
       const d = new Date(log.date);
@@ -60,7 +53,6 @@ export function StatsCards({ logs, edgesWithLogs }: StatsCardsProps) {
     const totalOccurrences = logs.filter(l => l.result === "OCCURRED").length;
     const avgPerWeek = (totalOccurrences / totalWeeks).toFixed(1);
 
-    // Hot edge (highest occurrence rate with at least 3 logs)
     const edgeStats = edgesWithLogs.map(edge => {
       const edgeLogs = edge.logs;
       const edgeOccurrences = edgeLogs.filter(l => l.result === "OCCURRED").length;
@@ -87,72 +79,57 @@ export function StatsCards({ logs, edgesWithLogs }: StatsCardsProps) {
     };
   }, [logs, edgesWithLogs]);
 
+  const statItems = [
+    {
+      value: stats.totalDaysLogged.toString(),
+      label: "Days Logged",
+      sublabel: `${stats.occurrences} with setups`,
+      accent: false,
+    },
+    {
+      value: `${stats.occurrenceRate}%`,
+      label: "Occurrence Rate",
+      sublabel: stats.rateDiff !== 0 ? `${stats.rateDiff > 0 ? "+" : ""}${stats.rateDiff}% vs last week` : null,
+      accent: stats.rateDiff > 0,
+    },
+    {
+      value: stats.avgPerWeek,
+      label: "Weekly Average",
+      sublabel: stats.bestDay ? `Best: ${stats.bestDay.slice(0, 3)}` : null,
+      accent: false,
+    },
+    {
+      value: stats.hotEdge?.name || "—",
+      label: "Most Active",
+      sublabel: stats.hotEdge ? `${stats.hotEdge.occurrenceRate}% frequency` : null,
+      accent: false,
+      isText: true,
+    },
+  ];
+
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-      <Card className="bg-zinc-950 border-zinc-800 p-4">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-zinc-900">
-            <Calendar className="w-5 h-5 text-zinc-400" />
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-white">{stats.totalDaysLogged}</p>
-            <p className="text-xs text-zinc-500">days logged</p>
-          </div>
-        </div>
-        <p className="text-xs mt-2 text-zinc-600">
-          {stats.occurrences} with setups
-        </p>
-      </Card>
-
-      <Card className="bg-zinc-950 border-zinc-800 p-4">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-emerald-900/30">
-            <TrendingUp className="w-5 h-5 text-emerald-500" />
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-white">{stats.occurrenceRate}%</p>
-            <p className="text-xs text-zinc-500">occurrence rate</p>
-          </div>
-        </div>
-        {stats.rateDiff !== 0 && (
-          <p className={`text-xs mt-2 ${stats.rateDiff > 0 ? "text-emerald-500" : "text-zinc-500"}`}>
-            {stats.rateDiff > 0 ? "+" : ""}{stats.rateDiff}% vs last week
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+      {statItems.map((item, i) => (
+        <div
+          key={i}
+          className="p-5 sm:p-6 rounded-2xl bg-white border border-[#0F0F0F]/5 hover:border-[#0F0F0F]/10 transition-colors duration-300"
+        >
+          <p
+            className={`${item.isText ? 'text-xl sm:text-2xl truncate' : 'text-3xl sm:text-4xl'} tracking-tight text-[#0F0F0F]`}
+            style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+          >
+            {item.value}
           </p>
-        )}
-      </Card>
-
-      <Card className="bg-zinc-950 border-zinc-800 p-4">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-zinc-900">
-            <BarChart2 className="w-5 h-5 text-zinc-400" />
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-white">{stats.avgPerWeek}</p>
-            <p className="text-xs text-zinc-500">avg/week</p>
-          </div>
-        </div>
-        {stats.bestDay && (
-          <p className="text-xs mt-2 text-zinc-600">
-            Best: {stats.bestDay.slice(0, 3)}
+          <p className="text-xs tracking-wider uppercase text-[#0F0F0F]/40 mt-2">
+            {item.label}
           </p>
-        )}
-      </Card>
-
-      <Card className="bg-zinc-950 border-zinc-800 p-4">
-        <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-orange-900/30">
-            <Flame className="w-5 h-5 text-orange-500" />
-          </div>
-          <div>
-            <p className="text-lg font-bold text-white truncate max-w-[120px]">
-              {stats.hotEdge?.name || "—"}
+          {item.sublabel && (
+            <p className={`text-xs mt-2 ${item.accent ? 'text-[#8B9A7D]' : 'text-[#0F0F0F]/30'}`}>
+              {item.sublabel}
             </p>
-            <p className="text-xs text-zinc-500">
-              {stats.hotEdge ? `${stats.hotEdge.occurrenceRate}% freq` : "most active"}
-            </p>
-          </div>
+          )}
         </div>
-      </Card>
+      ))}
     </div>
   );
 }

@@ -1,8 +1,6 @@
 "use client";
 
 import { useMemo } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart3 } from "lucide-react";
 import type { TradeLog } from "@/lib/types";
 import { TRADING_DAYS } from "@/lib/constants";
 
@@ -33,7 +31,6 @@ export function DayChart({ logs }: DayChartProps) {
       };
     });
 
-    // Find best day for highlighting
     const validStats = stats.filter(s => s.total > 0);
     const maxRate = Math.max(...validStats.map(s => s.occurrenceRate), 0);
 
@@ -43,50 +40,59 @@ export function DayChart({ logs }: DayChartProps) {
   const hasData = dayStats.stats.some(s => s.total > 0);
 
   return (
-    <Card className="bg-zinc-950 border-zinc-800">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium text-zinc-400 flex items-center gap-2">
-          <BarChart3 className="w-4 h-4" />
-          OCCURRENCE BY DAY
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        {!hasData ? (
-          <p className="text-zinc-600 text-sm italic py-4">
-            No days logged yet. Start tracking to see patterns.
-          </p>
-        ) : (
-          <div className="space-y-3">
-            {dayStats.stats.map(({ day, shortDay, occurrences, total, occurrenceRate }) => {
-              const isBest = total > 0 && occurrenceRate === dayStats.maxRate && occurrenceRate > 0;
+    <div className="p-6 sm:p-8 rounded-2xl bg-white border border-[#0F0F0F]/5">
+      <div className="flex items-center gap-4 mb-6">
+        <h3
+          className="text-lg tracking-tight"
+          style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+        >
+          Occurrence by Day
+        </h3>
+        <div className="flex-1 h-px bg-[#0F0F0F]/10" />
+      </div>
 
-              return (
-                <div key={day} className="flex items-center gap-3">
-                  <span className="w-8 text-xs font-medium text-zinc-500">
-                    {shortDay}
-                  </span>
-                  <div className="flex-1 h-6 bg-zinc-900 rounded overflow-hidden relative">
+      {!hasData ? (
+        <p className="text-[#0F0F0F]/40 text-sm py-8 text-center">
+          No days logged yet. Start tracking to see patterns.
+        </p>
+      ) : (
+        <div className="space-y-4">
+          {dayStats.stats.map(({ day, shortDay, occurrences, total, occurrenceRate }) => {
+            const isBest = total > 0 && occurrenceRate === dayStats.maxRate && occurrenceRate > 0;
+
+            return (
+              <div key={day} className="flex items-center gap-4">
+                <span className="w-10 text-xs font-medium text-[#0F0F0F]/50 uppercase tracking-wider">
+                  {shortDay}
+                </span>
+                <div className="flex-1 h-8 bg-[#0F0F0F]/5 rounded-lg overflow-hidden relative">
+                  {total > 0 && (
+                    <div
+                      className={`h-full transition-all duration-700 ease-out rounded-lg ${
+                        isBest ? "bg-[#8B9A7D]" : "bg-[#8B9A7D]/60"
+                      }`}
+                      style={{ width: `${Math.max(occurrenceRate, 2)}%` }}
+                    />
+                  )}
+                  <span className="absolute inset-0 flex items-center px-3 text-xs font-medium text-[#0F0F0F]/70">
+                    {total > 0 ? `${occurrenceRate}%` : "—"}
                     {total > 0 && (
-                      <div
-                        className={`h-full transition-all duration-500 ${
-                          isBest ? "bg-emerald-500" : "bg-emerald-700"
-                        }`}
-                        style={{ width: `${occurrenceRate}%` }}
-                      />
+                      <span className="text-[#0F0F0F]/30 ml-1">
+                        ({occurrences}/{total})
+                      </span>
                     )}
-                    <span className="absolute inset-0 flex items-center px-2 text-xs font-medium text-white">
-                      {total > 0 ? `${occurrenceRate}% (${occurrences}/${total})` : "—"}
-                    </span>
-                  </div>
-                  <span className="w-20 text-xs text-zinc-600 text-right">
-                    {isBest && "Most active"}
                   </span>
                 </div>
-              );
-            })}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+                {isBest && (
+                  <span className="text-xs text-[#C45A3B] font-medium tracking-wider uppercase">
+                    Peak
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }
