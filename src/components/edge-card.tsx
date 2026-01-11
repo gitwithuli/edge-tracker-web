@@ -5,15 +5,15 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Trophy, Clock, CalendarCheck, Plus } from "lucide-react";
-import type { Edge, TradeLogInput } from "@/lib/types";
+import type { EdgeWithLogs, TradeLogInput } from "@/lib/types";
 import { WIN_RATE_THRESHOLD } from "@/lib/constants";
 import { LogDialog } from "./log-dialog";
 import { HistorySheet } from "./history-sheet";
 
 interface EdgeCardProps {
-  edge: Edge;
+  edge: EdgeWithLogs;
   onAddLog: (data: TradeLogInput) => void;
-  onDeleteLog?: (id: string | number) => void;
+  onDeleteLog?: (id: string) => void;
   onUpdateLog?: (id: string, data: TradeLogInput) => void;
 }
 

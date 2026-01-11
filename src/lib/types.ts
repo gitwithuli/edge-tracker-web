@@ -1,5 +1,5 @@
-// Re-export types from schemas for backwards compatibility
-export type { TradeLog, TradeLogInput, Edge } from "./schemas";
+// Re-export types from schemas
+export type { TradeLog, TradeLogInput, Edge, EdgeInput, EdgeWithLogs } from "./schemas";
 export type { ResultType, TradingDay } from "./constants";
 
 // Legacy export - prefer importing from constants directly

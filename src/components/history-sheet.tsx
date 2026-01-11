@@ -8,21 +8,21 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import type { Edge, TradeLogInput } from "@/lib/types";
+import type { EdgeWithLogs, TradeLogInput } from "@/lib/types";
 import { getTVImageUrl } from "@/lib/utils";
 import { History, MoreHorizontal, Pencil, Trash2, Maximize2, Minimize2, ExternalLink, ZoomIn } from "lucide-react";
 import { LogDialog } from "./log-dialog";
 import { cn } from "@/lib/utils";
 
 interface HistorySheetProps {
-  edge: Edge;
-  onDeleteLog: (id: string | number) => void;
+  edge: EdgeWithLogs;
+  onDeleteLog: (id: string) => void;
   onUpdateLog: (id: string, data: TradeLogInput) => void;
 }
 
 export const HistorySheet = memo(function HistorySheet({ edge, onDeleteLog, onUpdateLog }: HistorySheetProps) {
   const [isFullScreen, setIsFullScreen] = useState(false);
-  const [deleteLogId, setDeleteLogId] = useState<string | number | null>(null);
+  const [deleteLogId, setDeleteLogId] = useState<string | null>(null);
 
   const handleDeleteConfirm = () => {
     if (deleteLogId !== null) {
