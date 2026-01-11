@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useState } from "react";
+import { memo, useState, useMemo } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger, DialogTitle } from "@/components/ui/dialog";
 import type { EdgeWithLogs, TradeLogInput } from "@/lib/types";
 import { getTVImageUrl } from "@/lib/utils";
-import { History, MoreHorizontal, Pencil, Trash2, Maximize2, Minimize2, ExternalLink, ZoomIn, Check, X } from "lucide-react";
+import { History, MoreHorizontal, Pencil, Trash2, Maximize2, Minimize2, ExternalLink, ZoomIn, Check, X, Calendar, Play, Rewind } from "lucide-react";
 import { LogDialog } from "./log-dialog";
 import { cn } from "@/lib/utils";
 
@@ -19,9 +19,52 @@ interface HistorySheetProps {
   onUpdateLog: (id: string, data: TradeLogInput) => void;
 }
 
+function formatDate(dateStr: string): string {
+  const date = new Date(dateStr + 'T12:00:00');
+  return date.toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  });
+}
+
+function groupLogsByDate(logs: EdgeWithLogs['logs']) {
+  const sorted = [...logs].sort((a, b) => {
+    const dateA = a.date || '1970-01-01';
+    const dateB = b.date || '1970-01-01';
+    return dateB.localeCompare(dateA);
+  });
+
+  const groups: { date: string; logs: typeof logs }[] = [];
+  let currentDate = '';
+  let currentGroup: typeof logs = [];
+
+  for (const log of sorted) {
+    const logDate = log.date || 'Unknown';
+    if (logDate !== currentDate) {
+      if (currentGroup.length > 0) {
+        groups.push({ date: currentDate, logs: currentGroup });
+      }
+      currentDate = logDate;
+      currentGroup = [log];
+    } else {
+      currentGroup.push(log);
+    }
+  }
+
+  if (currentGroup.length > 0) {
+    groups.push({ date: currentDate, logs: currentGroup });
+  }
+
+  return groups;
+}
+
 export const HistorySheet = memo(function HistorySheet({ edge, onDeleteLog, onUpdateLog }: HistorySheetProps) {
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [deleteLogId, setDeleteLogId] = useState<string | null>(null);
+
+  const groupedLogs = useMemo(() => groupLogsByDate(edge.logs), [edge.logs]);
 
   const handleDeleteConfirm = () => {
     if (deleteLogId !== null) {
@@ -34,141 +77,217 @@ export const HistorySheet = memo(function HistorySheet({ edge, onDeleteLog, onUp
     <>
       <Sheet>
         <SheetTrigger asChild>
-          <Button variant="outline" size="sm" className="flex-1 border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-900">
-            <History className="w-4 h-4 mr-1" /> History
-          </Button>
+          <button className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full text-sm font-medium border border-[#0F0F0F]/10 text-[#0F0F0F]/60 hover:border-[#0F0F0F]/30 hover:text-[#0F0F0F] transition-colors duration-300">
+            <History className="w-4 h-4" /> History
+          </button>
         </SheetTrigger>
 
-        <SheetContent className={cn("bg-zinc-950 border-zinc-800 text-zinc-100 p-0", isFullScreen ? "w-screen max-w-none" : "w-[400px] sm:w-[540px]")}>
-          <SheetHeader className="p-6 border-b border-zinc-800 flex flex-row items-center justify-start gap-4">
-            <Button variant="ghost" size="icon" onClick={() => setIsFullScreen(!isFullScreen)} className="text-zinc-500 hover:text-white transition-colors">
-              {isFullScreen ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
-            </Button>
-            <SheetTitle className="text-zinc-100 text-xl font-bold tracking-tighter">{edge.name}</SheetTitle>
+        <SheetContent
+          side="right"
+          className={cn(
+            "bg-[#FAF7F2] border-[#0F0F0F]/10 text-[#0F0F0F] p-0 flex flex-col",
+            isFullScreen
+              ? "!w-screen !max-w-none"
+              : "w-[400px] sm:w-[540px] sm:!max-w-[540px]"
+          )}
+        >
+          <SheetHeader className="p-6 pb-4 border-b border-[#0F0F0F]/10 flex flex-row items-center justify-between gap-4 shrink-0">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setIsFullScreen(!isFullScreen)}
+                className="w-10 h-10 rounded-full border border-[#0F0F0F]/10 flex items-center justify-center text-[#0F0F0F]/40 hover:text-[#0F0F0F] hover:border-[#0F0F0F]/30 transition-colors"
+              >
+                {isFullScreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+              </button>
+              <SheetTitle
+                className="text-[#0F0F0F] text-xl tracking-tight"
+                style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+              >
+                {edge.name}
+              </SheetTitle>
+            </div>
+            <div className="text-xs text-[#0F0F0F]/40 uppercase tracking-[0.15em]">
+              {edge.logs.length} {edge.logs.length === 1 ? 'entry' : 'entries'}
+            </div>
           </SheetHeader>
 
-          <ScrollArea className="h-[calc(100vh-80px)]">
-            <div className="p-6 space-y-4">
-              {edge.logs.length === 0 ? (
-                <p className="text-center text-zinc-500 py-10 italic">No days logged yet.</p>
+          <ScrollArea className="flex-1">
+            <div className="p-6 space-y-6">
+              {groupedLogs.length === 0 ? (
+                <div className="text-center py-16">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#0F0F0F]/5 flex items-center justify-center">
+                    <History className="w-6 h-6 text-[#0F0F0F]/30" />
+                  </div>
+                  <p className="text-[#0F0F0F]/40 text-sm" style={{ fontFamily: "'Libre Baskerville', Georgia, serif", fontStyle: 'italic' }}>
+                    No days logged yet
+                  </p>
+                </div>
               ) : (
-                edge.logs.map((log) => {
-                  const imageUrl = getTVImageUrl(log.tvLink || "");
-                  const isOccurred = log.result === "OCCURRED";
+                groupedLogs.map((group) => (
+                  <div key={group.date} className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <Calendar className="w-3 h-3 text-[#0F0F0F]/30" />
+                      <span className="text-xs text-[#0F0F0F]/40 uppercase tracking-[0.15em] font-medium">
+                        {group.date === 'Unknown' ? 'Unknown Date' : formatDate(group.date)}
+                      </span>
+                      <div className="flex-1 h-px bg-[#0F0F0F]/10" />
+                    </div>
 
-                  return (
-                    <div key={log.id} className="rounded-lg border border-zinc-800 overflow-hidden bg-zinc-900/30">
-                      {/* Inline Preview - Show prominently at top */}
-                      {imageUrl && (
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <div className="cursor-zoom-in relative group">
-                              <img
-                                src={imageUrl}
-                                alt="Chart snapshot"
-                                loading="lazy"
-                                decoding="async"
-                                className="w-full h-48 object-cover opacity-90 group-hover:opacity-100 transition-opacity"
-                              />
-                              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30">
-                                <div className="bg-zinc-900/90 p-2 rounded-full border border-zinc-700">
-                                  <ZoomIn className="w-4 h-4 text-white" />
+                    <div className={cn(
+                      "space-y-3",
+                      isFullScreen && "grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 space-y-0"
+                    )}>
+                    {group.logs.map((log) => {
+                      const imageUrl = getTVImageUrl(log.tvLink || "");
+                      const isOccurred = log.result === "OCCURRED";
+                      const isBacktest = log.logType === "BACKTEST";
+
+                      return (
+                        <div
+                          key={log.id}
+                          className={cn(
+                            "rounded-2xl border border-[#0F0F0F]/10 overflow-hidden bg-white/50",
+                            isFullScreen && "flex flex-col"
+                          )}
+                        >
+                          {imageUrl && (
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <div className="cursor-zoom-in relative group bg-[#0F0F0F]/5">
+                                  <img
+                                    src={imageUrl}
+                                    alt="Chart snapshot"
+                                    loading="lazy"
+                                    decoding="async"
+                                    className={cn(
+                                      "w-full opacity-90 group-hover:opacity-100 transition-opacity",
+                                      isFullScreen
+                                        ? "h-56 object-contain"
+                                        : "h-48 object-cover"
+                                    )}
+                                  />
+                                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-[#0F0F0F]/20">
+                                    <div className="bg-white/90 p-3 rounded-full shadow-lg">
+                                      <ZoomIn className="w-4 h-4 text-[#0F0F0F]" />
+                                    </div>
+                                  </div>
+                                </div>
+                              </DialogTrigger>
+                              <DialogContent className="max-w-[95vw] max-h-[90vh] p-0 bg-transparent border-none flex items-center justify-center shadow-none" showCloseButton={false}>
+                                <DialogTitle className="sr-only">Chart Image Preview</DialogTitle>
+                                <div className="relative w-full h-full flex flex-col items-center justify-center gap-4">
+                                  <img
+                                    src={imageUrl}
+                                    alt="Full Scale Chart"
+                                    className="max-w-full max-h-[80vh] object-contain rounded-2xl shadow-2xl border border-[#0F0F0F]/10"
+                                  />
+                                  {log.tvLink && (
+                                    <a
+                                      href={log.tvLink}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="bg-[#0F0F0F] text-[#FAF7F2] px-6 py-3 rounded-full text-sm font-medium flex items-center gap-2 hover:bg-[#C45A3B] transition-colors"
+                                    >
+                                      Open in TradingView <ExternalLink className="w-3 h-3" />
+                                    </a>
+                                  )}
+                                </div>
+                              </DialogContent>
+                            </Dialog>
+                          )}
+
+                          <div className="p-4">
+                            <div className="flex justify-between items-start mb-3">
+                              <div className="flex items-center gap-3">
+                                {isOccurred ? (
+                                  <div className="w-10 h-10 rounded-full bg-[#8B9A7D]/20 flex items-center justify-center">
+                                    <Check className="w-4 h-4 text-[#8B9A7D]" />
+                                  </div>
+                                ) : (
+                                  <div className="w-10 h-10 rounded-full bg-[#0F0F0F]/5 flex items-center justify-center">
+                                    <X className="w-4 h-4 text-[#0F0F0F]/30" />
+                                  </div>
+                                )}
+                                <div>
+                                  <p className="text-sm font-medium text-[#0F0F0F]">
+                                    {isOccurred ? "Setup Occurred" : "No Setup"}
+                                  </p>
+                                  <div className="flex items-center gap-2 mt-0.5">
+                                    <span className="text-xs text-[#0F0F0F]/50">
+                                      {log.dayOfWeek}
+                                      {log.durationMinutes > 0 && ` · ${log.durationMinutes}m`}
+                                    </span>
+                                    <span className={cn(
+                                      "inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-medium",
+                                      isBacktest
+                                        ? "bg-[#0F0F0F]/5 text-[#0F0F0F]/50"
+                                        : "bg-[#C45A3B]/10 text-[#C45A3B]"
+                                    )}>
+                                      {isBacktest ? (
+                                        <><Rewind className="w-2.5 h-2.5" /> Backtest</>
+                                      ) : (
+                                        <><Play className="w-2.5 h-2.5" /> Live</>
+                                      )}
+                                    </span>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-[95vw] max-h-[90vh] p-0 bg-transparent border-none flex items-center justify-center shadow-none" showCloseButton={false}>
-                            <DialogTitle className="sr-only">Chart Image Preview</DialogTitle>
-                            <div className="relative w-full h-full flex flex-col items-center justify-center gap-4">
-                              <img
-                                src={imageUrl}
-                                alt="Full Scale Chart"
-                                className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-zinc-800"
-                              />
-                              {log.tvLink && (
-                                <a
-                                  href={log.tvLink}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="bg-white text-black px-6 py-2 rounded-full text-xs font-bold flex items-center gap-2 hover:bg-zinc-200 transition-all"
+
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    className="h-8 w-8 p-0 hover:bg-[#0F0F0F]/5 text-[#0F0F0F]/30 hover:text-[#0F0F0F]"
+                                  >
+                                    <MoreHorizontal className="w-4 h-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent
+                                  align="end"
+                                  className="bg-[#FAF7F2] border-[#0F0F0F]/10 text-[#0F0F0F] rounded-xl shadow-lg"
                                 >
-                                  Open in TradingView <ExternalLink className="w-3 h-3" />
-                                </a>
-                              )}
+                                  <LogDialog
+                                    initialData={log}
+                                    onSave={(newData) => onUpdateLog(String(log.id), newData)}
+                                    trigger={
+                                      <div className="relative flex cursor-pointer items-center rounded-lg px-3 py-2 text-sm hover:bg-[#0F0F0F]/5 w-full font-medium transition-colors">
+                                        <Pencil className="mr-2 h-4 w-4 text-[#0F0F0F]/40" /> Edit
+                                      </div>
+                                    }
+                                  />
+                                  <DropdownMenuItem
+                                    className="text-[#C45A3B] cursor-pointer font-medium hover:bg-[#C45A3B]/10 rounded-lg mx-1"
+                                    onClick={() => setDeleteLogId(log.id)}
+                                  >
+                                    <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             </div>
-                          </DialogContent>
-                        </Dialog>
-                      )}
 
-                      {/* Log Content */}
-                      <div className="p-4">
-                        <div className="flex justify-between items-start mb-3">
-                          <div className="flex items-center gap-2">
-                            {isOccurred ? (
-                              <div className="w-8 h-8 rounded-full bg-emerald-900/50 flex items-center justify-center">
-                                <Check className="w-4 h-4 text-emerald-500" />
-                              </div>
-                            ) : (
-                              <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center">
-                                <X className="w-4 h-4 text-zinc-500" />
-                              </div>
+                            {log.note && (
+                              <p className="text-sm text-[#0F0F0F]/60 leading-relaxed border-l-2 border-[#0F0F0F]/10 pl-3 py-1 mt-2">
+                                {log.note}
+                              </p>
                             )}
-                            <div>
-                              <p className="text-sm font-medium text-white">
-                                {isOccurred ? "Setup Occurred" : "No Setup"}
-                              </p>
-                              <p className="text-xs text-zinc-500">
-                                {log.dayOfWeek} {log.durationMinutes > 0 && `• ${log.durationMinutes}m`}
-                              </p>
-                            </div>
-                          </div>
 
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-zinc-800">
-                                <MoreHorizontal className="w-4 h-4 text-zinc-500" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="bg-zinc-900 border-zinc-800 text-zinc-200">
-                              <LogDialog
-                                initialData={log}
-                                onSave={(newData) => onUpdateLog(String(log.id), newData)}
-                                trigger={
-                                  <div className="relative flex cursor-pointer items-center rounded-sm px-2 py-1.5 text-sm hover:bg-zinc-800 w-full font-medium transition-colors">
-                                    <Pencil className="mr-2 h-4 w-4 text-zinc-400" /> Edit
-                                  </div>
-                                }
-                              />
-                              <DropdownMenuItem
-                                className="text-red-400 cursor-pointer font-medium hover:bg-red-950/30"
-                                onClick={() => setDeleteLogId(log.id)}
+                            {log.tvLink && !imageUrl && (
+                              <a
+                                href={log.tvLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 text-xs text-[#C45A3B] hover:underline mt-2"
                               >
-                                <Trash2 className="mr-2 h-4 w-4" /> Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                                <ExternalLink className="w-3 h-3" /> View on TradingView
+                              </a>
+                            )}
+                          </div>
                         </div>
-
-                        {log.note && (
-                          <p className="text-sm text-zinc-400 leading-relaxed border-l-2 border-zinc-700 pl-3 py-1">
-                            {log.note}
-                          </p>
-                        )}
-
-                        {log.tvLink && !imageUrl && (
-                          <a
-                            href={log.tvLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-white mt-2"
-                          >
-                            <ExternalLink className="w-3 h-3" /> View on TradingView
-                          </a>
-                        )}
-                      </div>
+                      );
+                    })}
                     </div>
-                  );
-                })
+                  </div>
+                ))
               )}
             </div>
           </ScrollArea>
@@ -176,20 +295,25 @@ export const HistorySheet = memo(function HistorySheet({ edge, onDeleteLog, onUp
       </Sheet>
 
       <AlertDialog open={deleteLogId !== null} onOpenChange={(open) => !open && setDeleteLogId(null)}>
-        <AlertDialogContent className="bg-zinc-950 border-zinc-800">
+        <AlertDialogContent className="bg-[#FAF7F2] border-[#0F0F0F]/10 rounded-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-zinc-100">Delete Log</AlertDialogTitle>
-            <AlertDialogDescription className="text-zinc-400">
+            <AlertDialogTitle
+              className="text-[#0F0F0F] text-lg"
+              style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+            >
+              Delete Log
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-[#0F0F0F]/50">
               This will permanently delete this log entry. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="bg-zinc-900 border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white">
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel className="bg-white border-[#0F0F0F]/10 text-[#0F0F0F] hover:bg-[#0F0F0F]/5 rounded-full">
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteConfirm}
-              className="bg-red-600 text-white hover:bg-red-700"
+              className="bg-[#C45A3B] text-white hover:bg-[#C45A3B]/90 rounded-full"
             >
               Delete
             </AlertDialogAction>
