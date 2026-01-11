@@ -66,6 +66,11 @@ export const HistorySheet = memo(function HistorySheet({ edge, onDeleteLog, onUp
 
   const groupedLogs = useMemo(() => groupLogsByDate(edge.logs), [edge.logs]);
 
+  const logsWithImages = useMemo(() =>
+    edge.logs.filter(log => getTVImageUrl(log.tvLink || "")),
+    [edge.logs]
+  );
+
   const handleDeleteConfirm = () => {
     if (deleteLogId !== null) {
       onDeleteLog(deleteLogId);
@@ -133,6 +138,10 @@ export const HistorySheet = memo(function HistorySheet({ edge, onDeleteLog, onUp
                       <div className="flex-1 h-px bg-[#0F0F0F]/10" />
                     </div>
 
+                    <div className={cn(
+                      "space-y-3",
+                      isFullScreen && "grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 space-y-0"
+                    )}>
                     {group.logs.map((log) => {
                       const imageUrl = getTVImageUrl(log.tvLink || "");
                       const isOccurred = log.result === "OCCURRED";
@@ -141,18 +150,26 @@ export const HistorySheet = memo(function HistorySheet({ edge, onDeleteLog, onUp
                       return (
                         <div
                           key={log.id}
-                          className="rounded-2xl border border-[#0F0F0F]/10 overflow-hidden bg-white/50"
+                          className={cn(
+                            "rounded-2xl border border-[#0F0F0F]/10 overflow-hidden bg-white/50",
+                            isFullScreen && "flex flex-col"
+                          )}
                         >
                           {imageUrl && (
                             <Dialog>
                               <DialogTrigger asChild>
-                                <div className="cursor-zoom-in relative group">
+                                <div className="cursor-zoom-in relative group bg-[#0F0F0F]/5">
                                   <img
                                     src={imageUrl}
                                     alt="Chart snapshot"
                                     loading="lazy"
                                     decoding="async"
-                                    className="w-full h-48 object-cover opacity-90 group-hover:opacity-100 transition-opacity"
+                                    className={cn(
+                                      "w-full opacity-90 group-hover:opacity-100 transition-opacity",
+                                      isFullScreen
+                                        ? "h-56 object-contain"
+                                        : "h-48 object-cover"
+                                    )}
                                   />
                                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-[#0F0F0F]/20">
                                     <div className="bg-white/90 p-3 rounded-full shadow-lg">
@@ -272,6 +289,7 @@ export const HistorySheet = memo(function HistorySheet({ edge, onDeleteLog, onUp
                         </div>
                       );
                     })}
+                    </div>
                   </div>
                 ))
               )}
