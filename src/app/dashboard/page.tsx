@@ -8,6 +8,12 @@ import { DayChart } from "@/components/dashboard/day-chart";
 import { EdgeGrid } from "@/components/dashboard/edge-grid";
 import { RecentActivity } from "@/components/dashboard/recent-activity";
 import { BacktestStats } from "@/components/dashboard/backtest-stats";
+import {
+  DateRangeFilter,
+  filterLogsByDateRange,
+  getDefaultDateRange,
+  type DateRange,
+} from "@/components/dashboard/date-range-filter";
 import { LogDialog } from "@/components/log-dialog";
 import Link from "next/link";
 import type { LogType } from "@/lib/types";
@@ -27,23 +33,38 @@ export default function DashboardPage() {
   const { logs, isLoaded, logout, user, addLog, deleteLog, updateLog, getEdgesWithLogs } = useEdgeStore();
   const [mounted, setMounted] = useState(false);
   const [activeView, setActiveView] = useState<LogType>("FRONTTEST");
+  const [liveDateRange, setLiveDateRange] = useState<DateRange>(getDefaultDateRange);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const filteredLogs = useMemo(() => {
+  // Filter by log type first
+  const logsByType = useMemo(() => {
     return logs.filter(log => (log.logType || 'FRONTTEST') === activeView);
   }, [logs, activeView]);
+
+  // Then filter by date range for live view
+  const filteredLogs = useMemo(() => {
+    if (activeView === 'BACKTEST') {
+      return logsByType; // Backtest has its own internal date filter
+    }
+    return filterLogsByDateRange(logsByType, liveDateRange);
+  }, [logsByType, activeView, liveDateRange]);
 
   const edgesWithLogs = getEdgesWithLogs();
 
   const edgesWithFilteredLogs = useMemo(() => {
-    return edgesWithLogs.map(edge => ({
-      ...edge,
-      logs: edge.logs.filter(log => (log.logType || 'FRONTTEST') === activeView)
-    }));
-  }, [edgesWithLogs, activeView]);
+    return edgesWithLogs.map(edge => {
+      const logsByTypeForEdge = edge.logs.filter(log => (log.logType || 'FRONTTEST') === activeView);
+      if (activeView === 'BACKTEST') {
+        return { ...edge, logs: logsByTypeForEdge };
+      }
+      return { ...edge, logs: filterLogsByDateRange(logsByTypeForEdge, liveDateRange) };
+    });
+  }, [edgesWithLogs, activeView, liveDateRange]);
+
+  const totalLogsForType = logsByType.length;
 
   if (!isLoaded || !user) {
     return null;
@@ -180,11 +201,23 @@ export default function DashboardPage() {
             className={`mb-10 sm:mb-12 opacity-0 ${mounted ? 'animate-slide-up' : ''}`}
             style={{ animationDelay: '0.2s' }}
           >
-            <div className="flex items-center gap-4 mb-6">
-              <span className="text-xs tracking-[0.2em] uppercase text-[#0F0F0F]/40">
-                {isBacktest ? 'Backtest Summary' : 'This Week'}
-              </span>
-              <div className="flex-1 h-px bg-[#0F0F0F]/10" />
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
+              <div className="flex items-center gap-4">
+                <span className="text-xs tracking-[0.2em] uppercase text-[#0F0F0F]/40">
+                  {isBacktest ? 'Backtest Summary' : 'Live Summary'}
+                </span>
+                <div className="hidden sm:block flex-1 h-px bg-[#0F0F0F]/10 min-w-[40px]" />
+              </div>
+              {!isBacktest && (
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:ml-auto">
+                  <DateRangeFilter value={liveDateRange} onChange={setLiveDateRange} />
+                  {filteredLogs.length !== totalLogsForType && (
+                    <span className="text-xs text-[#0F0F0F]/40">
+                      {filteredLogs.length} of {totalLogsForType}
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
             <StatsCards logs={filteredLogs} edgesWithLogs={edgesWithFilteredLogs} />
           </section>

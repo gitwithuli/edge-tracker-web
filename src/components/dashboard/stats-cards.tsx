@@ -10,31 +10,26 @@ interface StatsCardsProps {
 
 export function StatsCards({ logs, edgesWithLogs }: StatsCardsProps) {
   const stats = useMemo(() => {
-    const now = new Date();
-    const startOfWeek = new Date(now);
-    startOfWeek.setDate(now.getDate() - now.getDay() + 1);
-    startOfWeek.setHours(0, 0, 0, 0);
-
-    const weekLogs = logs.filter(log => {
-      const logDate = new Date(log.date);
-      return logDate >= startOfWeek;
-    });
-
-    const totalDaysLogged = weekLogs.length;
-    const occurrences = weekLogs.filter(l => l.result === "OCCURRED").length;
+    // Use logs directly - filtering is now done by parent component
+    const totalDaysLogged = logs.length;
+    const occurrences = logs.filter(l => l.result === "OCCURRED").length;
     const occurrenceRate = totalDaysLogged > 0 ? Math.round((occurrences / totalDaysLogged) * 100) : 0;
 
-    const prevWeekStart = new Date(startOfWeek);
-    prevWeekStart.setDate(prevWeekStart.getDate() - 7);
-    const prevWeekLogs = logs.filter(log => {
-      const logDate = new Date(log.date);
-      return logDate >= prevWeekStart && logDate < startOfWeek;
-    });
-    const prevWeekOccurrences = prevWeekLogs.filter(l => l.result === "OCCURRED").length;
-    const prevWeekTotal = prevWeekLogs.length;
-    const prevWeekRate = prevWeekTotal > 0 ? Math.round((prevWeekOccurrences / prevWeekTotal) * 100) : 0;
-    const rateDiff = occurrenceRate - prevWeekRate;
+    // Find date range of current logs for comparison calculation
+    const sortedDates = logs
+      .map(l => l.date)
+      .filter(Boolean)
+      .sort();
 
+    const minDate = sortedDates[0];
+    const maxDate = sortedDates[sortedDates.length - 1];
+
+    // Calculate range duration in days
+    const rangeDays = minDate && maxDate
+      ? Math.ceil((new Date(maxDate).getTime() - new Date(minDate).getTime()) / (1000 * 60 * 60 * 24)) + 1
+      : 7;
+
+    // Best day calculation from filtered logs
     const dayOccurrences: Record<string, number> = {};
     logs.filter(l => l.result === "OCCURRED").forEach(log => {
       dayOccurrences[log.dayOfWeek] = (dayOccurrences[log.dayOfWeek] || 0) + 1;
@@ -43,16 +38,20 @@ export function StatsCards({ logs, edgesWithLogs }: StatsCardsProps) {
       ? Object.keys(dayOccurrences).reduce((a, b) => dayOccurrences[a] > dayOccurrences[b] ? a : b)
       : null;
 
+    // Calculate average per week from filtered data
     const allWeekNumbers = new Set<string>();
     logs.forEach(log => {
-      const d = new Date(log.date);
-      const weekNum = `${d.getFullYear()}-${Math.ceil((d.getDate() + new Date(d.getFullYear(), d.getMonth(), 1).getDay()) / 7)}`;
-      allWeekNumbers.add(weekNum);
+      if (log.date) {
+        const d = new Date(log.date + 'T12:00:00');
+        const weekNum = `${d.getFullYear()}-${Math.ceil((d.getDate() + new Date(d.getFullYear(), d.getMonth(), 1).getDay()) / 7)}`;
+        allWeekNumbers.add(weekNum);
+      }
     });
     const totalWeeks = allWeekNumbers.size || 1;
     const totalOccurrences = logs.filter(l => l.result === "OCCURRED").length;
     const avgPerWeek = (totalOccurrences / totalWeeks).toFixed(1);
 
+    // Hot edge from filtered data
     const edgeStats = edgesWithLogs.map(edge => {
       const edgeLogs = edge.logs;
       const edgeOccurrences = edgeLogs.filter(l => l.result === "OCCURRED").length;
@@ -72,10 +71,10 @@ export function StatsCards({ logs, edgesWithLogs }: StatsCardsProps) {
       totalDaysLogged,
       occurrences,
       occurrenceRate,
-      rateDiff,
       bestDay,
       avgPerWeek,
       hotEdge,
+      rangeDays,
     };
   }, [logs, edgesWithLogs]);
 
@@ -89,8 +88,8 @@ export function StatsCards({ logs, edgesWithLogs }: StatsCardsProps) {
     {
       value: `${stats.occurrenceRate}%`,
       label: "Occurrence Rate",
-      sublabel: stats.rateDiff !== 0 ? `${stats.rateDiff > 0 ? "+" : ""}${stats.rateDiff}% vs last week` : null,
-      accent: stats.rateDiff > 0,
+      sublabel: stats.totalDaysLogged > 0 ? `${stats.rangeDays} day period` : null,
+      accent: stats.occurrenceRate >= 50,
     },
     {
       value: stats.avgPerWeek,
