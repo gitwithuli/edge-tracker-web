@@ -164,7 +164,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, initialData, trigge
                 type="button"
                 className={`h-14 flex flex-col items-center justify-center gap-1 rounded-xl border transition-all duration-300 ${
                   result === "NO_SETUP"
-                    ? "bg-[#0F0F0F]/60 text-white border-[#0F0F0F]/60"
+                    ? "bg-[#C45A3B] text-white border-[#C45A3B]"
                     : "bg-transparent border-[#0F0F0F]/10 text-[#0F0F0F]/50 hover:border-[#0F0F0F]/30"
                 }`}
                 onClick={() => setResult("NO_SETUP")}
