@@ -1,7 +1,14 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Calendar, ChevronDown } from "lucide-react";
+import { Calendar as CalendarIcon } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { format } from "date-fns";
 
 export type DateRangePreset = "week" | "month" | "quarter" | "year" | "all" | "custom";
 
@@ -56,8 +63,19 @@ function getPresetDates(preset: DateRangePreset): { start: string | null; end: s
   }
 }
 
+function parseDate(dateStr: string | null): Date | undefined {
+  if (!dateStr) return undefined;
+  return new Date(dateStr + "T12:00:00");
+}
+
+function formatDateStr(date: Date): string {
+  return date.toISOString().split("T")[0];
+}
+
 export function DateRangeFilter({ value, onChange }: DateRangeFilterProps) {
   const [showCustom, setShowCustom] = useState(value.preset === "custom");
+  const [startOpen, setStartOpen] = useState(false);
+  const [endOpen, setEndOpen] = useState(false);
 
   const handlePresetChange = (preset: DateRangePreset) => {
     if (preset === "custom") {
@@ -70,12 +88,22 @@ export function DateRangeFilter({ value, onChange }: DateRangeFilterProps) {
     }
   };
 
-  const handleCustomDateChange = (field: "start" | "end", dateValue: string) => {
+  const handleStartDateSelect = (date: Date | undefined) => {
     onChange({
       ...value,
-      [field]: dateValue || null,
+      start: date ? formatDateStr(date) : null,
       preset: "custom",
     });
+    setStartOpen(false);
+  };
+
+  const handleEndDateSelect = (date: Date | undefined) => {
+    onChange({
+      ...value,
+      end: date ? formatDateStr(date) : null,
+      preset: "custom",
+    });
+    setEndOpen(false);
   };
 
   const displayRange = useMemo(() => {
@@ -96,6 +124,9 @@ export function DateRangeFilter({ value, onChange }: DateRangeFilterProps) {
     if (value.end) return `Until ${formatDate(value.end)}`;
     return "Select range";
   }, [value]);
+
+  const startDate = parseDate(value.start);
+  const endDate = parseDate(value.end);
 
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
@@ -122,7 +153,7 @@ export function DateRangeFilter({ value, onChange }: DateRangeFilterProps) {
               : "text-[#0F0F0F]/50 hover:text-[#0F0F0F]"
           }`}
         >
-          <Calendar className="w-3 h-3" />
+          <CalendarIcon className="w-3 h-3" />
           Custom
         </button>
       </div>
@@ -130,22 +161,95 @@ export function DateRangeFilter({ value, onChange }: DateRangeFilterProps) {
       {/* Custom date picker */}
       {showCustom && (
         <div className="flex items-center gap-2">
-          <input
-            type="date"
-            value={value.start || ""}
-            onChange={(e) => handleCustomDateChange("start", e.target.value)}
-            max={value.end || new Date().toISOString().split("T")[0]}
-            className="px-3 py-1.5 text-xs bg-white border border-[#0F0F0F]/10 rounded-lg focus:border-[#C45A3B] focus:outline-none focus:ring-1 focus:ring-[#C45A3B]/20"
-          />
+          <Popover open={startOpen} onOpenChange={setStartOpen}>
+            <PopoverTrigger asChild>
+              <button
+                className={`px-3 py-1.5 text-xs bg-white border border-[#0F0F0F]/10 rounded-lg hover:border-[#0F0F0F]/20 transition-colors flex items-center gap-2 ${
+                  startDate ? "text-[#0F0F0F]" : "text-[#0F0F0F]/40"
+                }`}
+              >
+                <CalendarIcon className="w-3 h-3" />
+                {startDate ? format(startDate, "MMM d, yyyy") : "Start date"}
+              </button>
+            </PopoverTrigger>
+            <PopoverContent
+              className="w-auto p-0 bg-[#FAF7F2] border-[#0F0F0F]/10 rounded-xl shadow-xl"
+              align="start"
+            >
+              <Calendar
+                mode="single"
+                selected={startDate}
+                onSelect={handleStartDateSelect}
+                disabled={(date) => {
+                  if (endDate && date > endDate) return true;
+                  if (date > new Date()) return true;
+                  return false;
+                }}
+                initialFocus
+                className="rounded-xl"
+                classNames={{
+                  months: "flex flex-col",
+                  month: "space-y-4",
+                  caption_label: "text-sm font-medium text-[#0F0F0F]",
+                  nav: "flex items-center gap-1",
+                  button_previous: "size-7 bg-transparent hover:bg-[#0F0F0F]/5 rounded-full p-0 text-[#0F0F0F]/60 hover:text-[#0F0F0F]",
+                  button_next: "size-7 bg-transparent hover:bg-[#0F0F0F]/5 rounded-full p-0 text-[#0F0F0F]/60 hover:text-[#0F0F0F]",
+                  weekday: "text-[#0F0F0F]/40 text-xs font-medium w-8",
+                  day: "w-8 h-8",
+                  today: "bg-[#C45A3B]/10 text-[#C45A3B] rounded-full",
+                  selected: "bg-[#0F0F0F] text-[#FAF7F2] rounded-full hover:bg-[#0F0F0F]",
+                  outside: "text-[#0F0F0F]/20",
+                  disabled: "text-[#0F0F0F]/20",
+                }}
+              />
+            </PopoverContent>
+          </Popover>
+
           <span className="text-xs text-[#0F0F0F]/30">to</span>
-          <input
-            type="date"
-            value={value.end || ""}
-            onChange={(e) => handleCustomDateChange("end", e.target.value)}
-            min={value.start || undefined}
-            max={new Date().toISOString().split("T")[0]}
-            className="px-3 py-1.5 text-xs bg-white border border-[#0F0F0F]/10 rounded-lg focus:border-[#C45A3B] focus:outline-none focus:ring-1 focus:ring-[#C45A3B]/20"
-          />
+
+          <Popover open={endOpen} onOpenChange={setEndOpen}>
+            <PopoverTrigger asChild>
+              <button
+                className={`px-3 py-1.5 text-xs bg-white border border-[#0F0F0F]/10 rounded-lg hover:border-[#0F0F0F]/20 transition-colors flex items-center gap-2 ${
+                  endDate ? "text-[#0F0F0F]" : "text-[#0F0F0F]/40"
+                }`}
+              >
+                <CalendarIcon className="w-3 h-3" />
+                {endDate ? format(endDate, "MMM d, yyyy") : "End date"}
+              </button>
+            </PopoverTrigger>
+            <PopoverContent
+              className="w-auto p-0 bg-[#FAF7F2] border-[#0F0F0F]/10 rounded-xl shadow-xl"
+              align="start"
+            >
+              <Calendar
+                mode="single"
+                selected={endDate}
+                onSelect={handleEndDateSelect}
+                disabled={(date) => {
+                  if (startDate && date < startDate) return true;
+                  if (date > new Date()) return true;
+                  return false;
+                }}
+                initialFocus
+                className="rounded-xl"
+                classNames={{
+                  months: "flex flex-col",
+                  month: "space-y-4",
+                  caption_label: "text-sm font-medium text-[#0F0F0F]",
+                  nav: "flex items-center gap-1",
+                  button_previous: "size-7 bg-transparent hover:bg-[#0F0F0F]/5 rounded-full p-0 text-[#0F0F0F]/60 hover:text-[#0F0F0F]",
+                  button_next: "size-7 bg-transparent hover:bg-[#0F0F0F]/5 rounded-full p-0 text-[#0F0F0F]/60 hover:text-[#0F0F0F]",
+                  weekday: "text-[#0F0F0F]/40 text-xs font-medium w-8",
+                  day: "w-8 h-8",
+                  today: "bg-[#C45A3B]/10 text-[#C45A3B] rounded-full",
+                  selected: "bg-[#0F0F0F] text-[#FAF7F2] rounded-full hover:bg-[#0F0F0F]",
+                  outside: "text-[#0F0F0F]/20",
+                  disabled: "text-[#0F0F0F]/20",
+                }}
+              />
+            </PopoverContent>
+          </Popover>
         </div>
       )}
 
