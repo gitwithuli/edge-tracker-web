@@ -13,6 +13,16 @@ interface LoadingStates {
   addingLog: boolean;
   deletingLogId: string | null;
   updatingLogId: string | null;
+  checkingMfa: boolean;
+  enrollingMfa: boolean;
+  verifyingMfa: boolean;
+  challengingMfa: boolean;
+}
+
+interface MfaEnrollResult {
+  qrCode: string;
+  secret: string;
+  factorId: string;
 }
 
 interface EdgeStore {
@@ -22,6 +32,7 @@ interface EdgeStore {
   isLoaded: boolean;
   error: string | null;
   loadingStates: LoadingStates;
+  mfaEnabled: boolean;
 
   // Computed
   getEdgesWithLogs: () => EdgeWithLogs[];
@@ -47,6 +58,12 @@ interface EdgeStore {
   addLog: (edgeId: string, logData: TradeLogInput) => Promise<void>;
   deleteLog: (logId: string) => Promise<void>;
   updateLog: (logId: string, logData: TradeLogInput) => Promise<void>;
+
+  // MFA
+  checkMfaStatus: () => Promise<void>;
+  enrollMfa: () => Promise<MfaEnrollResult | null>;
+  verifyMfa: (factorId: string, code: string) => Promise<boolean>;
+  challengeMfa: (code: string) => Promise<boolean>;
 }
 
 const initialLoadingStates: LoadingStates = {
@@ -58,6 +75,10 @@ const initialLoadingStates: LoadingStates = {
   addingLog: false,
   deletingLogId: null,
   updatingLogId: null,
+  checkingMfa: false,
+  enrollingMfa: false,
+  verifyingMfa: false,
+  challengingMfa: false,
 };
 
 // Map database row to Edge type
@@ -94,6 +115,7 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
   isLoaded: false,
   error: null,
   loadingStates: initialLoadingStates,
+  mfaEnabled: false,
 
   // Computed: Get edges with their logs attached
   getEdgesWithLogs: () => {
@@ -121,6 +143,7 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
         set({ user: session.user, isLoaded: true });
         await get().fetchEdges();
         await get().fetchLogs();
+        await get().checkMfaStatus();
       } else {
         set({ isLoaded: true });
       }
@@ -130,8 +153,9 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
           set({ user: session.user });
           await get().fetchEdges();
           await get().fetchLogs();
+          await get().checkMfaStatus();
         } else if (event === 'SIGNED_OUT') {
-          set({ user: null, logs: [], edges: [] });
+          set({ user: null, logs: [], edges: [], mfaEnabled: false });
         }
       });
     } catch (err) {
@@ -142,7 +166,7 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
 
   logout: async () => {
     await supabase.auth.signOut();
-    set({ user: null, logs: [], edges: [], error: null });
+    set({ user: null, logs: [], edges: [], error: null, mfaEnabled: false });
     window.location.href = '/';
   },
 
@@ -447,5 +471,146 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
 
     set({ loadingStates: { ...get().loadingStates, updatingLogId: null } });
     toast.success('Trade log updated');
+  },
+
+  // === MFA ===
+
+  checkMfaStatus: async () => {
+    set({ loadingStates: { ...get().loadingStates, checkingMfa: true } });
+
+    try {
+      const { data, error } = await supabase.auth.mfa.listFactors();
+
+      if (error) {
+        console.error('Failed to check MFA status:', error.message);
+        set({ loadingStates: { ...get().loadingStates, checkingMfa: false } });
+        return;
+      }
+
+      const hasVerifiedTotp = data.totp.some(factor => factor.status === 'verified');
+      set({
+        mfaEnabled: hasVerifiedTotp,
+        loadingStates: { ...get().loadingStates, checkingMfa: false }
+      });
+    } catch (err) {
+      console.error('MFA status check failed:', err);
+      set({ loadingStates: { ...get().loadingStates, checkingMfa: false } });
+    }
+  },
+
+  enrollMfa: async () => {
+    set({ loadingStates: { ...get().loadingStates, enrollingMfa: true } });
+
+    try {
+      const { data, error } = await supabase.auth.mfa.enroll({
+        factorType: 'totp',
+        friendlyName: 'Authenticator App',
+      });
+
+      if (error) {
+        toast.error(`Failed to start MFA enrollment: ${error.message}`);
+        set({ loadingStates: { ...get().loadingStates, enrollingMfa: false } });
+        return null;
+      }
+
+      set({ loadingStates: { ...get().loadingStates, enrollingMfa: false } });
+
+      return {
+        qrCode: data.totp.qr_code,
+        secret: data.totp.secret,
+        factorId: data.id,
+      };
+    } catch (err) {
+      console.error('MFA enrollment failed:', err);
+      toast.error('Failed to start MFA enrollment');
+      set({ loadingStates: { ...get().loadingStates, enrollingMfa: false } });
+      return null;
+    }
+  },
+
+  verifyMfa: async (factorId: string, code: string) => {
+    set({ loadingStates: { ...get().loadingStates, verifyingMfa: true } });
+
+    try {
+      const { data: challengeData, error: challengeError } =
+        await supabase.auth.mfa.challenge({ factorId });
+
+      if (challengeError) {
+        toast.error(`MFA challenge failed: ${challengeError.message}`);
+        set({ loadingStates: { ...get().loadingStates, verifyingMfa: false } });
+        return false;
+      }
+
+      const { error: verifyError } = await supabase.auth.mfa.verify({
+        factorId,
+        challengeId: challengeData.id,
+        code,
+      });
+
+      if (verifyError) {
+        set({ loadingStates: { ...get().loadingStates, verifyingMfa: false } });
+        return false;
+      }
+
+      set({
+        mfaEnabled: true,
+        loadingStates: { ...get().loadingStates, verifyingMfa: false }
+      });
+      toast.success('Two-factor authentication enabled');
+      return true;
+    } catch (err) {
+      console.error('MFA verification failed:', err);
+      set({ loadingStates: { ...get().loadingStates, verifyingMfa: false } });
+      return false;
+    }
+  },
+
+  challengeMfa: async (code: string) => {
+    set({ loadingStates: { ...get().loadingStates, challengingMfa: true } });
+
+    try {
+      const { data: factorsData, error: factorsError } =
+        await supabase.auth.mfa.listFactors();
+
+      if (factorsError || !factorsData.totp.length) {
+        toast.error('No MFA factors found');
+        set({ loadingStates: { ...get().loadingStates, challengingMfa: false } });
+        return false;
+      }
+
+      const verifiedFactor = factorsData.totp.find(f => f.status === 'verified');
+      if (!verifiedFactor) {
+        toast.error('No verified MFA factor found');
+        set({ loadingStates: { ...get().loadingStates, challengingMfa: false } });
+        return false;
+      }
+
+      const { data: challengeData, error: challengeError } =
+        await supabase.auth.mfa.challenge({ factorId: verifiedFactor.id });
+
+      if (challengeError) {
+        toast.error(`MFA challenge failed: ${challengeError.message}`);
+        set({ loadingStates: { ...get().loadingStates, challengingMfa: false } });
+        return false;
+      }
+
+      const { error: verifyError } = await supabase.auth.mfa.verify({
+        factorId: verifiedFactor.id,
+        challengeId: challengeData.id,
+        code,
+      });
+
+      set({ loadingStates: { ...get().loadingStates, challengingMfa: false } });
+
+      if (verifyError) {
+        return false;
+      }
+
+      return true;
+    } catch (err) {
+      console.error('MFA challenge failed:', err);
+      set({ loadingStates: { ...get().loadingStates, challengingMfa: false } });
+      return false;
+    }
   },
 }));
