@@ -1,6 +1,9 @@
 export const RESULT_TYPES = ["OCCURRED", "NO_SETUP"] as const;
 export type ResultType = (typeof RESULT_TYPES)[number];
 
+export const LOG_TYPES = ["FRONTTEST", "BACKTEST"] as const;
+export type LogType = (typeof LOG_TYPES)[number];
+
 export const TRADING_DAYS = [
   "Monday",
   "Tuesday",
@@ -12,10 +15,12 @@ export type TradingDay = (typeof TRADING_DAYS)[number];
 
 export const DEFAULT_LOG_VALUES = {
   result: "OCCURRED" as ResultType,
+  logType: "FRONTTEST" as LogType,
   dayOfWeek: "Tuesday" as TradingDay,
   durationMinutes: 15,
   note: "",
   tvLink: "",
+  date: new Date().toISOString().split('T')[0],
 } as const;
 
 export const WIN_RATE_THRESHOLD = 50;

@@ -6,7 +6,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger, DialogTitle } from "@/components/ui/dialog";
 import type { EdgeWithLogs, TradeLogInput } from "@/lib/types";
 import { getTVImageUrl } from "@/lib/utils";
 import { History, MoreHorizontal, Pencil, Trash2, Maximize2, Minimize2, ExternalLink, ZoomIn, Check, X } from "lucide-react";
@@ -77,7 +77,8 @@ export const HistorySheet = memo(function HistorySheet({ edge, onDeleteLog, onUp
                               </div>
                             </div>
                           </DialogTrigger>
-                          <DialogContent className="max-w-[95vw] max-h-[90vh] p-0 bg-transparent border-none flex items-center justify-center shadow-none">
+                          <DialogContent className="max-w-[95vw] max-h-[90vh] p-0 bg-transparent border-none flex items-center justify-center shadow-none" showCloseButton={false}>
+                            <DialogTitle className="sr-only">Chart Image Preview</DialogTitle>
                             <div className="relative w-full h-full flex flex-col items-center justify-center gap-4">
                               <img
                                 src={imageUrl}

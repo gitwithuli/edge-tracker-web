@@ -1,143 +1,204 @@
 "use client";
 
 import { memo, useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Link as LinkIcon, Loader2, Check, X } from "lucide-react";
-import type { TradeLog, TradeLogInput, ResultType, TradingDay } from "@/lib/types";
-import { RESULT_TYPES, TRADING_DAYS, DEFAULT_LOG_VALUES } from "@/lib/constants";
+import { Plus, Link as LinkIcon, Loader2, Check, X, Calendar, Clock, Rewind, Play } from "lucide-react";
+import type { TradeLog, TradeLogInput, ResultType, TradingDay, LogType } from "@/lib/types";
+import { RESULT_TYPES, TRADING_DAYS, LOG_TYPES, DEFAULT_LOG_VALUES } from "@/lib/constants";
 import { useEdgeStore } from "@/hooks/use-edge-store";
 
 interface LogDialogProps {
   edgeName?: string;
   initialData?: TradeLog;
   trigger?: React.ReactNode;
+  defaultLogType?: LogType;
   onSave: (data: TradeLogInput) => void;
 }
 
-export const LogDialog = memo(function LogDialog({ edgeName, initialData, trigger, onSave }: LogDialogProps) {
+export const LogDialog = memo(function LogDialog({ edgeName, initialData, trigger, defaultLogType, onSave }: LogDialogProps) {
   const [open, setOpen] = useState(false);
   const { loadingStates } = useEdgeStore();
   const isLoading = loadingStates.addingLog || loadingStates.updatingLogId !== null;
 
   const [result, setResult] = useState<ResultType>(initialData?.result as ResultType || DEFAULT_LOG_VALUES.result);
+  const [logType, setLogType] = useState<LogType>(initialData?.logType as LogType || defaultLogType || DEFAULT_LOG_VALUES.logType);
   const [day, setDay] = useState<TradingDay>(initialData?.dayOfWeek as TradingDay || DEFAULT_LOG_VALUES.dayOfWeek);
   const [duration, setDuration] = useState(initialData?.durationMinutes?.toString() || DEFAULT_LOG_VALUES.durationMinutes.toString());
   const [note, setNote] = useState(initialData?.note || DEFAULT_LOG_VALUES.note);
   const [tvLink, setTvLink] = useState(initialData?.tvLink || DEFAULT_LOG_VALUES.tvLink);
+  const [date, setDate] = useState(initialData?.date || new Date().toISOString().split('T')[0]);
 
-  // Auto-detect day of week
+  // Auto-detect day of week when date changes
   useEffect(() => {
-    if (open && !initialData) {
-      const days: TradingDay[] = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] as TradingDay[];
-      const today = days[new Date().getDay()];
-      if (TRADING_DAYS.includes(today as TradingDay)) {
-        setDay(today as TradingDay);
+    if (date) {
+      const dateObj = new Date(date + 'T12:00:00');
+      const dayNames: TradingDay[] = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] as TradingDay[];
+      const dayName = dayNames[dateObj.getDay()];
+      if (TRADING_DAYS.includes(dayName as TradingDay)) {
+        setDay(dayName as TradingDay);
       }
     }
-  }, [open, initialData]);
+  }, [date]);
 
   useEffect(() => {
     if (open) {
       if (initialData) {
         setResult(initialData.result as ResultType);
+        setLogType(initialData.logType as LogType || defaultLogType || 'FRONTTEST');
         setDay(initialData.dayOfWeek as TradingDay);
         setDuration(initialData.durationMinutes?.toString() || "15");
         setNote(initialData.note || "");
         setTvLink(initialData.tvLink || "");
+        setDate(initialData.date || new Date().toISOString().split('T')[0]);
       } else {
         setResult(DEFAULT_LOG_VALUES.result);
+        setLogType(defaultLogType || DEFAULT_LOG_VALUES.logType);
         setDuration(DEFAULT_LOG_VALUES.durationMinutes.toString());
         setNote(DEFAULT_LOG_VALUES.note);
         setTvLink(DEFAULT_LOG_VALUES.tvLink);
+        setDate(new Date().toISOString().split('T')[0]);
+        // Auto-detect today's day
+        const days: TradingDay[] = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] as TradingDay[];
+        const today = days[new Date().getDay()];
+        if (TRADING_DAYS.includes(today as TradingDay)) {
+          setDay(today as TradingDay);
+        }
       }
     }
-  }, [open, initialData]);
+  }, [open, initialData, defaultLogType]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // For NO_SETUP, we don't require duration
     const durationNum = result === "NO_SETUP" ? 0 : (parseInt(duration) || 0);
     if (result === "OCCURRED" && durationNum < 1) return;
 
     onSave({
       result,
+      logType,
       note,
       dayOfWeek: day,
       durationMinutes: durationNum,
       tvLink: result === "NO_SETUP" ? undefined : (tvLink || undefined),
+      date,
     });
     setOpen(false);
   };
 
   const isNoSetup = result === "NO_SETUP";
+  const isBacktest = logType === "BACKTEST";
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger ? trigger : (
-          <Button size="sm" className="w-full gap-2">
+          <button className="inline-flex items-center gap-2 bg-[#0F0F0F] text-[#FAF7F2] px-4 py-2 rounded-full text-sm font-medium hover:bg-[#C45A3B] transition-colors duration-300">
             <Plus className="w-4 h-4" /> Log Day
-          </Button>
+          </button>
         )}
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-[425px] bg-zinc-950 border-zinc-800 text-zinc-100">
-        <DialogHeader>
-          <DialogTitle className="text-zinc-100">
-            {initialData ? "Edit Log" : `Log Day${edgeName ? ` - ${edgeName}` : ""}`}
+      <DialogContent className="sm:max-w-[440px] bg-[#FAF7F2] border-[#0F0F0F]/10 text-[#0F0F0F] p-0 overflow-hidden">
+        <DialogHeader className="p-6 pb-0">
+          <DialogTitle
+            className="text-xl tracking-tight"
+            style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+          >
+            {initialData ? "Edit Log" : `Log ${isBacktest ? 'Backtest' : 'Day'}${edgeName ? ` — ${edgeName}` : ""}`}
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="grid gap-4 py-4">
+        <form onSubmit={handleSubmit} className="p-6 pt-4 space-y-5">
+          {/* Log Type Toggle */}
+          <div className="space-y-2">
+            <Label className="text-[#0F0F0F]/40 text-xs uppercase tracking-[0.15em]">Log Type</Label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                className={`h-12 flex items-center justify-center gap-2 rounded-xl border transition-all duration-300 ${
+                  logType === "FRONTTEST"
+                    ? "bg-[#0F0F0F] text-[#FAF7F2] border-[#0F0F0F]"
+                    : "bg-transparent border-[#0F0F0F]/10 text-[#0F0F0F]/50 hover:border-[#0F0F0F]/30"
+                }`}
+                onClick={() => setLogType("FRONTTEST")}
+              >
+                <Play className="w-4 h-4" />
+                <span className="text-sm font-medium">Live</span>
+              </button>
+              <button
+                type="button"
+                className={`h-12 flex items-center justify-center gap-2 rounded-xl border transition-all duration-300 ${
+                  logType === "BACKTEST"
+                    ? "bg-[#0F0F0F] text-[#FAF7F2] border-[#0F0F0F]"
+                    : "bg-transparent border-[#0F0F0F]/10 text-[#0F0F0F]/50 hover:border-[#0F0F0F]/30"
+                }`}
+                onClick={() => setLogType("BACKTEST")}
+              >
+                <Rewind className="w-4 h-4" />
+                <span className="text-sm font-medium">Backtest</span>
+              </button>
+            </div>
+          </div>
+
           {/* Occurrence Toggle */}
           <div className="space-y-2">
-            <Label className="text-zinc-400 text-xs uppercase tracking-widest">Did the setup appear?</Label>
+            <Label className="text-[#0F0F0F]/40 text-xs uppercase tracking-[0.15em]">Did the setup appear?</Label>
             <div className="grid grid-cols-2 gap-2">
-              <Button
+              <button
                 type="button"
-                variant={result === "OCCURRED" ? "default" : "outline"}
-                className={`h-16 flex flex-col gap-1 ${
+                className={`h-14 flex flex-col items-center justify-center gap-1 rounded-xl border transition-all duration-300 ${
                   result === "OCCURRED"
-                    ? "bg-emerald-600 hover:bg-emerald-700 border-emerald-600"
-                    : "border-zinc-700 text-zinc-400 hover:text-white hover:bg-zinc-900"
+                    ? "bg-[#8B9A7D] text-white border-[#8B9A7D]"
+                    : "bg-transparent border-[#0F0F0F]/10 text-[#0F0F0F]/50 hover:border-[#0F0F0F]/30"
                 }`}
                 onClick={() => setResult("OCCURRED")}
               >
                 <Check className="w-5 h-5" />
                 <span className="text-xs font-medium">Yes, it appeared</span>
-              </Button>
-              <Button
+              </button>
+              <button
                 type="button"
-                variant={result === "NO_SETUP" ? "default" : "outline"}
-                className={`h-16 flex flex-col gap-1 ${
+                className={`h-14 flex flex-col items-center justify-center gap-1 rounded-xl border transition-all duration-300 ${
                   result === "NO_SETUP"
-                    ? "bg-zinc-700 hover:bg-zinc-600 border-zinc-700"
-                    : "border-zinc-700 text-zinc-400 hover:text-white hover:bg-zinc-900"
+                    ? "bg-[#0F0F0F]/60 text-white border-[#0F0F0F]/60"
+                    : "bg-transparent border-[#0F0F0F]/10 text-[#0F0F0F]/50 hover:border-[#0F0F0F]/30"
                 }`}
                 onClick={() => setResult("NO_SETUP")}
               >
                 <X className="w-5 h-5" />
-                <span className="text-xs font-medium">No setup today</span>
-              </Button>
+                <span className="text-xs font-medium">No setup</span>
+              </button>
             </div>
+          </div>
+
+          {/* Date Picker */}
+          <div className="space-y-2">
+            <Label className="text-[#0F0F0F]/40 text-xs uppercase tracking-[0.15em] flex items-center gap-2">
+              <Calendar className="w-3 h-3" /> Date
+            </Label>
+            <Input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              max={logType === "FRONTTEST" ? new Date().toISOString().split('T')[0] : undefined}
+              className="bg-white border-[#0F0F0F]/10 text-[#0F0F0F] rounded-xl h-11 focus:border-[#C45A3B] focus:ring-[#C45A3B]/20"
+            />
           </div>
 
           {/* Day Selection */}
           <div className="space-y-2">
-            <Label className="text-zinc-400 text-xs uppercase tracking-widest">Day</Label>
+            <Label className="text-[#0F0F0F]/40 text-xs uppercase tracking-[0.15em]">Day of Week</Label>
             <Select value={day} onValueChange={(v) => setDay(v as TradingDay)}>
-              <SelectTrigger className="bg-zinc-900 border-zinc-700 text-zinc-100">
+              <SelectTrigger className="bg-white border-[#0F0F0F]/10 text-[#0F0F0F] rounded-xl h-11 focus:border-[#C45A3B] focus:ring-[#C45A3B]/20">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-zinc-900 border-zinc-700 text-zinc-100">
+              <SelectContent className="bg-white border-[#0F0F0F]/10 text-[#0F0F0F] rounded-xl">
                 {TRADING_DAYS.map((d) => (
-                  <SelectItem key={d} value={d}>{d}</SelectItem>
+                  <SelectItem key={d} value={d} className="rounded-lg">{d}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -147,57 +208,59 @@ export const LogDialog = memo(function LogDialog({ edgeName, initialData, trigge
           {!isNoSetup && (
             <>
               <div className="space-y-2">
-                <Label className="text-zinc-400 text-xs uppercase tracking-widest">Duration (Min)</Label>
+                <Label className="text-[#0F0F0F]/40 text-xs uppercase tracking-[0.15em] flex items-center gap-2">
+                  <Clock className="w-3 h-3" /> Duration (minutes)
+                </Label>
                 <Input
                   type="number"
                   min="1"
                   max="1440"
                   value={duration}
                   onChange={(e) => setDuration(e.target.value)}
-                  className="bg-zinc-900 border-zinc-700 text-zinc-100"
+                  className="bg-white border-[#0F0F0F]/10 text-[#0F0F0F] rounded-xl h-11 focus:border-[#C45A3B] focus:ring-[#C45A3B]/20"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label className="text-zinc-400 text-xs uppercase tracking-widest flex gap-2 items-center">
+                <Label className="text-[#0F0F0F]/40 text-xs uppercase tracking-[0.15em] flex items-center gap-2">
                   <LinkIcon className="w-3 h-3" /> TradingView Link
                 </Label>
                 <Input
                   placeholder="https://www.tradingview.com/x/..."
                   value={tvLink}
                   onChange={(e) => setTvLink(e.target.value)}
-                  className="bg-zinc-900 border-zinc-700 text-zinc-100"
+                  className="bg-white border-[#0F0F0F]/10 text-[#0F0F0F] rounded-xl h-11 focus:border-[#C45A3B] focus:ring-[#C45A3B]/20 placeholder:text-[#0F0F0F]/30"
                 />
               </div>
             </>
           )}
 
-          {/* Note - always shown */}
+          {/* Note */}
           <div className="space-y-2">
-            <Label className="text-zinc-400 text-xs uppercase tracking-widest">Note (optional)</Label>
+            <Label className="text-[#0F0F0F]/40 text-xs uppercase tracking-[0.15em]">Note (optional)</Label>
             <Textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder={isNoSetup ? "Why no setup today?" : "What did you observe?"}
-              className="bg-zinc-900 border-zinc-700 text-zinc-100 min-h-[60px]"
+              placeholder={isNoSetup ? "Why no setup?" : "What did you observe?"}
+              className="bg-white border-[#0F0F0F]/10 text-[#0F0F0F] rounded-xl min-h-[70px] focus:border-[#C45A3B] focus:ring-[#C45A3B]/20 placeholder:text-[#0F0F0F]/30 resize-none"
               maxLength={2000}
             />
           </div>
 
-          <Button
+          <button
             type="submit"
             disabled={isLoading || (result === "OCCURRED" && parseInt(duration) < 1)}
-            className="w-full bg-white text-black hover:bg-zinc-200 font-bold disabled:opacity-50"
+            className="w-full bg-[#0F0F0F] text-[#FAF7F2] py-3 rounded-full text-sm font-medium hover:bg-[#C45A3B] transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {isLoading ? (
               <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                <Loader2 className="w-4 h-4 animate-spin" />
                 Saving...
               </>
             ) : (
               initialData ? "Update Log" : "Save Log"
             )}
-          </Button>
+          </button>
         </form>
       </DialogContent>
     </Dialog>

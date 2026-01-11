@@ -1,14 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useEdgeStore } from "@/hooks/use-edge-store";
-import { LogOut, Plus, Settings, ArrowRight } from "lucide-react";
+import { LogOut, Plus, Settings, Play, Rewind, BarChart3 } from "lucide-react";
 import { StatsCards } from "@/components/dashboard/stats-cards";
 import { DayChart } from "@/components/dashboard/day-chart";
 import { EdgeGrid } from "@/components/dashboard/edge-grid";
 import { RecentActivity } from "@/components/dashboard/recent-activity";
+import { BacktestStats } from "@/components/dashboard/backtest-stats";
 import { LogDialog } from "@/components/log-dialog";
 import Link from "next/link";
+import type { LogType } from "@/lib/types";
 
 function GrainOverlay() {
   return (
@@ -24,16 +26,30 @@ function GrainOverlay() {
 export default function DashboardPage() {
   const { logs, isLoaded, logout, user, addLog, deleteLog, updateLog, getEdgesWithLogs } = useEdgeStore();
   const [mounted, setMounted] = useState(false);
+  const [activeView, setActiveView] = useState<LogType>("FRONTTEST");
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  const filteredLogs = useMemo(() => {
+    return logs.filter(log => (log.logType || 'FRONTTEST') === activeView);
+  }, [logs, activeView]);
+
+  const edgesWithLogs = getEdgesWithLogs();
+
+  const edgesWithFilteredLogs = useMemo(() => {
+    return edgesWithLogs.map(edge => ({
+      ...edge,
+      logs: edge.logs.filter(log => (log.logType || 'FRONTTEST') === activeView)
+    }));
+  }, [edgesWithLogs, activeView]);
+
   if (!isLoaded || !user) {
     return null;
   }
 
-  const edgesWithLogs = getEdgesWithLogs();
+  const isBacktest = activeView === "BACKTEST";
 
   return (
     <>
@@ -80,6 +96,7 @@ export default function DashboardPage() {
             <div className="flex items-center gap-3 sm:gap-4">
               {edgesWithLogs.length > 0 && (
                 <LogDialog
+                  defaultLogType={activeView}
                   onSave={(data) => {
                     if (edgesWithLogs[0]) {
                       addLog(edgesWithLogs[0].id, data);
@@ -88,7 +105,7 @@ export default function DashboardPage() {
                   trigger={
                     <button className="inline-flex items-center gap-2 bg-[#0F0F0F] text-[#FAF7F2] px-4 py-2 rounded-full text-sm font-medium hover:bg-[#C45A3B] transition-colors duration-300">
                       <Plus className="w-4 h-4" />
-                      <span className="hidden sm:inline">Log Day</span>
+                      <span className="hidden sm:inline">Log {isBacktest ? 'Backtest' : 'Day'}</span>
                     </button>
                   }
                 />
@@ -112,20 +129,50 @@ export default function DashboardPage() {
         </header>
 
         <main className="max-w-6xl mx-auto px-6 sm:px-8 py-8 sm:py-12">
-          {/* Welcome section */}
+          {/* Welcome section with View Toggle */}
           <div
             className={`mb-10 sm:mb-12 opacity-0 ${mounted ? 'animate-slide-up' : ''}`}
             style={{ animationDelay: '0.1s' }}
           >
-            <p className="text-[#C45A3B] text-xs tracking-[0.3em] uppercase font-medium mb-3">
-              Dashboard
-            </p>
-            <h1
-              className="text-3xl sm:text-4xl tracking-tight"
-              style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
-            >
-              Track your <span className="italic text-[#0F0F0F]/60">edge</span>
-            </h1>
+            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6">
+              <div>
+                <p className="text-[#C45A3B] text-xs tracking-[0.3em] uppercase font-medium mb-3">
+                  Dashboard
+                </p>
+                <h1
+                  className="text-3xl sm:text-4xl tracking-tight"
+                  style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                >
+                  Track your <span className="italic text-[#0F0F0F]/60">edge</span>
+                </h1>
+              </div>
+
+              {/* View Toggle */}
+              <div className="flex p-1 bg-[#0F0F0F]/5 rounded-full">
+                <button
+                  onClick={() => setActiveView("FRONTTEST")}
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 ${
+                    activeView === "FRONTTEST"
+                      ? "bg-[#0F0F0F] text-[#FAF7F2] shadow-sm"
+                      : "text-[#0F0F0F]/50 hover:text-[#0F0F0F]"
+                  }`}
+                >
+                  <Play className="w-4 h-4" />
+                  Live Trading
+                </button>
+                <button
+                  onClick={() => setActiveView("BACKTEST")}
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 ${
+                    activeView === "BACKTEST"
+                      ? "bg-[#0F0F0F] text-[#FAF7F2] shadow-sm"
+                      : "text-[#0F0F0F]/50 hover:text-[#0F0F0F]"
+                  }`}
+                >
+                  <Rewind className="w-4 h-4" />
+                  Backtest
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* Stats Cards */}
@@ -134,11 +181,30 @@ export default function DashboardPage() {
             style={{ animationDelay: '0.2s' }}
           >
             <div className="flex items-center gap-4 mb-6">
-              <span className="text-xs tracking-[0.2em] uppercase text-[#0F0F0F]/40">This Week</span>
+              <span className="text-xs tracking-[0.2em] uppercase text-[#0F0F0F]/40">
+                {isBacktest ? 'Backtest Summary' : 'This Week'}
+              </span>
               <div className="flex-1 h-px bg-[#0F0F0F]/10" />
             </div>
-            <StatsCards logs={logs} edgesWithLogs={edgesWithLogs} />
+            <StatsCards logs={filteredLogs} edgesWithLogs={edgesWithFilteredLogs} />
           </section>
+
+          {/* Backtest-specific Statistics */}
+          {isBacktest && filteredLogs.length > 0 && (
+            <section
+              className={`mb-10 sm:mb-12 opacity-0 ${mounted ? 'animate-slide-up' : ''}`}
+              style={{ animationDelay: '0.25s' }}
+            >
+              <div className="flex items-center gap-4 mb-6">
+                <BarChart3 className="w-4 h-4 text-[#0F0F0F]/40" />
+                <span className="text-xs tracking-[0.2em] uppercase text-[#0F0F0F]/40">
+                  Backtest Analytics
+                </span>
+                <div className="flex-1 h-px bg-[#0F0F0F]/10" />
+              </div>
+              <BacktestStats logs={filteredLogs} edgesWithLogs={edgesWithFilteredLogs} />
+            </section>
+          )}
 
           {/* Main Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -148,13 +214,19 @@ export default function DashboardPage() {
                 className={`opacity-0 ${mounted ? 'animate-slide-up' : ''}`}
                 style={{ animationDelay: '0.3s' }}
               >
-                <DayChart logs={logs} />
+                <DayChart logs={filteredLogs} />
               </div>
               <div
                 className={`opacity-0 ${mounted ? 'animate-slide-up' : ''}`}
                 style={{ animationDelay: '0.4s' }}
               >
-                <EdgeGrid edgesWithLogs={edgesWithLogs} onAddLog={addLog} onDeleteLog={deleteLog} onUpdateLog={updateLog} />
+                <EdgeGrid
+                  edgesWithLogs={edgesWithFilteredLogs}
+                  onAddLog={addLog}
+                  onDeleteLog={deleteLog}
+                  onUpdateLog={updateLog}
+                  defaultLogType={activeView}
+                />
               </div>
             </div>
 
@@ -163,7 +235,7 @@ export default function DashboardPage() {
               className={`lg:col-span-1 opacity-0 ${mounted ? 'animate-slide-up' : ''}`}
               style={{ animationDelay: '0.5s' }}
             >
-              <RecentActivity logs={logs} edgesWithLogs={edgesWithLogs} />
+              <RecentActivity logs={filteredLogs} edgesWithLogs={edgesWithFilteredLogs} />
             </div>
           </div>
         </main>
