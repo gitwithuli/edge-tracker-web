@@ -22,6 +22,8 @@ interface MacroStore {
   logMacro: (macroId: string, outcome: MacroOutcome, note?: string, tvLinks?: string[]) => void;
   updateLog: (logId: string, updates: Partial<Pick<MacroLog, 'outcome' | 'note' | 'tvLinks'>>) => void;
   deleteLog: (logId: string) => void;
+  addTvLink: (macroId: string, link: string) => void;
+  removeTvLink: (macroId: string, linkIndex: number) => void;
 
   // Queries
   getLogForMacroToday: (macroId: string) => MacroLog | undefined;
@@ -84,6 +86,55 @@ export const useMacroStore = create<MacroStore>()(
           logs: get().logs.filter(log => log.id !== logId),
         });
         toast.success('Log deleted');
+      },
+
+      addTvLink: (macroId, link) => {
+        const today = getTodayDate();
+        const existing = get().logs.find(
+          log => log.macroId === macroId && log.date === today
+        );
+
+        if (existing) {
+          set({
+            logs: get().logs.map(log =>
+              log.id === existing.id
+                ? { ...log, tvLinks: [...log.tvLinks, link] }
+                : log
+            ),
+          });
+        } else {
+          // Create a new log with NO_TRADE outcome if none exists
+          const newLog: MacroLog = {
+            id: `macro-${Date.now()}`,
+            macroId,
+            date: today,
+            outcome: 'NO_TRADE',
+            note: '',
+            tvLinks: [link],
+            createdAt: new Date().toISOString(),
+          };
+          set({ logs: [...get().logs, newLog] });
+        }
+        toast.success('Screenshot link added');
+      },
+
+      removeTvLink: (macroId, linkIndex) => {
+        const today = getTodayDate();
+        const existing = get().logs.find(
+          log => log.macroId === macroId && log.date === today
+        );
+
+        if (existing) {
+          const newLinks = existing.tvLinks.filter((_, i) => i !== linkIndex);
+          set({
+            logs: get().logs.map(log =>
+              log.id === existing.id
+                ? { ...log, tvLinks: newLinks }
+                : log
+            ),
+          });
+          toast.success('Screenshot link removed');
+        }
       },
 
       getLogForMacroToday: (macroId) => {

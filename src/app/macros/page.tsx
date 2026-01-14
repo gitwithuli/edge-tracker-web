@@ -6,8 +6,10 @@ import { useMacroTime } from "@/hooks/use-macro-time";
 import { useMacroStore, MacroLog } from "@/hooks/use-macro-store";
 import { useEdgeStore } from "@/hooks/use-edge-store";
 import { formatMacroTime, MacroWindow, MacroOutcome } from "@/lib/macro-constants";
-import { Clock, Timer, TrendingUp, TrendingDown, Minus, XCircle, ChevronLeft, Check } from "lucide-react";
+import { Clock, Timer, TrendingUp, TrendingDown, Minus, XCircle, ChevronLeft, Check, Link as LinkIcon, Plus, Trash2, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+import { getTVImageUrl } from "@/lib/utils";
 
 function MacroCard({
   macro,
@@ -17,6 +19,8 @@ function MacroCard({
   secondsRemaining,
   todayLog,
   onLog,
+  onAddTvLink,
+  onRemoveTvLink,
 }: {
   macro: MacroWindow;
   status: 'upcoming' | 'active' | 'passed';
@@ -25,10 +29,15 @@ function MacroCard({
   secondsRemaining?: number;
   todayLog?: MacroLog;
   onLog: (outcome: MacroOutcome) => void;
+  onAddTvLink: (link: string) => void;
+  onRemoveTvLink: (index: number) => void;
 }) {
+  const [newLink, setNewLink] = useState('');
+  const [showLinkInput, setShowLinkInput] = useState(false);
   const isRTH = macro.category === 'rth_close';
   const hasLog = !!todayLog;
   const showLogButtons = status === 'active' || status === 'passed';
+  const tvLinks = todayLog?.tvLinks || [];
 
   const outcomeStyles: Record<MacroOutcome, { bg: string; text: string; icon: React.ReactNode }> = {
     WIN: { bg: 'bg-[#8B9A7D]', text: 'text-white', icon: <TrendingUp className="w-4 h-4" /> },
@@ -116,7 +125,7 @@ function MacroCard({
           status === 'active' ? "border-[#C45A3B]/20" : "border-[#0F0F0F]/10"
         )}>
           <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 mb-2">
-            {hasLog ? 'Change Outcome' : 'Log Outcome'}
+            Tape-Reading Outcome
           </div>
           <div className="grid grid-cols-4 gap-2">
             <button
@@ -164,6 +173,99 @@ function MacroCard({
               <XCircle className="w-4 h-4" /> Skip
             </button>
           </div>
+
+          {/* TradingView Screenshots */}
+          <div className="mt-4">
+            <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 mb-2 flex items-center gap-1.5">
+              <LinkIcon className="w-3 h-3" /> Screenshots
+            </div>
+
+            {/* Existing links */}
+            {tvLinks.length > 0 && (
+              <div className="space-y-2 mb-2">
+                {tvLinks.map((link, idx) => {
+                  const imageUrl = getTVImageUrl(link);
+                  return (
+                    <div key={idx} className="flex items-center gap-2 group">
+                      {imageUrl ? (
+                        <a
+                          href={link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-1 flex items-center gap-2 p-2 rounded-lg bg-[#0F0F0F]/5 hover:bg-[#0F0F0F]/10 transition-colors"
+                        >
+                          <img
+                            src={imageUrl}
+                            alt={`Chart ${idx + 1}`}
+                            className="w-16 h-10 object-cover rounded"
+                          />
+                          <span className="text-xs text-[#0F0F0F]/60 truncate flex-1">
+                            Chart {idx + 1}
+                          </span>
+                          <ExternalLink className="w-3 h-3 text-[#0F0F0F]/40" />
+                        </a>
+                      ) : (
+                        <a
+                          href={link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-1 text-xs text-[#C45A3B] hover:underline truncate"
+                        >
+                          {link}
+                        </a>
+                      )}
+                      <button
+                        onClick={() => onRemoveTvLink(idx)}
+                        className="p-1.5 rounded-lg text-[#0F0F0F]/30 hover:text-[#C45A3B] hover:bg-[#C45A3B]/10 transition-colors opacity-0 group-hover:opacity-100"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Add link input */}
+            {showLinkInput ? (
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newLink}
+                  onChange={(e) => setNewLink(e.target.value)}
+                  placeholder="https://www.tradingview.com/x/..."
+                  className="flex-1 h-9 px-3 text-sm bg-white border border-[#0F0F0F]/10 rounded-lg focus:outline-none focus:border-[#C45A3B] placeholder:text-[#0F0F0F]/30"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && newLink.trim()) {
+                      onAddTvLink(newLink.trim());
+                      setNewLink('');
+                      setShowLinkInput(false);
+                    }
+                  }}
+                  autoFocus
+                />
+                <button
+                  onClick={() => {
+                    if (newLink.trim()) {
+                      onAddTvLink(newLink.trim());
+                      setNewLink('');
+                    }
+                    setShowLinkInput(false);
+                  }}
+                  className="h-9 px-3 rounded-lg bg-[#0F0F0F] text-white text-sm font-medium hover:bg-[#C45A3B] transition-colors"
+                >
+                  Add
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowLinkInput(true)}
+                className="w-full h-9 rounded-lg border border-dashed border-[#0F0F0F]/20 text-[#0F0F0F]/40 hover:border-[#0F0F0F]/40 hover:text-[#0F0F0F]/60 transition-colors flex items-center justify-center gap-1.5 text-sm"
+              >
+                <Plus className="w-3.5 h-3.5" /> Add Screenshot
+              </button>
+            )}
+          </div>
         </div>
       )}
     </div>
@@ -173,7 +275,7 @@ function MacroCard({
 export default function MacrosPage() {
   const router = useRouter();
   const { user, isLoaded } = useEdgeStore();
-  const { logMacro, getLogForMacroToday, getTodaysLogs } = useMacroStore();
+  const { logMacro, getLogForMacroToday, getTodaysLogs, addTvLink, removeTvLink } = useMacroStore();
   const [mounted, setMounted] = useState(false);
   const {
     etHour,
@@ -302,6 +404,8 @@ export default function MacrosPage() {
               minutesRemaining={activeMacroStatus.minutesRemaining}
               todayLog={getLogForMacroToday(activeMacroStatus.macro.id)}
               onLog={(outcome) => handleLog(activeMacroStatus.macro.id, outcome)}
+              onAddTvLink={(link) => addTvLink(activeMacroStatus.macro.id, link)}
+              onRemoveTvLink={(idx) => removeTvLink(activeMacroStatus.macro.id, idx)}
             />
           </div>
         )}
@@ -321,6 +425,8 @@ export default function MacrosPage() {
               secondsRemaining={secondsToNextMacro}
               todayLog={getLogForMacroToday(nextMacro.id)}
               onLog={(outcome) => handleLog(nextMacro.id, outcome)}
+              onAddTvLink={(link) => addTvLink(nextMacro.id, link)}
+              onRemoveTvLink={(idx) => removeTvLink(nextMacro.id, idx)}
             />
           </div>
         )}
@@ -343,6 +449,8 @@ export default function MacrosPage() {
                     minutesRemaining={0}
                     todayLog={getLogForMacroToday(macro.id)}
                     onLog={(outcome) => handleLog(macro.id, outcome)}
+                    onAddTvLink={(link) => addTvLink(macro.id, link)}
+                    onRemoveTvLink={(idx) => removeTvLink(macro.id, idx)}
                   />
                 ))}
             </div>
@@ -365,6 +473,8 @@ export default function MacrosPage() {
                   minutesRemaining={0}
                   todayLog={getLogForMacroToday(macro.id)}
                   onLog={(outcome) => handleLog(macro.id, outcome)}
+                  onAddTvLink={(link) => addTvLink(macro.id, link)}
+                  onRemoveTvLink={(idx) => removeTvLink(macro.id, idx)}
                 />
               ))}
             </div>
