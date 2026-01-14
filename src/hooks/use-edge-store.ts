@@ -216,37 +216,37 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
 
     set({ loadingStates: { ...get().loadingStates, addingEdge: true }, error: null });
 
-    const { data: newEdge, error } = await supabase
-      .from('edges')
-      .insert([{
-        user_id: user.id,
-        name: data.name,
-        description: data.description || '',
-      }])
-      .select()
-      .single();
+    try {
+      const { data: newEdge, error } = await supabase
+        .from('edges')
+        .insert([{
+          user_id: user.id,
+          name: data.name,
+          description: data.description || '',
+        }])
+        .select()
+        .single();
 
-    if (error) {
-      const message = `Failed to create edge: ${error.message}`;
-      set({
-        error: message,
-        loadingStates: { ...get().loadingStates, addingEdge: false }
-      });
-      toast.error(message);
+      if (error) {
+        set({ error: `Failed to create edge: ${error.message}` });
+        toast.error(`Failed to create edge: ${error.message}`);
+        return null;
+      }
+
+      if (newEdge) {
+        set({ edges: [...get().edges, mapDbToEdge(newEdge)] });
+        toast.success('Edge created successfully');
+        return newEdge.id as string;
+      }
+
       return null;
+    } catch (err) {
+      console.error('addEdge error:', err);
+      toast.error('Failed to create edge');
+      return null;
+    } finally {
+      set({ loadingStates: { ...get().loadingStates, addingEdge: false } });
     }
-
-    if (newEdge) {
-      set({
-        edges: [...get().edges, mapDbToEdge(newEdge)],
-        loadingStates: { ...get().loadingStates, addingEdge: false }
-      });
-      toast.success('Edge created successfully');
-      return newEdge.id as string;
-    }
-
-    set({ loadingStates: { ...get().loadingStates, addingEdge: false } });
-    return null;
   },
 
   updateEdge: async (edgeId, data) => {
@@ -261,31 +261,32 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
       return;
     }
 
-    // Optimistic update
     const updatedEdge: Edge = { ...originalEdge, ...data };
     set({ edges: edges.map(e => e.id === edgeId ? updatedEdge : e) });
 
-    const { error } = await supabase
-      .from('edges')
-      .update({
-        name: data.name,
-        description: data.description || '',
-      })
-      .eq('id', edgeId);
+    try {
+      const { error } = await supabase
+        .from('edges')
+        .update({
+          name: data.name,
+          description: data.description || '',
+        })
+        .eq('id', edgeId);
 
-    if (error) {
-      const message = `Failed to update edge: ${error.message}`;
-      set({
-        edges, // Rollback
-        error: message,
-        loadingStates: { ...get().loadingStates, updatingEdgeId: null }
-      });
-      toast.error(message);
-      return;
+      if (error) {
+        set({ edges, error: `Failed to update edge: ${error.message}` });
+        toast.error(`Failed to update edge: ${error.message}`);
+        return;
+      }
+
+      toast.success('Edge updated');
+    } catch (err) {
+      console.error('updateEdge error:', err);
+      set({ edges });
+      toast.error('Failed to update edge');
+    } finally {
+      set({ loadingStates: { ...get().loadingStates, updatingEdgeId: null } });
     }
-
-    set({ loadingStates: { ...get().loadingStates, updatingEdgeId: null } });
-    toast.success('Edge updated');
   },
 
   deleteEdge: async (edgeId) => {
@@ -296,28 +297,35 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
     const deletedEdge = edges.find(e => e.id === edgeId);
     const deletedLogs = logs.filter(l => l.edgeId === edgeId);
 
-    // Optimistic delete
     set({
       edges: edges.filter(e => e.id !== edgeId),
       logs: logs.filter(l => l.edgeId !== edgeId),
     });
 
-    const { error } = await supabase.from('edges').delete().eq('id', edgeId);
+    try {
+      const { error } = await supabase.from('edges').delete().eq('id', edgeId);
 
-    if (error) {
-      const message = `Failed to delete edge: ${error.message}`;
+      if (error) {
+        set({
+          edges: deletedEdge ? [...get().edges, deletedEdge] : get().edges,
+          logs: [...get().logs, ...deletedLogs],
+          error: `Failed to delete edge: ${error.message}`,
+        });
+        toast.error(`Failed to delete edge: ${error.message}`);
+        return;
+      }
+
+      toast.success('Edge deleted');
+    } catch (err) {
+      console.error('deleteEdge error:', err);
       set({
-        edges: deletedEdge ? [...get().edges, deletedEdge] : get().edges, // Rollback
+        edges: deletedEdge ? [...get().edges, deletedEdge] : get().edges,
         logs: [...get().logs, ...deletedLogs],
-        error: message,
-        loadingStates: { ...get().loadingStates, deletingEdgeId: null }
       });
-      toast.error(message);
-      return;
+      toast.error('Failed to delete edge');
+    } finally {
+      set({ loadingStates: { ...get().loadingStates, deletingEdgeId: null } });
     }
-
-    set({ loadingStates: { ...get().loadingStates, deletingEdgeId: null } });
-    toast.success('Edge deleted');
   },
 
   // === LOG CRUD ===
@@ -424,21 +432,26 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
     const deletedLog = logs.find(l => l.id === logId);
     set({ logs: logs.filter(l => l.id !== logId) });
 
-    const { error } = await supabase.from('logs').delete().eq('id', logId);
+    try {
+      const { error } = await supabase.from('logs').delete().eq('id', logId);
 
-    if (error) {
-      const message = `Failed to delete log: ${error.message}`;
-      set({
-        logs: deletedLog ? [...get().logs, deletedLog] : logs,
-        error: message,
-        loadingStates: { ...get().loadingStates, deletingLogId: null }
-      });
-      toast.error(message);
-      return;
+      if (error) {
+        set({
+          logs: deletedLog ? [...get().logs, deletedLog] : logs,
+          error: `Failed to delete log: ${error.message}`,
+        });
+        toast.error(`Failed to delete log: ${error.message}`);
+        return;
+      }
+
+      toast.success('Trade log deleted');
+    } catch (err) {
+      console.error('deleteLog error:', err);
+      set({ logs: deletedLog ? [...get().logs, deletedLog] : logs });
+      toast.error('Failed to delete log');
+    } finally {
+      set({ loadingStates: { ...get().loadingStates, deletingLogId: null } });
     }
-
-    set({ loadingStates: { ...get().loadingStates, deletingLogId: null } });
-    toast.success('Trade log deleted');
   },
 
   updateLog: async (logId, logData, newEdgeId) => {
