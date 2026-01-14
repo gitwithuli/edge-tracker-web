@@ -138,7 +138,8 @@ export const HistorySheet = memo(function HistorySheet({ edge, onDeleteLog, onUp
                       isFullScreen && "grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 space-y-0"
                     )}>
                     {group.logs.map((log) => {
-                      const imageUrl = getTVImageUrl(log.tvLink || "");
+                      const tvLinks = log.tvLinks || (log.tvLink ? [log.tvLink] : []);
+                      const imageUrls = tvLinks.map(link => getTVImageUrl(link)).filter((url): url is string => url !== null);
                       const isOccurred = log.result === "OCCURRED";
                       const isBacktest = log.logType === "BACKTEST";
 
@@ -150,50 +151,57 @@ export const HistorySheet = memo(function HistorySheet({ edge, onDeleteLog, onUp
                             isFullScreen && "flex flex-col"
                           )}
                         >
-                          {imageUrl && (
-                            <Dialog>
-                              <DialogTrigger asChild>
-                                <div className="cursor-zoom-in relative group bg-[#0F0F0F]/5">
-                                  <img
-                                    src={imageUrl}
-                                    alt="Chart snapshot"
-                                    loading="lazy"
-                                    decoding="async"
-                                    className={cn(
-                                      "w-full opacity-90 group-hover:opacity-100 transition-opacity",
-                                      isFullScreen
-                                        ? "h-56 object-contain"
-                                        : "h-48 object-cover"
-                                    )}
-                                  />
-                                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-[#0F0F0F]/20">
-                                    <div className="bg-white/90 p-3 rounded-full shadow-lg">
-                                      <ZoomIn className="w-4 h-4 text-[#0F0F0F]" />
+                          {imageUrls.length > 0 && (
+                            <div className={cn(
+                              "bg-[#0F0F0F]/5",
+                              imageUrls.length > 1 && "grid grid-cols-2 gap-px"
+                            )}>
+                              {imageUrls.map((imageUrl, idx) => (
+                                <Dialog key={idx}>
+                                  <DialogTrigger asChild>
+                                    <div className="cursor-zoom-in relative group">
+                                      <img
+                                        src={imageUrl}
+                                        alt={`Chart snapshot ${idx + 1}`}
+                                        loading="lazy"
+                                        decoding="async"
+                                        className={cn(
+                                          "w-full opacity-90 group-hover:opacity-100 transition-opacity",
+                                          isFullScreen
+                                            ? imageUrls.length > 1 ? "h-28 object-cover" : "h-56 object-contain"
+                                            : imageUrls.length > 1 ? "h-24 object-cover" : "h-48 object-cover"
+                                        )}
+                                      />
+                                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-[#0F0F0F]/20">
+                                        <div className="bg-white/90 p-2 rounded-full shadow-lg">
+                                          <ZoomIn className="w-3 h-3 text-[#0F0F0F]" />
+                                        </div>
+                                      </div>
                                     </div>
-                                  </div>
-                                </div>
-                              </DialogTrigger>
-                              <DialogContent className="max-w-[95vw] max-h-[90vh] p-0 bg-transparent border-none flex items-center justify-center shadow-none" showCloseButton={false}>
-                                <DialogTitle className="sr-only">Chart Image Preview</DialogTitle>
-                                <div className="relative w-full h-full flex flex-col items-center justify-center gap-4">
-                                  <img
-                                    src={imageUrl}
-                                    alt="Full Scale Chart"
-                                    className="max-w-full max-h-[80vh] object-contain rounded-2xl shadow-2xl border border-[#0F0F0F]/10"
-                                  />
-                                  {log.tvLink && (
-                                    <a
-                                      href={log.tvLink}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="bg-[#0F0F0F] text-[#FAF7F2] px-6 py-3 rounded-full text-sm font-medium flex items-center gap-2 hover:bg-[#C45A3B] transition-colors"
-                                    >
-                                      Open in TradingView <ExternalLink className="w-3 h-3" />
-                                    </a>
-                                  )}
-                                </div>
-                              </DialogContent>
-                            </Dialog>
+                                  </DialogTrigger>
+                                  <DialogContent className="max-w-[95vw] max-h-[90vh] p-0 bg-transparent border-none flex items-center justify-center shadow-none" showCloseButton={false}>
+                                    <DialogTitle className="sr-only">Chart Image Preview</DialogTitle>
+                                    <div className="relative w-full h-full flex flex-col items-center justify-center gap-4">
+                                      <img
+                                        src={imageUrl}
+                                        alt="Full Scale Chart"
+                                        className="max-w-full max-h-[80vh] object-contain rounded-2xl shadow-2xl border border-[#0F0F0F]/10"
+                                      />
+                                      {tvLinks[idx] && (
+                                        <a
+                                          href={tvLinks[idx]}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="bg-[#0F0F0F] text-[#FAF7F2] px-6 py-3 rounded-full text-sm font-medium flex items-center gap-2 hover:bg-[#C45A3B] transition-colors"
+                                        >
+                                          Open in TradingView <ExternalLink className="w-3 h-3" />
+                                        </a>
+                                      )}
+                                    </div>
+                                  </DialogContent>
+                                </Dialog>
+                              ))}
+                            </div>
                           )}
 
                           <div className="p-4">
@@ -271,15 +279,20 @@ export const HistorySheet = memo(function HistorySheet({ edge, onDeleteLog, onUp
                               </p>
                             )}
 
-                            {log.tvLink && !imageUrl && (
-                              <a
-                                href={log.tvLink}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 text-xs text-[#C45A3B] hover:underline mt-2"
-                              >
-                                <ExternalLink className="w-3 h-3" /> View on TradingView
-                              </a>
+                            {tvLinks.length > 0 && imageUrls.length === 0 && (
+                              <div className="flex flex-wrap gap-2 mt-2">
+                                {tvLinks.map((link, idx) => (
+                                  <a
+                                    key={idx}
+                                    href={link}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1 text-xs text-[#C45A3B] hover:underline"
+                                  >
+                                    <ExternalLink className="w-3 h-3" /> Chart {tvLinks.length > 1 ? idx + 1 : ''}
+                                  </a>
+                                ))}
+                              </div>
                             )}
                           </div>
                         </div>

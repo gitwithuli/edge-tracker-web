@@ -95,6 +95,14 @@ function mapDbToEdge(row: Record<string, unknown>): Edge {
 
 // Map database row to TradeLog type
 function mapDbToLog(row: Record<string, unknown>): TradeLog {
+  // Handle tvLinks - could be array from DB or need to migrate from tv_link
+  let tvLinks: string[] = [];
+  if (Array.isArray(row.tv_links) && row.tv_links.length > 0) {
+    tvLinks = row.tv_links as string[];
+  } else if (row.tv_link && typeof row.tv_link === 'string' && row.tv_link !== '') {
+    tvLinks = [row.tv_link];
+  }
+
   return {
     id: row.id as string,
     edgeId: row.edge_id as string,
@@ -104,7 +112,8 @@ function mapDbToLog(row: Record<string, unknown>): TradeLog {
     dayOfWeek: row.day_of_week as TradeLog['dayOfWeek'],
     durationMinutes: row.duration_minutes as number,
     note: (row.note as string) || '',
-    tvLink: (row.tv_link as string) || undefined,
+    tvLinks,
+    tvLink: tvLinks[0] || undefined, // Legacy compatibility
     date: row.date as string,
   };
 }
@@ -351,6 +360,7 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
     const logDate = logData.date || new Date().toISOString().split('T')[0];
     const logType = logData.logType || 'FRONTTEST';
     const outcome = logData.result === 'OCCURRED' ? (logData.outcome || null) : null;
+    const tvLinks = logData.tvLinks || (logData.tvLink ? [logData.tvLink] : []);
     const optimisticLog: TradeLog = {
       id: tempId,
       edgeId,
@@ -361,7 +371,8 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
       dayOfWeek: logData.dayOfWeek,
       durationMinutes: logData.durationMinutes,
       note: logData.note || '',
-      tvLink: logData.tvLink,
+      tvLinks,
+      tvLink: tvLinks[0] || undefined,
     };
 
     set({ logs: [optimisticLog, ...logs] });
@@ -377,7 +388,8 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
         day_of_week: logData.dayOfWeek,
         duration_minutes: logData.durationMinutes,
         note: logData.note || '',
-        tv_link: logData.tvLink || null,
+        tv_links: tvLinks,
+        tv_link: tvLinks[0] || null, // Legacy compatibility
         date: logDate,
       }])
       .select()
@@ -442,10 +454,13 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
     }
 
     const outcome = logData.result === 'OCCURRED' ? (logData.outcome || null) : null;
+    const tvLinks = logData.tvLinks || (logData.tvLink ? [logData.tvLink] : originalLog.tvLinks || []);
     const updatedLog: TradeLog = {
       ...originalLog,
       ...logData,
       outcome,
+      tvLinks,
+      tvLink: tvLinks[0] || undefined,
       logType: logData.logType || originalLog.logType,
       date: logData.date || originalLog.date,
     };
@@ -460,7 +475,8 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
         day_of_week: logData.dayOfWeek,
         duration_minutes: logData.durationMinutes,
         note: logData.note || '',
-        tv_link: logData.tvLink || null,
+        tv_links: tvLinks,
+        tv_link: tvLinks[0] || null, // Legacy compatibility
         date: logData.date || originalLog.date,
       })
       .eq('id', logId);

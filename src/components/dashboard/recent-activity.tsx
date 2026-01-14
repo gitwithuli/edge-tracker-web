@@ -18,11 +18,17 @@ export function RecentActivity({ logs, edgesWithLogs, limit = 5 }: RecentActivit
       edgeNames[e.id] = e.name;
     });
 
-    return logs.slice(0, limit).map(log => ({
-      ...log,
-      edgeName: edgeNames[log.edgeId] || "Unknown Edge",
-      imageUrl: log.tvLink ? getTVImageUrl(log.tvLink) : null,
-    }));
+    return logs.slice(0, limit).map(log => {
+      const tvLinks = log.tvLinks || (log.tvLink ? [log.tvLink] : []);
+      const firstLink = tvLinks[0] || null;
+      return {
+        ...log,
+        edgeName: edgeNames[log.edgeId] || "Unknown Edge",
+        imageUrl: firstLink ? getTVImageUrl(firstLink) : null,
+        firstTvLink: firstLink,
+        tvLinksCount: tvLinks.length,
+      };
+    });
   }, [logs, edgesWithLogs, limit]);
 
   const formatDate = (dateStr: string) => {
@@ -86,22 +92,29 @@ export function RecentActivity({ logs, edgesWithLogs, limit = 5 }: RecentActivit
                     </div>
                   </div>
                 </div>
-                {log.tvLink && (
-                  <a
-                    href={log.tvLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[#0F0F0F]/30 hover:text-[#C45A3B] transition-colors duration-300"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                  </a>
+                {log.firstTvLink && (
+                  <div className="flex items-center gap-1">
+                    {log.tvLinksCount > 1 && (
+                      <span className="text-[10px] text-[#0F0F0F]/30 bg-[#0F0F0F]/5 px-1.5 py-0.5 rounded">
+                        {log.tvLinksCount}
+                      </span>
+                    )}
+                    <a
+                      href={log.firstTvLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[#0F0F0F]/30 hover:text-[#C45A3B] transition-colors duration-300"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
+                  </div>
                 )}
               </div>
 
               {/* Inline TradingView Preview */}
               {log.imageUrl && (
                 <a
-                  href={log.tvLink || "#"}
+                  href={log.firstTvLink || "#"}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block mb-3 rounded-lg overflow-hidden border border-[#0F0F0F]/5 hover:border-[#0F0F0F]/10 transition-colors duration-300"

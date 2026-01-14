@@ -1,6 +1,15 @@
 import { z } from "zod";
 import { RESULT_TYPES, TRADING_DAYS, LOG_TYPES, OUTCOME_TYPES } from "./constants";
 
+// Schema for validating a single TradingView URL
+const tvLinkSchema = z
+  .string()
+  .url("Invalid TradingView URL")
+  .refine(
+    (url) => url === "" || url.includes("tradingview.com"),
+    "URL must be from TradingView"
+  );
+
 // Input schema for creating/updating logs (what the form submits)
 export const tradeLogInputSchema = z.object({
   result: z.enum(RESULT_TYPES),
@@ -10,15 +19,9 @@ export const tradeLogInputSchema = z.object({
   durationMinutes: z.number().int().min(0).max(1440),
   note: z.string().max(2000).default(""),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format").optional(),
-  tvLink: z
-    .string()
-    .url("Invalid TradingView URL")
-    .refine(
-      (url) => url === "" || url.includes("tradingview.com"),
-      "URL must be from TradingView"
-    )
-    .optional()
-    .or(z.literal("")),
+  tvLinks: z.array(tvLinkSchema).default([]),
+  // Legacy field for backward compatibility
+  tvLink: tvLinkSchema.optional().or(z.literal("")),
 });
 
 export type TradeLogInput = z.infer<typeof tradeLogInputSchema>;
@@ -30,6 +33,7 @@ export const tradeLogSchema = tradeLogInputSchema.extend({
   date: z.string(),
   logType: z.enum(LOG_TYPES),
   outcome: z.enum(OUTCOME_TYPES).nullable(),
+  tvLinks: z.array(z.string()).default([]),
 });
 
 export type TradeLog = z.infer<typeof tradeLogSchema>;

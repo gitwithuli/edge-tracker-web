@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { useEdgeStore } from "@/hooks/use-edge-store";
-import { LogOut, Plus, Settings, Play, Rewind, BarChart3 } from "lucide-react";
+import { LogOut, Plus, Settings, Play, Rewind, BarChart3, Download } from "lucide-react";
 import { StatsCards } from "@/components/dashboard/stats-cards";
 import { EdgeScorecard } from "@/components/dashboard/edge-scorecard";
 import { EdgeGrid } from "@/components/dashboard/edge-grid";
@@ -131,6 +131,15 @@ export default function DashboardPage() {
                   }
                 />
               )}
+
+              <a
+                href="/api/backup"
+                download
+                className="p-2 rounded-full text-[#0F0F0F]/40 hover:text-[#0F0F0F] hover:bg-[#0F0F0F]/5 transition-all duration-300"
+                title="Download Backup"
+              >
+                <Download className="w-4 h-4" />
+              </a>
 
               <Link
                 href="/settings/edges"

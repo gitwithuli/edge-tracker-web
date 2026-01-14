@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Plus, Link as LinkIcon, Loader2, Check, X, Calendar as CalendarIcon, Clock, Rewind, Play, TrendingUp, TrendingDown } from "lucide-react";
+import { Plus, Link as LinkIcon, Loader2, Check, X, Calendar as CalendarIcon, Clock, Rewind, Play, TrendingUp, TrendingDown, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import type { TradeLog, TradeLogInput, ResultType, TradingDay, LogType, OutcomeType } from "@/lib/types";
 import { RESULT_TYPES, TRADING_DAYS, LOG_TYPES, DEFAULT_LOG_VALUES, OUTCOME_TYPES } from "@/lib/constants";
@@ -34,7 +34,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, initialData, trigge
   const [day, setDay] = useState<TradingDay>(initialData?.dayOfWeek as TradingDay || DEFAULT_LOG_VALUES.dayOfWeek);
   const [duration, setDuration] = useState(initialData?.durationMinutes?.toString() || DEFAULT_LOG_VALUES.durationMinutes.toString());
   const [note, setNote] = useState(initialData?.note || DEFAULT_LOG_VALUES.note);
-  const [tvLink, setTvLink] = useState(initialData?.tvLink || DEFAULT_LOG_VALUES.tvLink);
+  const [tvLinks, setTvLinks] = useState<string[]>(initialData?.tvLinks || []);
   const [date, setDate] = useState(initialData?.date || new Date().toISOString().split('T')[0]);
 
   const selectedDate = date ? new Date(date + 'T12:00:00') : undefined;
@@ -60,7 +60,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, initialData, trigge
         setDay(initialData.dayOfWeek as TradingDay);
         setDuration(initialData.durationMinutes?.toString() || "15");
         setNote(initialData.note || "");
-        setTvLink(initialData.tvLink || "");
+        setTvLinks(initialData.tvLinks || []);
         setDate(initialData.date || new Date().toISOString().split('T')[0]);
       } else {
         setResult(DEFAULT_LOG_VALUES.result);
@@ -68,7 +68,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, initialData, trigge
         setLogType(defaultLogType || DEFAULT_LOG_VALUES.logType);
         setDuration(DEFAULT_LOG_VALUES.durationMinutes.toString());
         setNote(DEFAULT_LOG_VALUES.note);
-        setTvLink(DEFAULT_LOG_VALUES.tvLink);
+        setTvLinks([]);
         setDate(new Date().toISOString().split('T')[0]);
         // Auto-detect today's day
         const days: TradingDay[] = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] as TradingDay[];
@@ -87,6 +87,9 @@ export const LogDialog = memo(function LogDialog({ edgeName, initialData, trigge
     if (result === "OCCURRED" && durationNum < 1) return;
     if (result === "OCCURRED" && !outcome) return;
 
+    // Filter out empty links
+    const validLinks = tvLinks.filter(link => link.trim() !== '');
+
     onSave({
       result,
       outcome: result === "OCCURRED" ? outcome : null,
@@ -94,10 +97,24 @@ export const LogDialog = memo(function LogDialog({ edgeName, initialData, trigge
       note,
       dayOfWeek: day,
       durationMinutes: durationNum,
-      tvLink: result === "NO_SETUP" ? undefined : (tvLink || undefined),
+      tvLinks: result === "NO_SETUP" ? [] : validLinks,
       date,
     });
     setOpen(false);
+  };
+
+  const addTvLink = () => {
+    setTvLinks([...tvLinks, '']);
+  };
+
+  const updateTvLink = (index: number, value: string) => {
+    const updated = [...tvLinks];
+    updated[index] = value;
+    setTvLinks(updated);
+  };
+
+  const removeTvLink = (index: number) => {
+    setTvLinks(tvLinks.filter((_, i) => i !== index));
   };
 
   const isNoSetup = result === "NO_SETUP";
@@ -311,14 +328,35 @@ export const LogDialog = memo(function LogDialog({ edgeName, initialData, trigge
 
               <div className="space-y-2">
                 <Label className="text-[#0F0F0F]/40 text-xs uppercase tracking-[0.15em] flex items-center gap-2">
-                  <LinkIcon className="w-3 h-3" /> TradingView Link
+                  <LinkIcon className="w-3 h-3" /> TradingView Links
                 </Label>
-                <Input
-                  placeholder="https://www.tradingview.com/x/..."
-                  value={tvLink}
-                  onChange={(e) => setTvLink(e.target.value)}
-                  className="bg-white border-[#0F0F0F]/10 text-[#0F0F0F] rounded-xl h-11 focus:border-[#C45A3B] focus:ring-[#C45A3B]/20 placeholder:text-[#0F0F0F]/30"
-                />
+                <div className="space-y-2">
+                  {tvLinks.map((link, index) => (
+                    <div key={index} className="flex gap-2">
+                      <Input
+                        placeholder="https://www.tradingview.com/x/..."
+                        value={link}
+                        onChange={(e) => updateTvLink(index, e.target.value)}
+                        className="bg-white border-[#0F0F0F]/10 text-[#0F0F0F] rounded-xl h-11 focus:border-[#C45A3B] focus:ring-[#C45A3B]/20 placeholder:text-[#0F0F0F]/30"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeTvLink(index)}
+                        className="p-2.5 rounded-xl border border-[#0F0F0F]/10 text-[#0F0F0F]/40 hover:text-[#C45A3B] hover:border-[#C45A3B]/30 transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={addTvLink}
+                    className="w-full h-11 rounded-xl border border-dashed border-[#0F0F0F]/20 text-[#0F0F0F]/40 hover:border-[#0F0F0F]/40 hover:text-[#0F0F0F]/60 transition-colors flex items-center justify-center gap-2 text-sm"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Screenshot Link
+                  </button>
+                </div>
               </div>
             </>
           )}
