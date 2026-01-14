@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { Target, Plus, ArrowRight } from "lucide-react";
+import { Target, Plus, ArrowRight, TrendingUp } from "lucide-react";
 import type { EdgeWithLogs, TradeLogInput, LogType } from "@/lib/types";
 import { LogDialog } from "@/components/log-dialog";
 import { HistorySheet } from "@/components/history-sheet";
@@ -20,24 +20,32 @@ interface EdgeCardData {
   occurrenceRate: number;
   totalLogs: number;
   bestDay: string | null;
+  winRate: number;
+  wins: number;
+  losses: number;
 }
 
 export function EdgeGrid({ edgesWithLogs, onAddLog, onDeleteLog, onUpdateLog, defaultLogType = "FRONTTEST" }: EdgeGridProps) {
   const edgeData = useMemo(() => {
     return edgesWithLogs.map((edge): EdgeCardData => {
-      const occurred = edge.logs.filter(l => l.result === "OCCURRED").length;
+      const occurredLogs = edge.logs.filter(l => l.result === "OCCURRED");
+      const occurred = occurredLogs.length;
       const total = edge.logs.length;
       const occurrenceRate = total > 0 ? Math.round((occurred / total) * 100) : 0;
 
+      const wins = occurredLogs.filter(l => l.outcome === "WIN").length;
+      const losses = occurredLogs.filter(l => l.outcome === "LOSS").length;
+      const winRate = occurred > 0 ? Math.round((wins / occurred) * 100) : 0;
+
       const dayOccurrences: Record<string, number> = {};
-      edge.logs.filter(l => l.result === "OCCURRED").forEach(log => {
+      occurredLogs.forEach(log => {
         dayOccurrences[log.dayOfWeek] = (dayOccurrences[log.dayOfWeek] || 0) + 1;
       });
       const bestDay = Object.keys(dayOccurrences).length > 0
         ? Object.keys(dayOccurrences).reduce((a, b) => dayOccurrences[a] > dayOccurrences[b] ? a : b)
         : null;
 
-      return { edge, occurrenceRate, totalLogs: total, bestDay };
+      return { edge, occurrenceRate, totalLogs: total, bestDay, winRate, wins, losses };
     });
   }, [edgesWithLogs]);
 
@@ -89,46 +97,79 @@ export function EdgeGrid({ edgesWithLogs, onAddLog, onDeleteLog, onUpdateLog, de
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {edgeData.map(({ edge, occurrenceRate, totalLogs, bestDay }) => (
+        {edgeData.map(({ edge, occurrenceRate, totalLogs, bestDay, winRate, wins, losses }) => (
           <div
             key={edge.id}
             className="p-5 sm:p-6 rounded-2xl bg-white border border-[#0F0F0F]/5 hover:border-[#0F0F0F]/10 transition-all duration-300 group"
           >
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <h4
-                  className="text-lg font-normal tracking-tight text-[#0F0F0F]"
-                  style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
-                >
-                  {edge.name}
-                </h4>
-                {edge.description && (
-                  <p className="text-xs text-[#0F0F0F]/40 mt-1 line-clamp-1">
-                    {edge.description}
-                  </p>
-                )}
+            <Link href={`/edge/${edge.id}`} className="block mb-4">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h4
+                    className="text-lg font-normal tracking-tight text-[#0F0F0F] group-hover:text-[#C45A3B] transition-colors"
+                    style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                  >
+                    {edge.name}
+                  </h4>
+                  {edge.description && (
+                    <p className="text-xs text-[#0F0F0F]/40 mt-1 line-clamp-1">
+                      {edge.description}
+                    </p>
+                  )}
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-xs text-[#0F0F0F]/30 uppercase tracking-wider">
+                    {totalLogs} day{totalLogs !== 1 ? "s" : ""}
+                  </span>
+                  <ArrowRight className="w-4 h-4 text-[#0F0F0F]/20 group-hover:text-[#C45A3B] group-hover:translate-x-0.5 transition-all" />
+                </div>
               </div>
-              <span className="text-xs text-[#0F0F0F]/30 uppercase tracking-wider">
-                {totalLogs} day{totalLogs !== 1 ? "s" : ""}
-              </span>
-            </div>
+            </Link>
 
-            {/* Occurrence rate bar */}
-            <div className="mb-4">
-              <div className="flex items-center justify-between text-xs mb-2">
-                <span className="text-[#0F0F0F]/40 uppercase tracking-wider">Occurrence</span>
-                <span
-                  className="font-medium text-[#0F0F0F]"
-                  style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
-                >
-                  {occurrenceRate}%
-                </span>
+            {/* Stats row */}
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              {/* Occurrence rate */}
+              <div>
+                <div className="flex items-center justify-between text-xs mb-1.5">
+                  <span className="text-[#0F0F0F]/40 uppercase tracking-wider">Occurrence</span>
+                  <span
+                    className="font-medium text-[#0F0F0F]"
+                    style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                  >
+                    {occurrenceRate}%
+                  </span>
+                </div>
+                <div className="h-1.5 bg-[#0F0F0F]/5 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-[#8B9A7D] rounded-full transition-all duration-700 ease-out"
+                    style={{ width: `${Math.max(occurrenceRate, 2)}%` }}
+                  />
+                </div>
               </div>
-              <div className="h-2 bg-[#0F0F0F]/5 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-[#8B9A7D] rounded-full transition-all duration-700 ease-out"
-                  style={{ width: `${Math.max(occurrenceRate, 2)}%` }}
-                />
+
+              {/* Win rate */}
+              <div>
+                <div className="flex items-center justify-between text-xs mb-1.5">
+                  <span className="text-[#0F0F0F]/40 uppercase tracking-wider flex items-center gap-1">
+                    <TrendingUp className="w-3 h-3" />
+                    Win Rate
+                  </span>
+                  <span
+                    className="font-medium text-[#0F0F0F]"
+                    style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                  >
+                    {winRate}%
+                  </span>
+                </div>
+                <div className="h-1.5 bg-[#0F0F0F]/5 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all duration-700 ease-out ${winRate >= 50 ? 'bg-[#8B9A7D]' : 'bg-[#C45A3B]'}`}
+                    style={{ width: `${Math.max(winRate, 2)}%` }}
+                  />
+                </div>
+                <p className="text-[10px] text-[#0F0F0F]/30 mt-1">
+                  <span className="text-[#8B9A7D]">{wins}W</span> / <span className="text-[#C45A3B]">{losses}L</span>
+                </p>
               </div>
             </div>
 

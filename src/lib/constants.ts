@@ -1,6 +1,9 @@
 export const RESULT_TYPES = ["OCCURRED", "NO_SETUP"] as const;
 export type ResultType = (typeof RESULT_TYPES)[number];
 
+export const OUTCOME_TYPES = ["WIN", "LOSS"] as const;
+export type OutcomeType = (typeof OUTCOME_TYPES)[number];
+
 export const LOG_TYPES = ["FRONTTEST", "BACKTEST"] as const;
 export type LogType = (typeof LOG_TYPES)[number];
 

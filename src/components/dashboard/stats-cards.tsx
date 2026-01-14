@@ -12,8 +12,14 @@ export function StatsCards({ logs, edgesWithLogs }: StatsCardsProps) {
   const stats = useMemo(() => {
     // Use logs directly - filtering is now done by parent component
     const totalDaysLogged = logs.length;
-    const occurrences = logs.filter(l => l.result === "OCCURRED").length;
+    const occurredLogs = logs.filter(l => l.result === "OCCURRED");
+    const occurrences = occurredLogs.length;
     const occurrenceRate = totalDaysLogged > 0 ? Math.round((occurrences / totalDaysLogged) * 100) : 0;
+
+    // Win rate calculation
+    const wins = occurredLogs.filter(l => l.outcome === "WIN").length;
+    const losses = occurredLogs.filter(l => l.outcome === "LOSS").length;
+    const winRate = occurrences > 0 ? Math.round((wins / occurrences) * 100) : 0;
 
     // Find date range of current logs for comparison calculation
     const sortedDates = logs
@@ -31,7 +37,7 @@ export function StatsCards({ logs, edgesWithLogs }: StatsCardsProps) {
 
     // Best day calculation from filtered logs
     const dayOccurrences: Record<string, number> = {};
-    logs.filter(l => l.result === "OCCURRED").forEach(log => {
+    occurredLogs.forEach(log => {
       dayOccurrences[log.dayOfWeek] = (dayOccurrences[log.dayOfWeek] || 0) + 1;
     });
     const bestDay = Object.keys(dayOccurrences).length > 0
@@ -48,8 +54,7 @@ export function StatsCards({ logs, edgesWithLogs }: StatsCardsProps) {
       }
     });
     const totalWeeks = allWeekNumbers.size || 1;
-    const totalOccurrences = logs.filter(l => l.result === "OCCURRED").length;
-    const avgPerWeek = (totalOccurrences / totalWeeks).toFixed(1);
+    const avgPerWeek = (occurrences / totalWeeks).toFixed(1);
 
     // Hot edge from filtered data
     const edgeStats = edgesWithLogs.map(edge => {
@@ -75,6 +80,9 @@ export function StatsCards({ logs, edgesWithLogs }: StatsCardsProps) {
       avgPerWeek,
       hotEdge,
       rangeDays,
+      winRate,
+      wins,
+      losses,
     };
   }, [logs, edgesWithLogs]);
 
@@ -92,17 +100,16 @@ export function StatsCards({ logs, edgesWithLogs }: StatsCardsProps) {
       accent: stats.occurrenceRate >= 50,
     },
     {
+      value: `${stats.winRate}%`,
+      label: "Win Rate",
+      sublabel: stats.occurrences > 0 ? `${stats.wins}W / ${stats.losses}L` : null,
+      accent: stats.winRate >= 50,
+    },
+    {
       value: stats.avgPerWeek,
       label: "Weekly Average",
       sublabel: stats.bestDay ? `Best: ${stats.bestDay.slice(0, 3)}` : null,
       accent: false,
-    },
-    {
-      value: stats.hotEdge?.name || "—",
-      label: "Most Active",
-      sublabel: stats.hotEdge ? `${stats.hotEdge.occurrenceRate}% frequency` : null,
-      accent: false,
-      isText: true,
     },
   ];
 
@@ -114,7 +121,7 @@ export function StatsCards({ logs, edgesWithLogs }: StatsCardsProps) {
           className="p-5 sm:p-6 rounded-2xl bg-white border border-[#0F0F0F]/5 hover:border-[#0F0F0F]/10 transition-colors duration-300"
         >
           <p
-            className={`${item.isText ? 'text-xl sm:text-2xl truncate' : 'text-3xl sm:text-4xl'} tracking-tight text-[#0F0F0F]`}
+            className="text-3xl sm:text-4xl tracking-tight text-[#0F0F0F]"
             style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
           >
             {item.value}

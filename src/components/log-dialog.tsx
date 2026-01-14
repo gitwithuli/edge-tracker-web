@@ -8,10 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Plus, Link as LinkIcon, Loader2, Check, X, Calendar as CalendarIcon, Clock, Rewind, Play } from "lucide-react";
+import { Plus, Link as LinkIcon, Loader2, Check, X, Calendar as CalendarIcon, Clock, Rewind, Play, TrendingUp, TrendingDown } from "lucide-react";
 import { format } from "date-fns";
-import type { TradeLog, TradeLogInput, ResultType, TradingDay, LogType } from "@/lib/types";
-import { RESULT_TYPES, TRADING_DAYS, LOG_TYPES, DEFAULT_LOG_VALUES } from "@/lib/constants";
+import type { TradeLog, TradeLogInput, ResultType, TradingDay, LogType, OutcomeType } from "@/lib/types";
+import { RESULT_TYPES, TRADING_DAYS, LOG_TYPES, DEFAULT_LOG_VALUES, OUTCOME_TYPES } from "@/lib/constants";
 import { useEdgeStore } from "@/hooks/use-edge-store";
 
 interface LogDialogProps {
@@ -29,6 +29,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, initialData, trigge
   const isLoading = loadingStates.addingLog || loadingStates.updatingLogId !== null;
 
   const [result, setResult] = useState<ResultType>(initialData?.result as ResultType || DEFAULT_LOG_VALUES.result);
+  const [outcome, setOutcome] = useState<OutcomeType | null>(initialData?.outcome as OutcomeType || null);
   const [logType, setLogType] = useState<LogType>(initialData?.logType as LogType || defaultLogType || DEFAULT_LOG_VALUES.logType);
   const [day, setDay] = useState<TradingDay>(initialData?.dayOfWeek as TradingDay || DEFAULT_LOG_VALUES.dayOfWeek);
   const [duration, setDuration] = useState(initialData?.durationMinutes?.toString() || DEFAULT_LOG_VALUES.durationMinutes.toString());
@@ -54,6 +55,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, initialData, trigge
     if (open) {
       if (initialData) {
         setResult(initialData.result as ResultType);
+        setOutcome(initialData.outcome as OutcomeType || null);
         setLogType(initialData.logType as LogType || defaultLogType || 'FRONTTEST');
         setDay(initialData.dayOfWeek as TradingDay);
         setDuration(initialData.durationMinutes?.toString() || "15");
@@ -62,6 +64,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, initialData, trigge
         setDate(initialData.date || new Date().toISOString().split('T')[0]);
       } else {
         setResult(DEFAULT_LOG_VALUES.result);
+        setOutcome(null);
         setLogType(defaultLogType || DEFAULT_LOG_VALUES.logType);
         setDuration(DEFAULT_LOG_VALUES.durationMinutes.toString());
         setNote(DEFAULT_LOG_VALUES.note);
@@ -82,9 +85,11 @@ export const LogDialog = memo(function LogDialog({ edgeName, initialData, trigge
 
     const durationNum = result === "NO_SETUP" ? 0 : (parseInt(duration) || 0);
     if (result === "OCCURRED" && durationNum < 1) return;
+    if (result === "OCCURRED" && !outcome) return;
 
     onSave({
       result,
+      outcome: result === "OCCURRED" ? outcome : null,
       logType,
       note,
       dayOfWeek: day,
@@ -173,13 +178,49 @@ export const LogDialog = memo(function LogDialog({ edgeName, initialData, trigge
                     ? "bg-[#C45A3B] text-white border-[#C45A3B]"
                     : "bg-transparent border-[#0F0F0F]/10 text-[#0F0F0F]/50 hover:border-[#0F0F0F]/30"
                 }`}
-                onClick={() => setResult("NO_SETUP")}
+                onClick={() => {
+                  setResult("NO_SETUP");
+                  setOutcome(null);
+                }}
               >
                 <X className="w-5 h-5" />
                 <span className="text-xs font-medium">No setup</span>
               </button>
             </div>
           </div>
+
+          {/* WIN/LOSS Toggle - only shown when OCCURRED */}
+          {result === "OCCURRED" && (
+            <div className="space-y-2">
+              <Label className="text-[#0F0F0F]/40 text-xs uppercase tracking-[0.15em]">Trade outcome</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  className={`h-14 flex flex-col items-center justify-center gap-1 rounded-xl border transition-all duration-300 ${
+                    outcome === "WIN"
+                      ? "bg-[#8B9A7D] text-white border-[#8B9A7D]"
+                      : "bg-transparent border-[#0F0F0F]/10 text-[#0F0F0F]/50 hover:border-[#0F0F0F]/30"
+                  }`}
+                  onClick={() => setOutcome("WIN")}
+                >
+                  <TrendingUp className="w-5 h-5" />
+                  <span className="text-xs font-medium">Win</span>
+                </button>
+                <button
+                  type="button"
+                  className={`h-14 flex flex-col items-center justify-center gap-1 rounded-xl border transition-all duration-300 ${
+                    outcome === "LOSS"
+                      ? "bg-[#C45A3B] text-white border-[#C45A3B]"
+                      : "bg-transparent border-[#0F0F0F]/10 text-[#0F0F0F]/50 hover:border-[#0F0F0F]/30"
+                  }`}
+                  onClick={() => setOutcome("LOSS")}
+                >
+                  <TrendingDown className="w-5 h-5" />
+                  <span className="text-xs font-medium">Loss</span>
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Date Picker */}
           <div className="space-y-2">
@@ -296,7 +337,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, initialData, trigge
 
           <button
             type="submit"
-            disabled={isLoading || (result === "OCCURRED" && parseInt(duration) < 1)}
+            disabled={isLoading || (result === "OCCURRED" && parseInt(duration) < 1) || (result === "OCCURRED" && !outcome)}
             className="w-full bg-[#0F0F0F] text-[#FAF7F2] py-3 rounded-full text-sm font-medium hover:bg-[#C45A3B] transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {isLoading ? (

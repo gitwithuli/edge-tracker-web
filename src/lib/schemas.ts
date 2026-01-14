@@ -1,9 +1,10 @@
 import { z } from "zod";
-import { RESULT_TYPES, TRADING_DAYS, LOG_TYPES } from "./constants";
+import { RESULT_TYPES, TRADING_DAYS, LOG_TYPES, OUTCOME_TYPES } from "./constants";
 
 // Input schema for creating/updating logs (what the form submits)
 export const tradeLogInputSchema = z.object({
   result: z.enum(RESULT_TYPES),
+  outcome: z.enum(OUTCOME_TYPES).nullable().optional(),
   logType: z.enum(LOG_TYPES).default("FRONTTEST"),
   dayOfWeek: z.enum(TRADING_DAYS),
   durationMinutes: z.number().int().min(0).max(1440),
@@ -28,6 +29,7 @@ export const tradeLogSchema = tradeLogInputSchema.extend({
   edgeId: z.string(),
   date: z.string(),
   logType: z.enum(LOG_TYPES),
+  outcome: z.enum(OUTCOME_TYPES).nullable(),
 });
 
 export type TradeLog = z.infer<typeof tradeLogSchema>;

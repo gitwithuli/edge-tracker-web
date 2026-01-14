@@ -99,6 +99,7 @@ function mapDbToLog(row: Record<string, unknown>): TradeLog {
     id: row.id as string,
     edgeId: row.edge_id as string,
     result: row.result as TradeLog['result'],
+    outcome: (row.outcome as TradeLog['outcome']) || null,
     logType: (row.log_type as TradeLog['logType']) || 'FRONTTEST',
     dayOfWeek: row.day_of_week as TradeLog['dayOfWeek'],
     durationMinutes: row.duration_minutes as number,
@@ -349,12 +350,14 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
     const tempId = `temp-${Date.now()}`;
     const logDate = logData.date || new Date().toISOString().split('T')[0];
     const logType = logData.logType || 'FRONTTEST';
+    const outcome = logData.result === 'OCCURRED' ? (logData.outcome || null) : null;
     const optimisticLog: TradeLog = {
       id: tempId,
       edgeId,
       date: logDate,
       logType,
       result: logData.result,
+      outcome,
       dayOfWeek: logData.dayOfWeek,
       durationMinutes: logData.durationMinutes,
       note: logData.note || '',
@@ -369,6 +372,7 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
         user_id: user.id,
         edge_id: edgeId,
         result: logData.result,
+        outcome,
         log_type: logType,
         day_of_week: logData.dayOfWeek,
         duration_minutes: logData.durationMinutes,
@@ -437,9 +441,11 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
       return;
     }
 
+    const outcome = logData.result === 'OCCURRED' ? (logData.outcome || null) : null;
     const updatedLog: TradeLog = {
       ...originalLog,
       ...logData,
+      outcome,
       logType: logData.logType || originalLog.logType,
       date: logData.date || originalLog.date,
     };
@@ -449,6 +455,7 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
       .from('logs')
       .update({
         result: logData.result,
+        outcome,
         log_type: logData.logType || originalLog.logType,
         day_of_week: logData.dayOfWeek,
         duration_minutes: logData.durationMinutes,
