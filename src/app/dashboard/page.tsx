@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { useEdgeStore } from "@/hooks/use-edge-store";
-import { LogOut, Plus, Settings, Play, Rewind, BarChart3, Download } from "lucide-react";
+import { LogOut, Plus, Settings, Play, Rewind, BarChart3, Download, Timer } from "lucide-react";
 import { StatsCards } from "@/components/dashboard/stats-cards";
 import { EdgeScorecard } from "@/components/dashboard/edge-scorecard";
 import { EdgeGrid } from "@/components/dashboard/edge-grid";
@@ -131,6 +131,14 @@ export default function DashboardPage() {
                   }
                 />
               )}
+
+              <Link
+                href="/macros"
+                className="p-2 rounded-full text-[#0F0F0F]/40 hover:text-[#0F0F0F] hover:bg-[#0F0F0F]/5 transition-all duration-300"
+                title="Macro Tracker"
+              >
+                <Timer className="w-4 h-4" />
+              </Link>
 
               <a
                 href="/api/backup"
