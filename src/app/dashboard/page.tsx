@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo } from "react";
 import { useEdgeStore } from "@/hooks/use-edge-store";
 import { LogOut, Plus, Settings, Play, Rewind, BarChart3 } from "lucide-react";
 import { StatsCards } from "@/components/dashboard/stats-cards";
-import { DayChart } from "@/components/dashboard/day-chart";
+import { EdgeScorecard } from "@/components/dashboard/edge-scorecard";
 import { EdgeGrid } from "@/components/dashboard/edge-grid";
 import { RecentActivity } from "@/components/dashboard/recent-activity";
 import { BacktestStats } from "@/components/dashboard/backtest-stats";
@@ -247,7 +247,7 @@ export default function DashboardPage() {
                 className={`opacity-0 ${mounted ? 'animate-slide-up' : ''}`}
                 style={{ animationDelay: '0.3s' }}
               >
-                <DayChart logs={filteredLogs} />
+                <EdgeScorecard edgesWithLogs={edgesWithFilteredLogs} />
               </div>
               <div
                 className={`opacity-0 ${mounted ? 'animate-slide-up' : ''}`}
