@@ -86,6 +86,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, initialData, trigge
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('[LogDialog] handleSubmit called', { result, outcome, logType, isEditing });
 
     const durationNum = result === "NO_SETUP" ? 0 : (parseInt(duration) || 0);
     if (result === "OCCURRED" && durationNum < 1) return;
@@ -95,6 +96,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, initialData, trigge
     const validLinks = tvLinks.filter(link => link.trim() !== '');
 
     const newEdgeId = isEditing && selectedEdgeId !== initialData?.edgeId ? selectedEdgeId : undefined;
+    console.log('[LogDialog] Calling onSave', { newEdgeId, selectedEdgeId, initialEdgeId: initialData?.edgeId });
     onSave({
       result,
       outcome: result === "OCCURRED" ? outcome : null,
@@ -105,7 +107,9 @@ export const LogDialog = memo(function LogDialog({ edgeName, initialData, trigge
       tvLinks: result === "NO_SETUP" ? [] : validLinks,
       date,
     }, newEdgeId);
+    console.log('[LogDialog] onSave returned, calling setOpen(false)');
     setOpen(false);
+    console.log('[LogDialog] setOpen(false) called');
   };
 
   const addTvLink = () => {
