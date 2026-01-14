@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 interface HistorySheetProps {
   edge: EdgeWithLogs;
   onDeleteLog: (id: string) => void;
-  onUpdateLog: (id: string, data: TradeLogInput) => void;
+  onUpdateLog: (id: string, data: TradeLogInput, newEdgeId?: string) => void;
 }
 
 function formatDate(dateStr: string): string {
@@ -256,7 +256,7 @@ export const HistorySheet = memo(function HistorySheet({ edge, onDeleteLog, onUp
                                 >
                                   <LogDialog
                                     initialData={log}
-                                    onSave={(newData) => onUpdateLog(String(log.id), newData)}
+                                    onSave={(newData, newEdgeId) => onUpdateLog(String(log.id), newData, newEdgeId)}
                                     trigger={
                                       <div className="relative flex cursor-pointer items-center rounded-lg px-3 py-2 text-sm hover:bg-[#0F0F0F]/5 w-full font-medium transition-colors">
                                         <Pencil className="mr-2 h-4 w-4 text-[#0F0F0F]/40" /> Edit

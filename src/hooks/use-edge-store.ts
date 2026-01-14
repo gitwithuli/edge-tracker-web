@@ -57,7 +57,7 @@ interface EdgeStore {
   fetchLogs: () => Promise<void>;
   addLog: (edgeId: string, logData: TradeLogInput) => Promise<void>;
   deleteLog: (logId: string) => Promise<void>;
-  updateLog: (logId: string, logData: TradeLogInput) => Promise<void>;
+  updateLog: (logId: string, logData: TradeLogInput, newEdgeId?: string) => Promise<void>;
 
   // MFA
   checkMfaStatus: () => Promise<void>;
@@ -377,42 +377,42 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
 
     set({ logs: [optimisticLog, ...logs] });
 
-    const { data, error } = await supabase
-      .from('logs')
-      .insert([{
-        user_id: user.id,
-        edge_id: edgeId,
-        result: logData.result,
-        outcome,
-        log_type: logType,
-        day_of_week: logData.dayOfWeek,
-        duration_minutes: logData.durationMinutes,
-        note: logData.note || '',
-        tv_links: tvLinks,
-        tv_link: tvLinks[0] || null, // Legacy compatibility
-        date: logDate,
-      }])
-      .select()
-      .single();
+    try {
+      const { data, error } = await supabase
+        .from('logs')
+        .insert([{
+          user_id: user.id,
+          edge_id: edgeId,
+          result: logData.result,
+          outcome,
+          log_type: logType,
+          day_of_week: logData.dayOfWeek,
+          duration_minutes: logData.durationMinutes,
+          note: logData.note || '',
+          tv_links: tvLinks,
+          tv_link: tvLinks[0] || null,
+          date: logDate,
+        }])
+        .select()
+        .single();
 
-    if (error) {
-      const message = `Failed to add log: ${error.message}`;
-      set({
-        logs: logs.filter(l => l.id !== tempId),
-        error: message,
-        loadingStates: { ...get().loadingStates, addingLog: false }
-      });
-      toast.error(message);
-      return;
-    }
+      if (error) {
+        set({ logs: logs.filter(l => l.id !== tempId), error: `Failed to add log: ${error.message}` });
+        toast.error(`Failed to add log: ${error.message}`);
+        return;
+      }
 
-    if (data) {
-      const newLog = mapDbToLog(data);
-      set({
-        logs: get().logs.map(l => l.id === tempId ? newLog : l),
-        loadingStates: { ...get().loadingStates, addingLog: false }
-      });
-      toast.success('Trade logged');
+      if (data) {
+        const newLog = mapDbToLog(data);
+        set({ logs: get().logs.map(l => l.id === tempId ? newLog : l) });
+        toast.success('Trade logged');
+      }
+    } catch (err) {
+      console.error('addLog error:', err);
+      set({ logs: logs.filter(l => l.id !== tempId) });
+      toast.error('Failed to add log');
+    } finally {
+      set({ loadingStates: { ...get().loadingStates, addingLog: false } });
     }
   },
 
@@ -441,7 +441,7 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
     toast.success('Trade log deleted');
   },
 
-  updateLog: async (logId, logData) => {
+  updateLog: async (logId, logData, newEdgeId) => {
     const { logs } = get();
 
     set({ loadingStates: { ...get().loadingStates, updatingLogId: logId }, error: null });
@@ -453,47 +453,52 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
       return;
     }
 
-    const outcome = logData.result === 'OCCURRED' ? (logData.outcome || null) : null;
-    const tvLinks = logData.tvLinks || (logData.tvLink ? [logData.tvLink] : originalLog.tvLinks || []);
-    const updatedLog: TradeLog = {
-      ...originalLog,
-      ...logData,
-      outcome,
-      tvLinks,
-      tvLink: tvLinks[0] || undefined,
-      logType: logData.logType || originalLog.logType,
-      date: logData.date || originalLog.date,
-    };
-    set({ logs: logs.map(l => l.id === logId ? updatedLog : l) });
-
-    const { error } = await supabase
-      .from('logs')
-      .update({
-        result: logData.result,
+    try {
+      const outcome = logData.result === 'OCCURRED' ? (logData.outcome || null) : null;
+      const tvLinks = logData.tvLinks || (logData.tvLink ? [logData.tvLink] : originalLog.tvLinks || []);
+      const targetEdgeId = newEdgeId || originalLog.edgeId;
+      const updatedLog: TradeLog = {
+        ...originalLog,
+        ...logData,
+        edgeId: targetEdgeId,
         outcome,
-        log_type: logData.logType || originalLog.logType,
-        day_of_week: logData.dayOfWeek,
-        duration_minutes: logData.durationMinutes,
-        note: logData.note || '',
-        tv_links: tvLinks,
-        tv_link: tvLinks[0] || null, // Legacy compatibility
+        tvLinks,
+        tvLink: tvLinks[0] || undefined,
+        logType: logData.logType || originalLog.logType,
         date: logData.date || originalLog.date,
-      })
-      .eq('id', logId);
+      };
+      set({ logs: logs.map(l => l.id === logId ? updatedLog : l) });
 
-    if (error) {
-      const message = `Failed to update log: ${error.message}`;
-      set({
-        logs,
-        error: message,
-        loadingStates: { ...get().loadingStates, updatingLogId: null }
-      });
-      toast.error(message);
-      return;
+      const { error } = await supabase
+        .from('logs')
+        .update({
+          edge_id: targetEdgeId,
+          result: logData.result,
+          outcome,
+          log_type: logData.logType || originalLog.logType,
+          day_of_week: logData.dayOfWeek,
+          duration_minutes: logData.durationMinutes,
+          note: logData.note || '',
+          tv_links: tvLinks,
+          tv_link: tvLinks[0] || null,
+          date: logData.date || originalLog.date,
+        })
+        .eq('id', logId);
+
+      if (error) {
+        set({ logs, error: `Failed to update log: ${error.message}` });
+        toast.error(`Failed to update log: ${error.message}`);
+        return;
+      }
+
+      toast.success('Trade log updated');
+    } catch (err) {
+      console.error('updateLog error:', err);
+      set({ logs });
+      toast.error('Failed to update log');
+    } finally {
+      set({ loadingStates: { ...get().loadingStates, updatingLogId: null } });
     }
-
-    set({ loadingStates: { ...get().loadingStates, updatingLogId: null } });
-    toast.success('Trade log updated');
   },
 
   // === MFA ===

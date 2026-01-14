@@ -19,14 +19,15 @@ interface LogDialogProps {
   initialData?: TradeLog;
   trigger?: React.ReactNode;
   defaultLogType?: LogType;
-  onSave: (data: TradeLogInput) => void;
+  onSave: (data: TradeLogInput, newEdgeId?: string) => void;
 }
 
 export const LogDialog = memo(function LogDialog({ edgeName, initialData, trigger, defaultLogType, onSave }: LogDialogProps) {
   const [open, setOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const { loadingStates } = useEdgeStore();
+  const { loadingStates, edges } = useEdgeStore();
   const isLoading = loadingStates.addingLog || loadingStates.updatingLogId !== null;
+  const isEditing = !!initialData;
 
   const [result, setResult] = useState<ResultType>(initialData?.result as ResultType || DEFAULT_LOG_VALUES.result);
   const [outcome, setOutcome] = useState<OutcomeType | null>(initialData?.outcome as OutcomeType || null);
@@ -36,6 +37,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, initialData, trigge
   const [note, setNote] = useState(initialData?.note || DEFAULT_LOG_VALUES.note);
   const [tvLinks, setTvLinks] = useState<string[]>(initialData?.tvLinks || []);
   const [date, setDate] = useState(initialData?.date || new Date().toISOString().split('T')[0]);
+  const [selectedEdgeId, setSelectedEdgeId] = useState<string>(initialData?.edgeId || '');
 
   const selectedDate = date ? new Date(date + 'T12:00:00') : undefined;
 
@@ -62,6 +64,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, initialData, trigge
         setNote(initialData.note || "");
         setTvLinks(initialData.tvLinks || []);
         setDate(initialData.date || new Date().toISOString().split('T')[0]);
+        setSelectedEdgeId(initialData.edgeId);
       } else {
         setResult(DEFAULT_LOG_VALUES.result);
         setOutcome(null);
@@ -70,6 +73,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, initialData, trigge
         setNote(DEFAULT_LOG_VALUES.note);
         setTvLinks([]);
         setDate(new Date().toISOString().split('T')[0]);
+        setSelectedEdgeId('');
         // Auto-detect today's day
         const days: TradingDay[] = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] as TradingDay[];
         const today = days[new Date().getDay()];
@@ -90,6 +94,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, initialData, trigge
     // Filter out empty links
     const validLinks = tvLinks.filter(link => link.trim() !== '');
 
+    const newEdgeId = isEditing && selectedEdgeId !== initialData?.edgeId ? selectedEdgeId : undefined;
     onSave({
       result,
       outcome: result === "OCCURRED" ? outcome : null,
@@ -99,7 +104,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, initialData, trigge
       durationMinutes: durationNum,
       tvLinks: result === "NO_SETUP" ? [] : validLinks,
       date,
-    });
+    }, newEdgeId);
     setOpen(false);
   };
 
@@ -141,6 +146,25 @@ export const LogDialog = memo(function LogDialog({ edgeName, initialData, trigge
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="p-6 pt-4 space-y-5">
+          {/* Edge Selector - only when editing */}
+          {isEditing && edges.length > 1 && (
+            <div className="space-y-2">
+              <Label className="text-[#0F0F0F]/40 text-xs uppercase tracking-[0.15em]">Edge</Label>
+              <Select value={selectedEdgeId} onValueChange={setSelectedEdgeId}>
+                <SelectTrigger className="bg-white border-[#0F0F0F]/10 text-[#0F0F0F] rounded-xl h-11 focus:border-[#C45A3B] focus:ring-[#C45A3B]/20">
+                  <SelectValue placeholder="Select edge" />
+                </SelectTrigger>
+                <SelectContent className="bg-white border-[#0F0F0F]/10 text-[#0F0F0F] rounded-xl">
+                  {edges.map((edge) => (
+                    <SelectItem key={edge.id} value={edge.id} className="rounded-lg">
+                      {edge.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
           {/* Log Type Toggle */}
           <div className="space-y-2">
             <Label className="text-[#0F0F0F]/40 text-xs uppercase tracking-[0.15em]">Log Type</Label>
