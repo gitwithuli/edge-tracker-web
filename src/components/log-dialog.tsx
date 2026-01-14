@@ -38,6 +38,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, initialData, trigge
   const [tvLinks, setTvLinks] = useState<string[]>(initialData?.tvLinks || []);
   const [date, setDate] = useState(initialData?.date || new Date().toISOString().split('T')[0]);
   const [selectedEdgeId, setSelectedEdgeId] = useState<string>(initialData?.edgeId || '');
+  const [showOutcomeError, setShowOutcomeError] = useState(false);
 
   const selectedDate = date ? new Date(date + 'T12:00:00') : undefined;
 
@@ -55,6 +56,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, initialData, trigge
 
   useEffect(() => {
     if (open) {
+      setShowOutcomeError(false);
       if (initialData) {
         setResult(initialData.result as ResultType);
         setOutcome(initialData.outcome as OutcomeType || null);
@@ -86,17 +88,18 @@ export const LogDialog = memo(function LogDialog({ edgeName, initialData, trigge
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('[LogDialog] handleSubmit called', { result, outcome, logType, isEditing });
 
     const durationNum = result === "NO_SETUP" ? 0 : (parseInt(duration) || 0);
     if (result === "OCCURRED" && durationNum < 1) return;
-    if (result === "OCCURRED" && !outcome) return;
+    if (result === "OCCURRED" && !outcome) {
+      setShowOutcomeError(true);
+      return;
+    }
 
     // Filter out empty links
     const validLinks = tvLinks.filter(link => link.trim() !== '');
 
     const newEdgeId = isEditing && selectedEdgeId !== initialData?.edgeId ? selectedEdgeId : undefined;
-    console.log('[LogDialog] Calling onSave', { newEdgeId, selectedEdgeId, initialEdgeId: initialData?.edgeId });
     onSave({
       result,
       outcome: result === "OCCURRED" ? outcome : null,
@@ -107,9 +110,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, initialData, trigge
       tvLinks: result === "NO_SETUP" ? [] : validLinks,
       date,
     }, newEdgeId);
-    console.log('[LogDialog] onSave returned, calling setOpen(false)');
     setOpen(false);
-    console.log('[LogDialog] setOpen(false) called');
   };
 
   const addTvLink = () => {
@@ -237,16 +238,20 @@ export const LogDialog = memo(function LogDialog({ edgeName, initialData, trigge
           {/* WIN/LOSS Toggle - only shown when OCCURRED */}
           {result === "OCCURRED" && (
             <div className="space-y-2">
-              <Label className="text-[#0F0F0F]/40 text-xs uppercase tracking-[0.15em]">Trade outcome</Label>
+              <Label className={`text-xs uppercase tracking-[0.15em] ${showOutcomeError && !outcome ? "text-[#C45A3B]" : "text-[#0F0F0F]/40"}`}>
+                Trade outcome {showOutcomeError && !outcome && <span className="normal-case tracking-normal">— required</span>}
+              </Label>
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
                   className={`h-14 flex flex-col items-center justify-center gap-1 rounded-xl border transition-all duration-300 ${
                     outcome === "WIN"
                       ? "bg-[#8B9A7D] text-white border-[#8B9A7D]"
-                      : "bg-transparent border-[#0F0F0F]/10 text-[#0F0F0F]/50 hover:border-[#0F0F0F]/30"
+                      : showOutcomeError && !outcome
+                        ? "bg-transparent border-[#C45A3B]/50 text-[#0F0F0F]/50 hover:border-[#C45A3B]"
+                        : "bg-transparent border-[#0F0F0F]/10 text-[#0F0F0F]/50 hover:border-[#0F0F0F]/30"
                   }`}
-                  onClick={() => setOutcome("WIN")}
+                  onClick={() => { setOutcome("WIN"); setShowOutcomeError(false); }}
                 >
                   <TrendingUp className="w-5 h-5" />
                   <span className="text-xs font-medium">Win</span>
@@ -256,9 +261,11 @@ export const LogDialog = memo(function LogDialog({ edgeName, initialData, trigge
                   className={`h-14 flex flex-col items-center justify-center gap-1 rounded-xl border transition-all duration-300 ${
                     outcome === "LOSS"
                       ? "bg-[#C45A3B] text-white border-[#C45A3B]"
-                      : "bg-transparent border-[#0F0F0F]/10 text-[#0F0F0F]/50 hover:border-[#0F0F0F]/30"
+                      : showOutcomeError && !outcome
+                        ? "bg-transparent border-[#C45A3B]/50 text-[#0F0F0F]/50 hover:border-[#C45A3B]"
+                        : "bg-transparent border-[#0F0F0F]/10 text-[#0F0F0F]/50 hover:border-[#0F0F0F]/30"
                   }`}
-                  onClick={() => setOutcome("LOSS")}
+                  onClick={() => { setOutcome("LOSS"); setShowOutcomeError(false); }}
                 >
                   <TrendingDown className="w-5 h-5" />
                   <span className="text-xs font-medium">Loss</span>
