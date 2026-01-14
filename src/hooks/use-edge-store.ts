@@ -359,10 +359,15 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
   },
 
   addLog: async (edgeId, logData) => {
+    console.log('[addLog] START', { edgeId, logData });
     const { user, logs } = get();
-    if (!user) return;
+    if (!user) {
+      console.log('[addLog] No user, returning');
+      return;
+    }
 
     set({ loadingStates: { ...get().loadingStates, addingLog: true }, error: null });
+    console.log('[addLog] Loading state set');
 
     const tempId = `temp-${Date.now()}`;
     const logDate = logData.date || new Date().toISOString().split('T')[0];
@@ -384,8 +389,10 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
     };
 
     set({ logs: [optimisticLog, ...logs] });
+    console.log('[addLog] Optimistic update done');
 
     try {
+      console.log('[addLog] Calling Supabase...');
       const { data, error } = await supabase
         .from('logs')
         .insert([{
@@ -403,6 +410,7 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
         }])
         .select()
         .single();
+      console.log('[addLog] Supabase returned', { data: !!data, error });
 
       if (error) {
         set({ logs: logs.filter(l => l.id !== tempId), error: `Failed to add log: ${error.message}` });
@@ -414,12 +422,14 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
         const newLog = mapDbToLog(data);
         set({ logs: get().logs.map(l => l.id === tempId ? newLog : l) });
         toast.success('Trade logged');
+        console.log('[addLog] SUCCESS');
       }
     } catch (err) {
-      console.error('addLog error:', err);
+      console.error('[addLog] CATCH error:', err);
       set({ logs: logs.filter(l => l.id !== tempId) });
       toast.error('Failed to add log');
     } finally {
+      console.log('[addLog] FINALLY - clearing loading state');
       set({ loadingStates: { ...get().loadingStates, addingLog: false } });
     }
   },
