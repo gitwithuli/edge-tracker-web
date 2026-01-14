@@ -3,9 +3,10 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useMacroTime } from "@/hooks/use-macro-time";
+import { useMacroStore, MacroLog } from "@/hooks/use-macro-store";
 import { useEdgeStore } from "@/hooks/use-edge-store";
-import { formatMacroTime, MacroWindow, MACRO_OUTCOMES } from "@/lib/macro-constants";
-import { Clock, Timer, TrendingUp, TrendingDown, Minus, XCircle, ChevronLeft } from "lucide-react";
+import { formatMacroTime, MacroWindow, MacroOutcome } from "@/lib/macro-constants";
+import { Clock, Timer, TrendingUp, TrendingDown, Minus, XCircle, ChevronLeft, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 function MacroCard({
@@ -14,14 +15,27 @@ function MacroCard({
   minutesUntil,
   minutesRemaining,
   secondsRemaining,
+  todayLog,
+  onLog,
 }: {
   macro: MacroWindow;
   status: 'upcoming' | 'active' | 'passed';
   minutesUntil: number;
   minutesRemaining: number;
   secondsRemaining?: number;
+  todayLog?: MacroLog;
+  onLog: (outcome: MacroOutcome) => void;
 }) {
   const isRTH = macro.category === 'rth_close';
+  const hasLog = !!todayLog;
+  const showLogButtons = status === 'active' || status === 'passed';
+
+  const outcomeStyles: Record<MacroOutcome, { bg: string; text: string; icon: React.ReactNode }> = {
+    WIN: { bg: 'bg-[#8B9A7D]', text: 'text-white', icon: <TrendingUp className="w-4 h-4" /> },
+    LOSS: { bg: 'bg-[#C45A3B]', text: 'text-white', icon: <TrendingDown className="w-4 h-4" /> },
+    BREAKEVEN: { bg: 'bg-[#0F0F0F]/20', text: 'text-[#0F0F0F]', icon: <Minus className="w-4 h-4" /> },
+    NO_TRADE: { bg: 'bg-[#0F0F0F]/10', text: 'text-[#0F0F0F]/60', icon: <XCircle className="w-4 h-4" /> },
+  };
 
   return (
     <div
@@ -31,7 +45,9 @@ function MacroCard({
           ? "bg-[#C45A3B]/10 border-[#C45A3B] shadow-lg shadow-[#C45A3B]/10"
           : status === 'upcoming'
             ? "bg-white/50 border-[#0F0F0F]/10 hover:border-[#0F0F0F]/20"
-            : "bg-[#0F0F0F]/5 border-[#0F0F0F]/5 opacity-60"
+            : hasLog
+              ? "bg-white/30 border-[#0F0F0F]/10"
+              : "bg-[#0F0F0F]/5 border-[#0F0F0F]/5 opacity-60"
       )}
     >
       <div className="flex items-start justify-between mb-3">
@@ -47,11 +63,21 @@ function MacroCard({
                 Live
               </span>
             )}
+            {hasLog && status !== 'active' && (
+              <span className={cn(
+                "text-[10px] px-2 py-0.5 rounded-full font-medium uppercase tracking-wider flex items-center gap-1",
+                outcomeStyles[todayLog.outcome].bg,
+                outcomeStyles[todayLog.outcome].text
+              )}>
+                <Check className="w-3 h-3" />
+                {todayLog.outcome === 'NO_TRADE' ? 'Skipped' : todayLog.outcome === 'BREAKEVEN' ? 'BE' : todayLog.outcome}
+              </span>
+            )}
           </div>
           <h3
             className={cn(
               "text-lg font-medium",
-              status === 'passed' ? "text-[#0F0F0F]/40" : "text-[#0F0F0F]"
+              status === 'passed' && !hasLog ? "text-[#0F0F0F]/40" : "text-[#0F0F0F]"
             )}
             style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
           >
@@ -84,20 +110,57 @@ function MacroCard({
         </span>
       </div>
 
-      {status === 'active' && (
-        <div className="mt-4 pt-4 border-t border-[#C45A3B]/20">
-          <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 mb-2">Log Outcome</div>
+      {showLogButtons && (
+        <div className={cn(
+          "mt-4 pt-4 border-t",
+          status === 'active' ? "border-[#C45A3B]/20" : "border-[#0F0F0F]/10"
+        )}>
+          <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 mb-2">
+            {hasLog ? 'Change Outcome' : 'Log Outcome'}
+          </div>
           <div className="grid grid-cols-4 gap-2">
-            <button className="h-10 rounded-xl border border-[#8B9A7D]/30 text-[#8B9A7D] hover:bg-[#8B9A7D] hover:text-white transition-colors flex items-center justify-center gap-1.5 text-sm font-medium">
+            <button
+              onClick={() => onLog('WIN')}
+              className={cn(
+                "h-10 rounded-xl border transition-colors flex items-center justify-center gap-1.5 text-sm font-medium",
+                todayLog?.outcome === 'WIN'
+                  ? "bg-[#8B9A7D] text-white border-[#8B9A7D]"
+                  : "border-[#8B9A7D]/30 text-[#8B9A7D] hover:bg-[#8B9A7D] hover:text-white"
+              )}
+            >
               <TrendingUp className="w-4 h-4" /> Win
             </button>
-            <button className="h-10 rounded-xl border border-[#C45A3B]/30 text-[#C45A3B] hover:bg-[#C45A3B] hover:text-white transition-colors flex items-center justify-center gap-1.5 text-sm font-medium">
+            <button
+              onClick={() => onLog('LOSS')}
+              className={cn(
+                "h-10 rounded-xl border transition-colors flex items-center justify-center gap-1.5 text-sm font-medium",
+                todayLog?.outcome === 'LOSS'
+                  ? "bg-[#C45A3B] text-white border-[#C45A3B]"
+                  : "border-[#C45A3B]/30 text-[#C45A3B] hover:bg-[#C45A3B] hover:text-white"
+              )}
+            >
               <TrendingDown className="w-4 h-4" /> Loss
             </button>
-            <button className="h-10 rounded-xl border border-[#0F0F0F]/10 text-[#0F0F0F]/50 hover:bg-[#0F0F0F]/5 transition-colors flex items-center justify-center gap-1.5 text-sm font-medium">
+            <button
+              onClick={() => onLog('BREAKEVEN')}
+              className={cn(
+                "h-10 rounded-xl border transition-colors flex items-center justify-center gap-1.5 text-sm font-medium",
+                todayLog?.outcome === 'BREAKEVEN'
+                  ? "bg-[#0F0F0F]/20 text-[#0F0F0F] border-[#0F0F0F]/20"
+                  : "border-[#0F0F0F]/10 text-[#0F0F0F]/50 hover:bg-[#0F0F0F]/5"
+              )}
+            >
               <Minus className="w-4 h-4" /> BE
             </button>
-            <button className="h-10 rounded-xl border border-[#0F0F0F]/10 text-[#0F0F0F]/50 hover:bg-[#0F0F0F]/5 transition-colors flex items-center justify-center gap-1.5 text-sm font-medium">
+            <button
+              onClick={() => onLog('NO_TRADE')}
+              className={cn(
+                "h-10 rounded-xl border transition-colors flex items-center justify-center gap-1.5 text-sm font-medium",
+                todayLog?.outcome === 'NO_TRADE'
+                  ? "bg-[#0F0F0F]/10 text-[#0F0F0F]/60 border-[#0F0F0F]/10"
+                  : "border-[#0F0F0F]/10 text-[#0F0F0F]/50 hover:bg-[#0F0F0F]/5"
+              )}
+            >
               <XCircle className="w-4 h-4" /> Skip
             </button>
           </div>
@@ -110,6 +173,7 @@ function MacroCard({
 export default function MacrosPage() {
   const router = useRouter();
   const { user, isLoaded } = useEdgeStore();
+  const { logMacro, getLogForMacroToday, getTodaysLogs } = useMacroStore();
   const [mounted, setMounted] = useState(false);
   const {
     etHour,
@@ -146,6 +210,15 @@ export default function MacrosPage() {
     const displayHour = etHour > 12 ? etHour - 12 : etHour === 0 ? 12 : etHour;
     return `${displayHour}:${etMinute.toString().padStart(2, '0')}:${etSecond.toString().padStart(2, '0')} ${period}`;
   };
+
+  const handleLog = (macroId: string, outcome: MacroOutcome) => {
+    logMacro(macroId, outcome);
+  };
+
+  const todaysLogs = getTodaysLogs();
+  const loggedCount = todaysLogs.length;
+  const winCount = todaysLogs.filter(l => l.outcome === 'WIN').length;
+  const lossCount = todaysLogs.filter(l => l.outcome === 'LOSS').length;
 
   const upcomingMacros = macroStatuses.filter(s => s.status === 'upcoming');
   const passedMacros = macroStatuses.filter(s => s.status === 'passed');
@@ -190,6 +263,31 @@ export default function MacrosPage() {
       </header>
 
       <main className="max-w-4xl mx-auto px-6 py-8">
+        {/* Today's Summary */}
+        {loggedCount > 0 && (
+          <div className="mb-8 p-4 rounded-2xl bg-white/50 border border-[#0F0F0F]/10">
+            <div className="text-xs tracking-[0.15em] uppercase text-[#0F0F0F]/40 mb-2">Today's Summary</div>
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl font-bold text-[#0F0F0F]">{loggedCount}</span>
+                <span className="text-sm text-[#0F0F0F]/50">logged</span>
+              </div>
+              {winCount > 0 && (
+                <div className="flex items-center gap-1.5 text-[#8B9A7D]">
+                  <TrendingUp className="w-4 h-4" />
+                  <span className="font-medium">{winCount} W</span>
+                </div>
+              )}
+              {lossCount > 0 && (
+                <div className="flex items-center gap-1.5 text-[#C45A3B]">
+                  <TrendingDown className="w-4 h-4" />
+                  <span className="font-medium">{lossCount} L</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Active Macro Hero */}
         {activeMacroStatus && (
           <div className="mb-8">
@@ -202,6 +300,8 @@ export default function MacrosPage() {
               status="active"
               minutesUntil={0}
               minutesRemaining={activeMacroStatus.minutesRemaining}
+              todayLog={getLogForMacroToday(activeMacroStatus.macro.id)}
+              onLog={(outcome) => handleLog(activeMacroStatus.macro.id, outcome)}
             />
           </div>
         )}
@@ -219,6 +319,8 @@ export default function MacrosPage() {
               minutesUntil={minutesToNextMacro}
               minutesRemaining={0}
               secondsRemaining={secondsToNextMacro}
+              todayLog={getLogForMacroToday(nextMacro.id)}
+              onLog={(outcome) => handleLog(nextMacro.id, outcome)}
             />
           </div>
         )}
@@ -239,6 +341,8 @@ export default function MacrosPage() {
                     status="upcoming"
                     minutesUntil={minutesUntil}
                     minutesRemaining={0}
+                    todayLog={getLogForMacroToday(macro.id)}
+                    onLog={(outcome) => handleLog(macro.id, outcome)}
                   />
                 ))}
             </div>
@@ -259,6 +363,8 @@ export default function MacrosPage() {
                   status="passed"
                   minutesUntil={0}
                   minutesRemaining={0}
+                  todayLog={getLogForMacroToday(macro.id)}
+                  onLog={(outcome) => handleLog(macro.id, outcome)}
                 />
               ))}
             </div>
