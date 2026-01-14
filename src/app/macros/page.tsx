@@ -3,12 +3,12 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useMacroTime } from "@/hooks/use-macro-time";
-import { useMacroStore, MacroLog } from "@/hooks/use-macro-store";
+import { useMacroStore, MacroLog, MacroLogInput, MacroDirection, DisplacementQuality, LiquiditySweep } from "@/hooks/use-macro-store";
 import { useEdgeStore } from "@/hooks/use-edge-store";
-import { formatMacroTime, MacroWindow, MacroOutcome } from "@/lib/macro-constants";
-import { Clock, Timer, TrendingUp, TrendingDown, Minus, XCircle, ChevronLeft, Check, Link as LinkIcon, Plus, Trash2, ExternalLink } from "lucide-react";
+import { formatMacroTime, MacroWindow, MACRO_DIRECTIONS, DISPLACEMENT_QUALITIES, LIQUIDITY_SWEEPS } from "@/lib/macro-constants";
+import { Clock, Timer, TrendingUp, TrendingDown, Minus, ChevronLeft, Check, Link as LinkIcon, Plus, Trash2, ExternalLink, ArrowUp, ArrowDown, Activity, BarChart3, Settings, Moon, Download, Upload } from "lucide-react";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
-
 import { getTVImageUrl } from "@/lib/utils";
 
 function MacroCard({
@@ -28,23 +28,29 @@ function MacroCard({
   minutesRemaining: number;
   secondsRemaining?: number;
   todayLog?: MacroLog;
-  onLog: (outcome: MacroOutcome) => void;
+  onLog: (data: MacroLogInput) => void;
   onAddTvLink: (link: string) => void;
   onRemoveTvLink: (index: number) => void;
 }) {
   const [newLink, setNewLink] = useState('');
   const [showLinkInput, setShowLinkInput] = useState(false);
+  const [pointsInput, setPointsInput] = useState('');
   const isRTH = macro.category === 'rth_close';
-  const hasLog = !!todayLog;
-  const showLogButtons = status === 'active' || status === 'passed';
+  const hasLog = !!todayLog && (todayLog.direction !== null || todayLog.pointsMoved !== null);
+  const showLogSection = status === 'active' || status === 'passed';
   const tvLinks = todayLog?.tvLinks || [];
 
-  const outcomeStyles: Record<MacroOutcome, { bg: string; text: string; icon: React.ReactNode }> = {
-    WIN: { bg: 'bg-[#8B9A7D]', text: 'text-white', icon: <TrendingUp className="w-4 h-4" /> },
-    LOSS: { bg: 'bg-[#C45A3B]', text: 'text-white', icon: <TrendingDown className="w-4 h-4" /> },
-    BREAKEVEN: { bg: 'bg-[#0F0F0F]/20', text: 'text-[#0F0F0F]', icon: <Minus className="w-4 h-4" /> },
-    NO_TRADE: { bg: 'bg-[#0F0F0F]/10', text: 'text-[#0F0F0F]/60', icon: <XCircle className="w-4 h-4" /> },
+  const getDirectionDisplay = () => {
+    if (!todayLog?.direction) return null;
+    const styles: Record<MacroDirection, { bg: string; text: string; icon: React.ReactNode }> = {
+      BULLISH: { bg: 'bg-[#8B9A7D]', text: 'text-white', icon: <ArrowUp className="w-3 h-3" /> },
+      BEARISH: { bg: 'bg-[#C45A3B]', text: 'text-white', icon: <ArrowDown className="w-3 h-3" /> },
+      CONSOLIDATION: { bg: 'bg-[#0F0F0F]/20', text: 'text-[#0F0F0F]', icon: <Minus className="w-3 h-3" /> },
+    };
+    return styles[todayLog.direction];
   };
+
+  const directionStyle = getDirectionDisplay();
 
   return (
     <div
@@ -72,14 +78,15 @@ function MacroCard({
                 Live
               </span>
             )}
-            {hasLog && status !== 'active' && (
+            {hasLog && status !== 'active' && directionStyle && (
               <span className={cn(
                 "text-[10px] px-2 py-0.5 rounded-full font-medium uppercase tracking-wider flex items-center gap-1",
-                outcomeStyles[todayLog.outcome].bg,
-                outcomeStyles[todayLog.outcome].text
+                directionStyle.bg,
+                directionStyle.text
               )}>
-                <Check className="w-3 h-3" />
-                {todayLog.outcome === 'NO_TRADE' ? 'Skipped' : todayLog.outcome === 'BREAKEVEN' ? 'BE' : todayLog.outcome}
+                {directionStyle.icon}
+                {todayLog!.direction}
+                {todayLog!.pointsMoved !== null && ` (${todayLog!.pointsMoved}pts)`}
               </span>
             )}
           </div>
@@ -119,68 +126,166 @@ function MacroCard({
         </span>
       </div>
 
-      {showLogButtons && (
+      {showLogSection && (
         <div className={cn(
-          "mt-4 pt-4 border-t",
+          "mt-4 pt-4 border-t space-y-4",
           status === 'active' ? "border-[#C45A3B]/20" : "border-[#0F0F0F]/10"
         )}>
-          <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 mb-2">
-            Tape-Reading Outcome
+          {/* Points Moved */}
+          <div>
+            <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 mb-2">
+              Points Moved
+            </div>
+            <div className="flex gap-2">
+              <input
+                type="number"
+                value={todayLog?.pointsMoved !== null ? todayLog?.pointsMoved : pointsInput}
+                onChange={(e) => {
+                  setPointsInput(e.target.value);
+                  const val = e.target.value ? parseFloat(e.target.value) : null;
+                  onLog({ pointsMoved: val });
+                }}
+                placeholder="e.g. 15"
+                className="flex-1 h-10 px-3 text-sm bg-white border border-[#0F0F0F]/10 rounded-xl focus:outline-none focus:border-[#C45A3B] placeholder:text-[#0F0F0F]/30"
+              />
+              <span className="h-10 px-3 flex items-center text-sm text-[#0F0F0F]/40 bg-[#0F0F0F]/5 rounded-xl">
+                pts
+              </span>
+            </div>
           </div>
-          <div className="grid grid-cols-4 gap-2">
-            <button
-              onClick={() => onLog('WIN')}
-              className={cn(
-                "h-10 rounded-xl border transition-colors flex items-center justify-center gap-1.5 text-sm font-medium",
-                todayLog?.outcome === 'WIN'
-                  ? "bg-[#8B9A7D] text-white border-[#8B9A7D]"
-                  : "border-[#8B9A7D]/30 text-[#8B9A7D] hover:bg-[#8B9A7D] hover:text-white"
-              )}
-            >
-              <TrendingUp className="w-4 h-4" /> Win
-            </button>
-            <button
-              onClick={() => onLog('LOSS')}
-              className={cn(
-                "h-10 rounded-xl border transition-colors flex items-center justify-center gap-1.5 text-sm font-medium",
-                todayLog?.outcome === 'LOSS'
-                  ? "bg-[#C45A3B] text-white border-[#C45A3B]"
-                  : "border-[#C45A3B]/30 text-[#C45A3B] hover:bg-[#C45A3B] hover:text-white"
-              )}
-            >
-              <TrendingDown className="w-4 h-4" /> Loss
-            </button>
-            <button
-              onClick={() => onLog('BREAKEVEN')}
-              className={cn(
-                "h-10 rounded-xl border transition-colors flex items-center justify-center gap-1.5 text-sm font-medium",
-                todayLog?.outcome === 'BREAKEVEN'
-                  ? "bg-[#0F0F0F]/20 text-[#0F0F0F] border-[#0F0F0F]/20"
-                  : "border-[#0F0F0F]/10 text-[#0F0F0F]/50 hover:bg-[#0F0F0F]/5"
-              )}
-            >
-              <Minus className="w-4 h-4" /> BE
-            </button>
-            <button
-              onClick={() => onLog('NO_TRADE')}
-              className={cn(
-                "h-10 rounded-xl border transition-colors flex items-center justify-center gap-1.5 text-sm font-medium",
-                todayLog?.outcome === 'NO_TRADE'
-                  ? "bg-[#0F0F0F]/10 text-[#0F0F0F]/60 border-[#0F0F0F]/10"
-                  : "border-[#0F0F0F]/10 text-[#0F0F0F]/50 hover:bg-[#0F0F0F]/5"
-              )}
-            >
-              <XCircle className="w-4 h-4" /> Skip
-            </button>
+
+          {/* Direction */}
+          <div>
+            <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 mb-2">
+              Direction
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                onClick={() => onLog({ direction: 'BULLISH' })}
+                className={cn(
+                  "h-10 rounded-xl border transition-colors flex items-center justify-center gap-1.5 text-sm font-medium",
+                  todayLog?.direction === 'BULLISH'
+                    ? "bg-[#8B9A7D] text-white border-[#8B9A7D]"
+                    : "border-[#8B9A7D]/30 text-[#8B9A7D] hover:bg-[#8B9A7D] hover:text-white"
+                )}
+              >
+                <ArrowUp className="w-4 h-4" /> Bullish
+              </button>
+              <button
+                onClick={() => onLog({ direction: 'BEARISH' })}
+                className={cn(
+                  "h-10 rounded-xl border transition-colors flex items-center justify-center gap-1.5 text-sm font-medium",
+                  todayLog?.direction === 'BEARISH'
+                    ? "bg-[#C45A3B] text-white border-[#C45A3B]"
+                    : "border-[#C45A3B]/30 text-[#C45A3B] hover:bg-[#C45A3B] hover:text-white"
+                )}
+              >
+                <ArrowDown className="w-4 h-4" /> Bearish
+              </button>
+              <button
+                onClick={() => onLog({ direction: 'CONSOLIDATION' })}
+                className={cn(
+                  "h-10 rounded-xl border transition-colors flex items-center justify-center gap-1.5 text-sm font-medium",
+                  todayLog?.direction === 'CONSOLIDATION'
+                    ? "bg-[#0F0F0F]/20 text-[#0F0F0F] border-[#0F0F0F]/20"
+                    : "border-[#0F0F0F]/10 text-[#0F0F0F]/50 hover:bg-[#0F0F0F]/5"
+                )}
+              >
+                <Minus className="w-4 h-4" /> Chop
+              </button>
+            </div>
+          </div>
+
+          {/* Displacement Quality */}
+          <div>
+            <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 mb-2">
+              Displacement Quality
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => onLog({ displacementQuality: 'CLEAN' })}
+                className={cn(
+                  "h-10 rounded-xl border transition-colors flex items-center justify-center gap-1.5 text-sm font-medium",
+                  todayLog?.displacementQuality === 'CLEAN'
+                    ? "bg-[#8B9A7D] text-white border-[#8B9A7D]"
+                    : "border-[#0F0F0F]/10 text-[#0F0F0F]/60 hover:bg-[#0F0F0F]/5"
+                )}
+              >
+                <Activity className="w-4 h-4" /> Low Resistance
+              </button>
+              <button
+                onClick={() => onLog({ displacementQuality: 'CHOPPY' })}
+                className={cn(
+                  "h-10 rounded-xl border transition-colors flex items-center justify-center gap-1.5 text-sm font-medium",
+                  todayLog?.displacementQuality === 'CHOPPY'
+                    ? "bg-[#C45A3B] text-white border-[#C45A3B]"
+                    : "border-[#0F0F0F]/10 text-[#0F0F0F]/60 hover:bg-[#0F0F0F]/5"
+                )}
+              >
+                <Activity className="w-4 h-4" /> High Resistance
+              </button>
+            </div>
+          </div>
+
+          {/* Liquidity Sweep */}
+          <div>
+            <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 mb-2">
+              Liquidity Sweep
+            </div>
+            <div className="grid grid-cols-4 gap-2">
+              <button
+                onClick={() => onLog({ liquiditySweep: 'HIGHS' })}
+                className={cn(
+                  "h-10 rounded-xl border transition-colors flex items-center justify-center text-sm font-medium",
+                  todayLog?.liquiditySweep === 'HIGHS'
+                    ? "bg-[#8B9A7D] text-white border-[#8B9A7D]"
+                    : "border-[#0F0F0F]/10 text-[#0F0F0F]/60 hover:bg-[#0F0F0F]/5"
+                )}
+              >
+                Highs
+              </button>
+              <button
+                onClick={() => onLog({ liquiditySweep: 'LOWS' })}
+                className={cn(
+                  "h-10 rounded-xl border transition-colors flex items-center justify-center text-sm font-medium",
+                  todayLog?.liquiditySweep === 'LOWS'
+                    ? "bg-[#C45A3B] text-white border-[#C45A3B]"
+                    : "border-[#0F0F0F]/10 text-[#0F0F0F]/60 hover:bg-[#0F0F0F]/5"
+                )}
+              >
+                Lows
+              </button>
+              <button
+                onClick={() => onLog({ liquiditySweep: 'BOTH' })}
+                className={cn(
+                  "h-10 rounded-xl border transition-colors flex items-center justify-center text-sm font-medium",
+                  todayLog?.liquiditySweep === 'BOTH'
+                    ? "bg-[#0F0F0F] text-white border-[#0F0F0F]"
+                    : "border-[#0F0F0F]/10 text-[#0F0F0F]/60 hover:bg-[#0F0F0F]/5"
+                )}
+              >
+                Both
+              </button>
+              <button
+                onClick={() => onLog({ liquiditySweep: 'NONE' })}
+                className={cn(
+                  "h-10 rounded-xl border transition-colors flex items-center justify-center text-sm font-medium",
+                  todayLog?.liquiditySweep === 'NONE'
+                    ? "bg-[#0F0F0F]/20 text-[#0F0F0F] border-[#0F0F0F]/20"
+                    : "border-[#0F0F0F]/10 text-[#0F0F0F]/60 hover:bg-[#0F0F0F]/5"
+                )}
+              >
+                None
+              </button>
+            </div>
           </div>
 
           {/* TradingView Screenshots */}
-          <div className="mt-4">
+          <div>
             <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 mb-2 flex items-center gap-1.5">
               <LinkIcon className="w-3 h-3" /> Screenshots
             </div>
 
-            {/* Existing links */}
             {tvLinks.length > 0 && (
               <div className="space-y-2 mb-2">
                 {tvLinks.map((link, idx) => {
@@ -226,7 +331,6 @@ function MacroCard({
               </div>
             )}
 
-            {/* Add link input */}
             {showLinkInput ? (
               <div className="flex gap-2">
                 <input
@@ -275,7 +379,22 @@ function MacroCard({
 export default function MacrosPage() {
   const router = useRouter();
   const { user, isLoaded } = useEdgeStore();
-  const { logMacro, getLogForMacroToday, getTodaysLogs, addTvLink, removeTvLink } = useMacroStore();
+  const { logs, logMacro, getLogForMacroToday, getTodaysLogs, addTvLink, removeTvLink, showAsiaMacros, setShowAsiaMacros } = useMacroStore();
+  const [showSettings, setShowSettings] = useState(false);
+
+  const exportMacroData = () => {
+    const data = {
+      exportedAt: new Date().toISOString(),
+      macroLogs: logs,
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `macro-logs-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
   const [mounted, setMounted] = useState(false);
   const {
     etHour,
@@ -313,14 +432,19 @@ export default function MacrosPage() {
     return `${displayHour}:${etMinute.toString().padStart(2, '0')}:${etSecond.toString().padStart(2, '0')} ${period}`;
   };
 
-  const handleLog = (macroId: string, outcome: MacroOutcome) => {
-    logMacro(macroId, outcome);
+  const handleLog = (macroId: string, data: MacroLogInput) => {
+    logMacro(macroId, data);
   };
 
   const todaysLogs = getTodaysLogs();
-  const loggedCount = todaysLogs.length;
-  const winCount = todaysLogs.filter(l => l.outcome === 'WIN').length;
-  const lossCount = todaysLogs.filter(l => l.outcome === 'LOSS').length;
+  const logsWithData = todaysLogs.filter(l => l.direction !== null || l.pointsMoved !== null);
+  const loggedCount = logsWithData.length;
+  const bullishCount = logsWithData.filter(l => l.direction === 'BULLISH').length;
+  const bearishCount = logsWithData.filter(l => l.direction === 'BEARISH').length;
+  const consolidationCount = logsWithData.filter(l => l.direction === 'CONSOLIDATION').length;
+  const avgPoints = logsWithData.filter(l => l.pointsMoved !== null).length > 0
+    ? Math.round(logsWithData.filter(l => l.pointsMoved !== null).reduce((sum, l) => sum + (l.pointsMoved || 0), 0) / logsWithData.filter(l => l.pointsMoved !== null).length)
+    : null;
 
   const upcomingMacros = macroStatuses.filter(s => s.status === 'upcoming');
   const passedMacros = macroStatuses.filter(s => s.status === 'passed');
@@ -351,14 +475,87 @@ export default function MacrosPage() {
             </div>
           </div>
 
-          <div className="text-right">
-            <div className="text-xs tracking-wider uppercase text-[#0F0F0F]/40 mb-1">
-              {isTradingHours ? 'Market Open' : 'Market Closed'} • ET
-            </div>
-            <div
-              className="text-2xl font-mono font-bold tabular-nums text-[#0F0F0F]"
+          <div className="flex items-center gap-4">
+            <Link
+              href="/macros/stats"
+              className="p-2 rounded-full hover:bg-[#0F0F0F]/5 transition-colors"
+              title="View Statistics"
             >
-              {formatCurrentTime()}
+              <BarChart3 className="w-5 h-5 text-[#0F0F0F]/60" />
+            </Link>
+
+            {/* Settings Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setShowSettings(!showSettings)}
+                className={cn(
+                  "p-2 rounded-full transition-colors",
+                  showSettings ? "bg-[#0F0F0F]/10" : "hover:bg-[#0F0F0F]/5"
+                )}
+                title="Settings"
+              >
+                <Settings className="w-5 h-5 text-[#0F0F0F]/60" />
+              </button>
+
+              {showSettings && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setShowSettings(false)}
+                  />
+                  <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-xl border border-[#0F0F0F]/10 shadow-lg z-50 p-4">
+                    <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 mb-3">Settings</div>
+                    <label className="flex items-center justify-between cursor-pointer group">
+                      <div className="flex items-center gap-2">
+                        <Moon className="w-4 h-4 text-[#0F0F0F]/40" />
+                        <span className="text-sm font-medium">Asia Session</span>
+                      </div>
+                      <button
+                        onClick={() => setShowAsiaMacros(!showAsiaMacros)}
+                        className={cn(
+                          "relative w-10 h-6 rounded-full transition-colors",
+                          showAsiaMacros ? "bg-[#C45A3B]" : "bg-[#0F0F0F]/20"
+                        )}
+                      >
+                        <div
+                          className={cn(
+                            "absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-transform",
+                            showAsiaMacros ? "translate-x-5" : "translate-x-1"
+                          )}
+                        />
+                      </button>
+                    </label>
+                    <p className="text-xs text-[#0F0F0F]/40 mt-2">
+                      Enable to track 6PM-12AM ET macros
+                    </p>
+
+                    <div className="border-t border-[#0F0F0F]/10 mt-4 pt-4">
+                      <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 mb-3">Data</div>
+                      <button
+                        onClick={() => {
+                          exportMacroData();
+                          setShowSettings(false);
+                        }}
+                        className="flex items-center gap-2 w-full px-3 py-2 text-sm font-medium rounded-lg hover:bg-[#0F0F0F]/5 transition-colors"
+                      >
+                        <Download className="w-4 h-4 text-[#0F0F0F]/40" />
+                        Export Macro Logs
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="text-right">
+              <div className="text-xs tracking-wider uppercase text-[#0F0F0F]/40 mb-1">
+                {isTradingHours ? 'Market Open' : 'Market Closed'} • ET
+              </div>
+              <div
+                className="text-2xl font-mono font-bold tabular-nums text-[#0F0F0F]"
+              >
+                {formatCurrentTime()}
+              </div>
             </div>
           </div>
         </div>
@@ -369,21 +566,33 @@ export default function MacrosPage() {
         {loggedCount > 0 && (
           <div className="mb-8 p-4 rounded-2xl bg-white/50 border border-[#0F0F0F]/10">
             <div className="text-xs tracking-[0.15em] uppercase text-[#0F0F0F]/40 mb-2">Today's Summary</div>
-            <div className="flex items-center gap-6">
+            <div className="flex flex-wrap items-center gap-4 sm:gap-6">
               <div className="flex items-center gap-2">
                 <span className="text-2xl font-bold text-[#0F0F0F]">{loggedCount}</span>
                 <span className="text-sm text-[#0F0F0F]/50">logged</span>
               </div>
-              {winCount > 0 && (
-                <div className="flex items-center gap-1.5 text-[#8B9A7D]">
-                  <TrendingUp className="w-4 h-4" />
-                  <span className="font-medium">{winCount} W</span>
+              {avgPoints !== null && (
+                <div className="flex items-center gap-1.5 text-[#0F0F0F]">
+                  <Activity className="w-4 h-4 text-[#0F0F0F]/40" />
+                  <span className="font-medium">{avgPoints} pts avg</span>
                 </div>
               )}
-              {lossCount > 0 && (
+              {bullishCount > 0 && (
+                <div className="flex items-center gap-1.5 text-[#8B9A7D]">
+                  <ArrowUp className="w-4 h-4" />
+                  <span className="font-medium">{bullishCount}</span>
+                </div>
+              )}
+              {bearishCount > 0 && (
                 <div className="flex items-center gap-1.5 text-[#C45A3B]">
-                  <TrendingDown className="w-4 h-4" />
-                  <span className="font-medium">{lossCount} L</span>
+                  <ArrowDown className="w-4 h-4" />
+                  <span className="font-medium">{bearishCount}</span>
+                </div>
+              )}
+              {consolidationCount > 0 && (
+                <div className="flex items-center gap-1.5 text-[#0F0F0F]/50">
+                  <Minus className="w-4 h-4" />
+                  <span className="font-medium">{consolidationCount}</span>
                 </div>
               )}
             </div>
@@ -403,7 +612,7 @@ export default function MacrosPage() {
               minutesUntil={0}
               minutesRemaining={activeMacroStatus.minutesRemaining}
               todayLog={getLogForMacroToday(activeMacroStatus.macro.id)}
-              onLog={(outcome) => handleLog(activeMacroStatus.macro.id, outcome)}
+              onLog={(data) => handleLog(activeMacroStatus.macro.id, data)}
               onAddTvLink={(link) => addTvLink(activeMacroStatus.macro.id, link)}
               onRemoveTvLink={(idx) => removeTvLink(activeMacroStatus.macro.id, idx)}
             />
@@ -424,7 +633,7 @@ export default function MacrosPage() {
               minutesRemaining={0}
               secondsRemaining={secondsToNextMacro}
               todayLog={getLogForMacroToday(nextMacro.id)}
-              onLog={(outcome) => handleLog(nextMacro.id, outcome)}
+              onLog={(data) => handleLog(nextMacro.id, data)}
               onAddTvLink={(link) => addTvLink(nextMacro.id, link)}
               onRemoveTvLink={(idx) => removeTvLink(nextMacro.id, idx)}
             />
@@ -448,7 +657,7 @@ export default function MacrosPage() {
                     minutesUntil={minutesUntil}
                     minutesRemaining={0}
                     todayLog={getLogForMacroToday(macro.id)}
-                    onLog={(outcome) => handleLog(macro.id, outcome)}
+                    onLog={(data) => handleLog(macro.id, data)}
                     onAddTvLink={(link) => addTvLink(macro.id, link)}
                     onRemoveTvLink={(idx) => removeTvLink(macro.id, idx)}
                   />
@@ -472,7 +681,7 @@ export default function MacrosPage() {
                   minutesUntil={0}
                   minutesRemaining={0}
                   todayLog={getLogForMacroToday(macro.id)}
-                  onLog={(outcome) => handleLog(macro.id, outcome)}
+                  onLog={(data) => handleLog(macro.id, data)}
                   onAddTvLink={(link) => addTvLink(macro.id, link)}
                   onRemoveTvLink={(idx) => removeTvLink(macro.id, idx)}
                 />

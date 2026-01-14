@@ -451,7 +451,7 @@ export default function EdgeDetailPage() {
         {/* Footer */}
         <footer className="border-t border-[#0F0F0F]/5 py-6 mt-12">
           <div className="max-w-4xl mx-auto px-6 sm:px-8 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-[#0F0F0F]/30">
-            <span className="tracking-[0.15em] uppercase">EdgeTracker</span>
+            <span className="flex items-center gap-2 tracking-[0.15em] uppercase"><img src="/logo-icon-transparent.png" alt="" className="w-5 h-5" />Edge of ICT</span>
             <span>Built for ICT traders</span>
           </div>
         </footer>

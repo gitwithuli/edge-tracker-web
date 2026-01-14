@@ -3,30 +3,49 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { toast } from 'sonner';
-import type { MacroOutcome } from '@/lib/macro-constants';
+import type {
+  MacroDirection,
+  DisplacementQuality,
+  LiquiditySweep,
+  MacroLogData,
+} from '@/lib/macro-constants';
+
+export type { MacroDirection, DisplacementQuality, LiquiditySweep };
 
 export interface MacroLog {
   id: string;
   macroId: string;
   date: string; // YYYY-MM-DD
-  outcome: MacroOutcome;
+  pointsMoved: number | null;
+  direction: MacroDirection | null;
+  displacementQuality: DisplacementQuality | null;
+  liquiditySweep: LiquiditySweep | null;
   note: string;
   tvLinks: string[];
   createdAt: string;
 }
 
+export type MacroLogInput = Partial<MacroLogData> & {
+  note?: string;
+  tvLinks?: string[];
+};
+
 interface MacroStore {
   logs: MacroLog[];
+  showAsiaMacros: boolean;
 
   // Actions
-  logMacro: (macroId: string, outcome: MacroOutcome, note?: string, tvLinks?: string[]) => void;
-  updateLog: (logId: string, updates: Partial<Pick<MacroLog, 'outcome' | 'note' | 'tvLinks'>>) => void;
+  logMacro: (macroId: string, data: MacroLogInput) => void;
+  logMacroForDate: (macroId: string, date: string, data: MacroLogInput) => void;
+  updateLog: (logId: string, updates: Partial<MacroLogData & { note: string; tvLinks: string[] }>) => void;
   deleteLog: (logId: string) => void;
   addTvLink: (macroId: string, link: string) => void;
   removeTvLink: (macroId: string, linkIndex: number) => void;
+  setShowAsiaMacros: (show: boolean) => void;
 
   // Queries
   getLogForMacroToday: (macroId: string) => MacroLog | undefined;
+  getLogForMacroOnDate: (macroId: string, date: string) => MacroLog | undefined;
   getLogsForDate: (date: string) => MacroLog[];
   getTodaysLogs: () => MacroLog[];
 }
@@ -39,19 +58,36 @@ export const useMacroStore = create<MacroStore>()(
   persist(
     (set, get) => ({
       logs: [],
+      showAsiaMacros: false,
 
-      logMacro: (macroId, outcome, note = '', tvLinks = []) => {
+      setShowAsiaMacros: (show) => {
+        set({ showAsiaMacros: show });
+      },
+
+      logMacro: (macroId, data) => {
         const today = getTodayDate();
+        get().logMacroForDate(macroId, today, data);
+      },
+
+      logMacroForDate: (macroId, date, data) => {
         const existing = get().logs.find(
-          log => log.macroId === macroId && log.date === today
+          log => log.macroId === macroId && log.date === date
         );
 
         if (existing) {
-          // Update existing log for today
+          // Update existing log
           set({
             logs: get().logs.map(log =>
               log.id === existing.id
-                ? { ...log, outcome, note, tvLinks }
+                ? {
+                    ...log,
+                    pointsMoved: data.pointsMoved ?? log.pointsMoved,
+                    direction: data.direction ?? log.direction,
+                    displacementQuality: data.displacementQuality ?? log.displacementQuality,
+                    liquiditySweep: data.liquiditySweep ?? log.liquiditySweep,
+                    note: data.note ?? log.note,
+                    tvLinks: data.tvLinks ?? log.tvLinks,
+                  }
                 : log
             ),
           });
@@ -61,10 +97,13 @@ export const useMacroStore = create<MacroStore>()(
           const newLog: MacroLog = {
             id: `macro-${Date.now()}`,
             macroId,
-            date: today,
-            outcome,
-            note,
-            tvLinks,
+            date,
+            pointsMoved: data.pointsMoved ?? null,
+            direction: data.direction ?? null,
+            displacementQuality: data.displacementQuality ?? null,
+            liquiditySweep: data.liquiditySweep ?? null,
+            note: data.note ?? '',
+            tvLinks: data.tvLinks ?? [],
             createdAt: new Date().toISOString(),
           };
           set({ logs: [...get().logs, newLog] });
@@ -103,12 +142,15 @@ export const useMacroStore = create<MacroStore>()(
             ),
           });
         } else {
-          // Create a new log with NO_TRADE outcome if none exists
+          // Create a new log with empty data if none exists
           const newLog: MacroLog = {
             id: `macro-${Date.now()}`,
             macroId,
             date: today,
-            outcome: 'NO_TRADE',
+            pointsMoved: null,
+            direction: null,
+            displacementQuality: null,
+            liquiditySweep: null,
             note: '',
             tvLinks: [link],
             createdAt: new Date().toISOString(),
@@ -141,6 +183,12 @@ export const useMacroStore = create<MacroStore>()(
         const today = getTodayDate();
         return get().logs.find(
           log => log.macroId === macroId && log.date === today
+        );
+      },
+
+      getLogForMacroOnDate: (macroId, date) => {
+        return get().logs.find(
+          log => log.macroId === macroId && log.date === date
         );
       },
 

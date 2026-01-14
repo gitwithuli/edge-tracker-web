@@ -54,7 +54,7 @@ export async function GET() {
       logs: logs || [],
     };
 
-    const filename = `edgetracker-backup-${new Date().toISOString().split("T")[0]}.json`;
+    const filename = `edgeofict-backup-${new Date().toISOString().split("T")[0]}.json`;
 
     return new NextResponse(JSON.stringify(backup, null, 2), {
       status: 200,

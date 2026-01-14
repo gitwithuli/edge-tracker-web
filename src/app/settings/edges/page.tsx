@@ -96,7 +96,15 @@ export default function EdgeSettingsPage() {
                 <span className="hidden sm:inline">Back</span>
               </Link>
               <div className="h-4 w-px bg-[#0F0F0F]/10" />
-              <span className="text-sm tracking-[0.2em] uppercase font-medium">EdgeTracker</span>
+              <Link href="/dashboard" className="flex items-center gap-2">
+                <img src="/logo-icon-transparent.png" alt="Edge of ICT" className="w-16 h-16" />
+                <span
+                  className="text-sm tracking-[0.08em] font-medium"
+                  style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                >
+                  EDGE <span className="text-[#0F0F0F]/40 text-xs">OF</span> ICT
+                </span>
+              </Link>
             </div>
           </div>
         </header>
@@ -221,7 +229,7 @@ export default function EdgeSettingsPage() {
         {/* Footer */}
         <footer className="border-t border-[#0F0F0F]/5 py-6 mt-12">
           <div className="max-w-3xl mx-auto px-6 sm:px-8 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-[#0F0F0F]/30">
-            <span className="tracking-[0.15em] uppercase">EdgeTracker</span>
+            <span className="flex items-center gap-2 tracking-[0.15em] uppercase"><img src="/logo-icon-transparent.png" alt="" className="w-5 h-5" />Edge of ICT</span>
             <span>Built for ICT traders</span>
           </div>
         </footer>

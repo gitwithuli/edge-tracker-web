@@ -185,7 +185,7 @@ export default function LoginPage() {
               className={`text-xs text-[#FAF7F2]/20 tracking-wider uppercase opacity-0 ${mounted ? 'animate-fade-in' : ''}`}
               style={{ animationDelay: '0.8s' }}
             >
-              EdgeTracker &mdash; Built for ICT traders
+              Edge of ICT &mdash; Built for ICT traders
             </p>
           </div>
         </div>

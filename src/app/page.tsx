@@ -123,12 +123,15 @@ export default function LandingPage() {
           className={`max-w-6xl mx-auto px-6 sm:px-8 py-6 sm:py-8 flex justify-between items-center opacity-0 ${mounted ? 'animate-fade-in' : ''}`}
           style={{ animationDelay: '0.1s' }}
         >
-          <div
-            className="text-sm tracking-[0.2em] uppercase font-medium"
-            style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
-          >
-            EdgeTracker
-          </div>
+          <Link href="/dashboard" className="flex items-center gap-2">
+            <img src="/logo-icon-transparent.png" alt="Edge of ICT" className="w-20 h-20" />
+            <span
+              className="text-sm tracking-[0.08em] font-medium"
+              style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+            >
+              EDGE <span className="text-[#0F0F0F]/40 text-xs">OF</span> ICT
+            </span>
+          </Link>
           <div className="flex items-center gap-6 sm:gap-8">
             <Link
               href="/login"
@@ -300,7 +303,7 @@ export default function LandingPage() {
         {/* Footer */}
         <footer className="border-t border-[#0F0F0F]/10 py-8">
           <div className="max-w-6xl mx-auto px-6 sm:px-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-[#0F0F0F]/40">
-            <span className="tracking-[0.15em] uppercase">EdgeTracker</span>
+            <span className="flex items-center gap-2 tracking-[0.15em] uppercase"><img src="/logo-icon-transparent.png" alt="" className="w-5 h-5" />Edge of ICT</span>
             <span>Built for ICT traders</span>
           </div>
         </footer>

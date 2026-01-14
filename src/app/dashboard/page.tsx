@@ -108,11 +108,18 @@ export default function DashboardPage() {
         {/* Header */}
         <header className="border-b border-[#0F0F0F]/5 bg-[#FAF7F2]/80 backdrop-blur-md sticky top-0 z-40">
           <div className="max-w-6xl mx-auto px-6 sm:px-8 py-4 flex justify-between items-center">
-            <div
-              className={`text-sm tracking-[0.2em] uppercase font-medium opacity-0 ${mounted ? 'animate-fade-in' : ''}`}
+            <Link
+              href="/dashboard"
+              className={`flex items-center gap-2 opacity-0 ${mounted ? 'animate-fade-in' : ''}`}
             >
-              EdgeTracker
-            </div>
+              <img src="/logo-icon-transparent.png" alt="Edge of ICT" className="w-20 h-20" />
+              <span
+                className="text-sm tracking-[0.08em] font-medium"
+                style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+              >
+                EDGE <span className="text-[#0F0F0F]/40 text-xs">OF</span> ICT
+              </span>
+            </Link>
 
             <div className="flex items-center gap-3 sm:gap-4">
               {edgesWithLogs.length > 0 && (
@@ -293,7 +300,7 @@ export default function DashboardPage() {
         {/* Footer */}
         <footer className="border-t border-[#0F0F0F]/5 py-6 mt-12">
           <div className="max-w-6xl mx-auto px-6 sm:px-8 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-[#0F0F0F]/30">
-            <span className="tracking-[0.15em] uppercase">EdgeTracker</span>
+            <span className="flex items-center gap-2 tracking-[0.15em] uppercase"><img src="/logo-icon-transparent.png" alt="" className="w-5 h-5" />Edge of ICT</span>
             <span>Built for ICT traders</span>
           </div>
         </footer>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import {
-  ALL_MACROS,
+  STANDARD_MACROS,
   MacroWindow,
   isWithinMacro,
   getMinutesUntilMacro,
@@ -57,14 +57,14 @@ export function useMacroTime(): UseMacroTimeReturn {
 
   // Find active macro
   const activeMacro = useMemo(() => {
-    return ALL_MACROS.find(macro => isWithinMacro(macro, etHour, etMinute)) || null;
+    return STANDARD_MACROS.find(macro => isWithinMacro(macro, etHour, etMinute)) || null;
   }, [etHour, etMinute]);
 
   // Calculate all macro statuses
   const macroStatuses = useMemo((): MacroStatus[] => {
     const currentMinutes = etHour * 60 + etMinute;
 
-    return ALL_MACROS.map(macro => {
+    return STANDARD_MACROS.map(macro => {
       const startMinutes = macro.startHour * 60 + macro.startMinute;
       const endMinutes = macro.endHour * 60 + macro.endMinute;
 
