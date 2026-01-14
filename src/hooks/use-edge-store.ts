@@ -359,15 +359,10 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
   },
 
   addLog: async (edgeId, logData) => {
-    console.log('[addLog] START', { edgeId, logData });
     const { user, logs } = get();
-    if (!user) {
-      console.log('[addLog] No user, returning');
-      return;
-    }
+    if (!user) return;
 
     set({ loadingStates: { ...get().loadingStates, addingLog: true }, error: null });
-    console.log('[addLog] Loading state set');
 
     const tempId = `temp-${Date.now()}`;
     const logDate = logData.date || new Date().toISOString().split('T')[0];
@@ -389,10 +384,8 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
     };
 
     set({ logs: [optimisticLog, ...logs] });
-    console.log('[addLog] Optimistic update done');
 
     try {
-      console.log('[addLog] Calling Supabase...');
       const { data, error } = await supabase
         .from('logs')
         .insert([{
@@ -410,7 +403,6 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
         }])
         .select()
         .single();
-      console.log('[addLog] Supabase returned', { data: !!data, error });
 
       if (error) {
         set({ logs: logs.filter(l => l.id !== tempId), error: `Failed to add log: ${error.message}` });
@@ -422,14 +414,12 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
         const newLog = mapDbToLog(data);
         set({ logs: get().logs.map(l => l.id === tempId ? newLog : l) });
         toast.success('Trade logged');
-        console.log('[addLog] SUCCESS');
       }
     } catch (err) {
-      console.error('[addLog] CATCH error:', err);
+      console.error('addLog error:', err);
       set({ logs: logs.filter(l => l.id !== tempId) });
       toast.error('Failed to add log');
     } finally {
-      console.log('[addLog] FINALLY - clearing loading state');
       set({ loadingStates: { ...get().loadingStates, addingLog: false } });
     }
   },
@@ -465,15 +455,12 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
   },
 
   updateLog: async (logId, logData, newEdgeId) => {
-    console.log('[updateLog] START', { logId, logData, newEdgeId });
     const { logs } = get();
 
     set({ loadingStates: { ...get().loadingStates, updatingLogId: logId }, error: null });
-    console.log('[updateLog] Loading state set');
 
     const originalLog = logs.find(l => l.id === logId);
     if (!originalLog) {
-      console.log('[updateLog] Log not found');
       toast.error('Log not found');
       set({ loadingStates: { ...get().loadingStates, updatingLogId: null } });
       return;
@@ -483,7 +470,6 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
       const outcome = logData.result === 'OCCURRED' ? (logData.outcome || null) : null;
       const tvLinks = logData.tvLinks || (logData.tvLink ? [logData.tvLink] : originalLog.tvLinks || []);
       const targetEdgeId = newEdgeId || originalLog.edgeId;
-      console.log('[updateLog] Computed values', { outcome, tvLinks, targetEdgeId });
 
       const updatedLog: TradeLog = {
         ...originalLog,
@@ -496,9 +482,7 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
         date: logData.date || originalLog.date,
       };
       set({ logs: logs.map(l => l.id === logId ? updatedLog : l) });
-      console.log('[updateLog] Optimistic update done');
 
-      console.log('[updateLog] Calling Supabase...');
       const { error } = await supabase
         .from('logs')
         .update({
@@ -514,7 +498,6 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
           date: logData.date || originalLog.date,
         })
         .eq('id', logId);
-      console.log('[updateLog] Supabase returned', { error });
 
       if (error) {
         set({ logs, error: `Failed to update log: ${error.message}` });
@@ -523,13 +506,11 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
       }
 
       toast.success('Trade log updated');
-      console.log('[updateLog] SUCCESS');
     } catch (err) {
-      console.error('[updateLog] CATCH error:', err);
+      console.error('updateLog error:', err);
       set({ logs });
       toast.error('Failed to update log');
     } finally {
-      console.log('[updateLog] FINALLY - clearing loading state');
       set({ loadingStates: { ...get().loadingStates, updatingLogId: null } });
     }
   },
