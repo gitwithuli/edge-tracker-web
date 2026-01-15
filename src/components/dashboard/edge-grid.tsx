@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Target, Plus, ArrowRight, TrendingUp, ChevronDown, ChevronRight, Layers } from "lucide-react";
+import { Target, Plus, ArrowRight, TrendingUp, ChevronDown, ChevronRight } from "lucide-react";
 import type { EdgeWithLogs, TradeLogInput, LogType, TradeLog } from "@/lib/types";
 import { LogDialog } from "@/components/log-dialog";
 import { HistorySheet } from "@/components/history-sheet";
@@ -153,10 +153,10 @@ export function EdgeGrid({ edgesWithLogs, onAddLog, onDeleteLog, onUpdateLog, de
   }
 
   // Render a single edge card
-  const renderEdgeCard = ({ edge, occurrenceRate, totalLogs, bestDay, winRate, wins, losses }: EdgeCardData, isSubEdge = false) => (
+  const renderEdgeCard = ({ edge, occurrenceRate, totalLogs, bestDay, winRate, wins, losses }: EdgeCardData) => (
     <div
       key={edge.id}
-      className={`p-5 sm:p-6 rounded-2xl bg-white border border-[#0F0F0F]/5 hover:border-[#0F0F0F]/10 transition-all duration-300 group ${isSubEdge ? 'ml-4 border-l-2 border-l-[#C45A3B]/20' : ''}`}
+      className="p-5 sm:p-6 rounded-2xl bg-white border border-[#0F0F0F]/5 hover:border-[#0F0F0F]/10 transition-all duration-300 group"
     >
       <Link href={`/edge/${edge.id}`} className="block mb-4">
         <div className="flex items-start justify-between">
@@ -298,7 +298,7 @@ export function EdgeGrid({ edgesWithLogs, onAddLog, onDeleteLog, onUpdateLog, de
                     ) : (
                       <ChevronRight className="w-4 h-4" />
                     )}
-                    <Layers className="w-4 h-4 text-[#C45A3B]" />
+                    <img src="/logo-icon-transparent.png" alt="" className="w-5 h-5" />
                     <h4
                       className="text-lg font-normal tracking-tight"
                       style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
@@ -360,8 +360,8 @@ export function EdgeGrid({ edgesWithLogs, onAddLog, onDeleteLog, onUpdateLog, de
 
               {/* Sub-edges (collapsible) */}
               {isExpanded && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-4">
-                  {subEdges.map(subEdge => renderEdgeCard(subEdge, true))}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {subEdges.map(subEdge => renderEdgeCard(subEdge))}
                 </div>
               )}
             </div>
