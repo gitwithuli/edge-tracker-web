@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Target, Plus, ArrowRight, TrendingUp, ChevronDown, ChevronRight } from "lucide-react";
+import { Target, Plus, ArrowRight, TrendingUp, ChevronDown, ChevronRight, GitBranch } from "lucide-react";
 import type { EdgeWithLogs, TradeLogInput, LogType, TradeLog } from "@/lib/types";
 import { LogDialog } from "@/components/log-dialog";
 import { HistorySheet } from "@/components/history-sheet";
@@ -298,7 +298,7 @@ export function EdgeGrid({ edgesWithLogs, onAddLog, onDeleteLog, onUpdateLog, de
                     ) : (
                       <ChevronRight className="w-4 h-4" />
                     )}
-                    <img src="/logo-icon-transparent.png" alt="" className="w-5 h-5" />
+                    <GitBranch className="w-4 h-4 text-[#C45A3B]" />
                     <h4
                       className="text-lg font-normal tracking-tight"
                       style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
