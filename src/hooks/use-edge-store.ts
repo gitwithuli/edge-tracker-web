@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import type { User } from '@supabase/supabase-js';
 import type { Edge, EdgeInput, TradeLog, TradeLogInput, EdgeWithLogs } from '@/lib/types';
+import type { OptionalFieldGroup } from '@/lib/schemas';
 
 interface LoadingStates {
   fetchingEdges: boolean;
@@ -88,6 +89,8 @@ function mapDbToEdge(row: Record<string, unknown>): Edge {
     userId: row.user_id as string,
     name: row.name as string,
     description: (row.description as string) || '',
+    enabledFields: (row.enabled_fields as OptionalFieldGroup[]) || [],
+    symbol: (row.symbol as string) || null,
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
   };
@@ -115,6 +118,19 @@ function mapDbToLog(row: Record<string, unknown>): TradeLog {
     tvLinks,
     tvLink: tvLinks[0] || undefined, // Legacy compatibility
     date: row.date as string,
+    // Optional fields
+    entryPrice: row.entry_price as number | null,
+    exitPrice: row.exit_price as number | null,
+    entryTime: row.entry_time as string | null,
+    exitTime: row.exit_time as string | null,
+    dailyOpen: row.daily_open as number | null,
+    dailyHigh: row.daily_high as number | null,
+    dailyLow: row.daily_low as number | null,
+    dailyClose: row.daily_close as number | null,
+    nyOpen: row.ny_open as number | null,
+    positionSize: row.position_size as number | null,
+    direction: (row.direction as TradeLog['direction']) || null,
+    symbol: (row.symbol as string) || null,
   };
 }
 
@@ -151,9 +167,12 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
 
       if (session?.user) {
         set({ user: session.user, isLoaded: true });
-        await get().fetchEdges();
-        await get().fetchLogs();
-        await get().checkMfaStatus();
+        // Parallelize independent fetches for better performance
+        await Promise.all([
+          get().fetchEdges(),
+          get().fetchLogs(),
+          get().checkMfaStatus(),
+        ]);
       } else {
         set({ isLoaded: true });
       }
@@ -161,9 +180,12 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
       supabase.auth.onAuthStateChange(async (event, session) => {
         if (event === 'SIGNED_IN' && session) {
           set({ user: session.user });
-          await get().fetchEdges();
-          await get().fetchLogs();
-          await get().checkMfaStatus();
+          // Parallelize independent fetches for better performance
+          await Promise.all([
+            get().fetchEdges(),
+            get().fetchLogs(),
+            get().checkMfaStatus(),
+          ]);
         } else if (event === 'SIGNED_OUT') {
           set({ user: null, logs: [], edges: [], mfaEnabled: false });
         }
@@ -223,6 +245,8 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
           user_id: user.id,
           name: data.name,
           description: data.description || '',
+          enabled_fields: data.enabledFields || [],
+          symbol: data.symbol || null,
         }])
         .select()
         .single();
@@ -270,6 +294,8 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
         .update({
           name: data.name,
           description: data.description || '',
+          enabled_fields: data.enabledFields || [],
+          symbol: data.symbol || null,
         })
         .eq('id', edgeId);
 
@@ -381,6 +407,19 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
       note: logData.note || '',
       tvLinks,
       tvLink: tvLinks[0] || undefined,
+      // Optional fields
+      entryPrice: logData.entryPrice ?? null,
+      exitPrice: logData.exitPrice ?? null,
+      entryTime: logData.entryTime ?? null,
+      exitTime: logData.exitTime ?? null,
+      dailyOpen: logData.dailyOpen ?? null,
+      dailyHigh: logData.dailyHigh ?? null,
+      dailyLow: logData.dailyLow ?? null,
+      dailyClose: logData.dailyClose ?? null,
+      nyOpen: logData.nyOpen ?? null,
+      positionSize: logData.positionSize ?? null,
+      direction: logData.direction ?? null,
+      symbol: logData.symbol ?? null,
     };
 
     set({ logs: [optimisticLog, ...logs] });
@@ -400,6 +439,19 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
           tv_links: tvLinks,
           tv_link: tvLinks[0] || null,
           date: logDate,
+          // Optional fields
+          entry_price: logData.entryPrice ?? null,
+          exit_price: logData.exitPrice ?? null,
+          entry_time: logData.entryTime ?? null,
+          exit_time: logData.exitTime ?? null,
+          daily_open: logData.dailyOpen ?? null,
+          daily_high: logData.dailyHigh ?? null,
+          daily_low: logData.dailyLow ?? null,
+          daily_close: logData.dailyClose ?? null,
+          ny_open: logData.nyOpen ?? null,
+          position_size: logData.positionSize ?? null,
+          direction: logData.direction ?? null,
+          symbol: logData.symbol ?? null,
         }])
         .select()
         .single();
@@ -480,6 +532,16 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
         tvLink: tvLinks[0] || undefined,
         logType: logData.logType || originalLog.logType,
         date: logData.date || originalLog.date,
+        // Optional fields
+        entryPrice: logData.entryPrice ?? originalLog.entryPrice ?? null,
+        exitPrice: logData.exitPrice ?? originalLog.exitPrice ?? null,
+        entryTime: logData.entryTime ?? originalLog.entryTime ?? null,
+        exitTime: logData.exitTime ?? originalLog.exitTime ?? null,
+        dailyOpen: logData.dailyOpen ?? originalLog.dailyOpen ?? null,
+        dailyHigh: logData.dailyHigh ?? originalLog.dailyHigh ?? null,
+        dailyLow: logData.dailyLow ?? originalLog.dailyLow ?? null,
+        dailyClose: logData.dailyClose ?? originalLog.dailyClose ?? null,
+        positionSize: logData.positionSize ?? originalLog.positionSize ?? null,
       };
       set({ logs: logs.map(l => l.id === logId ? updatedLog : l) });
 
@@ -496,6 +558,19 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
           tv_links: tvLinks,
           tv_link: tvLinks[0] || null,
           date: logData.date || originalLog.date,
+          // Optional fields
+          entry_price: logData.entryPrice ?? originalLog.entryPrice ?? null,
+          exit_price: logData.exitPrice ?? originalLog.exitPrice ?? null,
+          entry_time: logData.entryTime ?? originalLog.entryTime ?? null,
+          exit_time: logData.exitTime ?? originalLog.exitTime ?? null,
+          daily_open: logData.dailyOpen ?? originalLog.dailyOpen ?? null,
+          daily_high: logData.dailyHigh ?? originalLog.dailyHigh ?? null,
+          daily_low: logData.dailyLow ?? originalLog.dailyLow ?? null,
+          daily_close: logData.dailyClose ?? originalLog.dailyClose ?? null,
+          ny_open: logData.nyOpen ?? originalLog.nyOpen ?? null,
+          position_size: logData.positionSize ?? originalLog.positionSize ?? null,
+          direction: logData.direction ?? originalLog.direction ?? null,
+          symbol: logData.symbol ?? originalLog.symbol ?? null,
         })
         .eq('id', logId);
 

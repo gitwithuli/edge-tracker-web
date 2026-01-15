@@ -27,8 +27,8 @@ export function StatsCards({ logs, edgesWithLogs }: StatsCardsProps) {
       .filter(Boolean)
       .sort();
 
-    const minDate = sortedDates[0];
-    const maxDate = sortedDates[sortedDates.length - 1];
+    const minDate = sortedDates.length > 0 ? sortedDates[0] : undefined;
+    const maxDate = sortedDates.length > 0 ? sortedDates[sortedDates.length - 1] : undefined;
 
     // Calculate range duration in days
     const rangeDays = minDate && maxDate

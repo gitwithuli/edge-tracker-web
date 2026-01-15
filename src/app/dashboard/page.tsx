@@ -8,6 +8,7 @@ import { EdgeScorecard } from "@/components/dashboard/edge-scorecard";
 import { EdgeGrid } from "@/components/dashboard/edge-grid";
 import { RecentActivity } from "@/components/dashboard/recent-activity";
 import { BacktestStats } from "@/components/dashboard/backtest-stats";
+import { GrainOverlay } from "@/components/grain-overlay";
 import {
   DateRangeFilter,
   filterLogsByDateRange,
@@ -17,17 +18,6 @@ import {
 import { LogDialog } from "@/components/log-dialog";
 import Link from "next/link";
 import type { LogType } from "@/lib/types";
-
-function GrainOverlay() {
-  return (
-    <div
-      className="pointer-events-none fixed inset-0 z-50 opacity-[0.03]"
-      style={{
-        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-      }}
-    />
-  );
-}
 
 export default function DashboardPage() {
   const { logs, isLoaded, logout, user, addLog, deleteLog, updateLog, getEdgesWithLogs } = useEdgeStore();
@@ -125,9 +115,10 @@ export default function DashboardPage() {
               {edgesWithLogs.length > 0 && (
                 <LogDialog
                   defaultLogType={activeView}
-                  onSave={(data) => {
-                    if (edgesWithLogs[0]) {
-                      addLog(edgesWithLogs[0].id, data);
+                  onSave={(data, newEdgeId) => {
+                    const targetEdgeId = newEdgeId || edgesWithLogs[0]?.id;
+                    if (targetEdgeId) {
+                      addLog(targetEdgeId, data);
                     }
                   }}
                   trigger={
@@ -143,8 +134,9 @@ export default function DashboardPage() {
                 href="/macros"
                 className="p-2 rounded-full text-[#0F0F0F]/40 hover:text-[#0F0F0F] hover:bg-[#0F0F0F]/5 transition-all duration-300"
                 title="Macro Tracker"
+                aria-label="Macro Tracker"
               >
-                <Timer className="w-4 h-4" />
+                <Timer className="w-4 h-4" aria-hidden="true" />
               </Link>
 
               <a
@@ -152,22 +144,25 @@ export default function DashboardPage() {
                 download
                 className="p-2 rounded-full text-[#0F0F0F]/40 hover:text-[#0F0F0F] hover:bg-[#0F0F0F]/5 transition-all duration-300"
                 title="Download Backup"
+                aria-label="Download Backup"
               >
-                <Download className="w-4 h-4" />
+                <Download className="w-4 h-4" aria-hidden="true" />
               </a>
 
               <Link
                 href="/settings/edges"
                 className="p-2 rounded-full text-[#0F0F0F]/40 hover:text-[#0F0F0F] hover:bg-[#0F0F0F]/5 transition-all duration-300"
+                aria-label="Edge Settings"
               >
-                <Settings className="w-4 h-4" />
+                <Settings className="w-4 h-4" aria-hidden="true" />
               </Link>
 
               <button
                 onClick={logout}
                 className="inline-flex items-center gap-2 p-2 rounded-full text-[#0F0F0F]/40 hover:text-[#0F0F0F] hover:bg-[#0F0F0F]/5 transition-all duration-300"
+                aria-label="Sign Out"
               >
-                <LogOut className="w-4 h-4" />
+                <LogOut className="w-4 h-4" aria-hidden="true" />
               </button>
             </div>
           </div>

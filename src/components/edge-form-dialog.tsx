@@ -5,9 +5,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2 } from "lucide-react";
+import { Loader2, Check } from "lucide-react";
 import type { Edge, EdgeInput } from "@/lib/types";
 import { useEdgeStore } from "@/hooks/use-edge-store";
+import { OPTIONAL_FIELD_GROUPS, FIELD_GROUP_INFO, type OptionalFieldGroup } from "@/lib/schemas";
 
 interface EdgeFormDialogProps {
   edge?: Edge;
@@ -22,16 +23,26 @@ export function EdgeFormDialog({ edge, trigger, onSuccess }: EdgeFormDialogProps
 
   const [name, setName] = useState(edge?.name || "");
   const [description, setDescription] = useState(edge?.description || "");
+  const [enabledFields, setEnabledFields] = useState<OptionalFieldGroup[]>(edge?.enabledFields || []);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (open) {
       setName(edge?.name || "");
       setDescription(edge?.description || "");
+      setEnabledFields(edge?.enabledFields || []);
       setError(null);
       setIsSubmitting(false);
     }
   }, [open, edge]);
+
+  const toggleField = (field: OptionalFieldGroup) => {
+    setEnabledFields(prev =>
+      prev.includes(field)
+        ? prev.filter(f => f !== field)
+        : [...prev, field]
+    );
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,6 +63,7 @@ export function EdgeFormDialog({ edge, trigger, onSuccess }: EdgeFormDialogProps
     const data: EdgeInput = {
       name: name.trim(),
       description: description.trim(),
+      enabledFields,
     };
 
     try {
@@ -68,7 +80,8 @@ export function EdgeFormDialog({ edge, trigger, onSuccess }: EdgeFormDialogProps
 
       setOpen(false);
       onSuccess?.();
-    } catch {
+    } catch (err) {
+      console.error("Edge form error:", err);
       setError("Something went wrong. Please try again.");
     } finally {
       setIsSubmitting(false);
@@ -119,6 +132,55 @@ export function EdgeFormDialog({ edge, trigger, onSuccess }: EdgeFormDialogProps
               disabled={isSubmitting}
             />
             <p className="text-xs text-[#0F0F0F]/30">{description.length}/500</p>
+          </div>
+
+          {/* Optional Tracking Fields */}
+          <div className="space-y-3 pt-2">
+            <div className="border-t border-[#0F0F0F]/10 pt-4">
+              <Label className="text-[#0F0F0F]/40 text-xs uppercase tracking-[0.15em]">
+                Optional Tracking Fields
+              </Label>
+              <p className="text-xs text-[#0F0F0F]/30 mt-1">
+                Enable additional fields to track for this edge
+              </p>
+            </div>
+            <div className="space-y-2">
+              {OPTIONAL_FIELD_GROUPS.map((field) => {
+                const info = FIELD_GROUP_INFO[field];
+                const isEnabled = enabledFields.includes(field);
+                return (
+                  <button
+                    key={field}
+                    type="button"
+                    onClick={() => toggleField(field)}
+                    disabled={isSubmitting}
+                    className={`w-full flex items-start gap-3 p-3 rounded-xl border transition-all duration-200 text-left ${
+                      isEnabled
+                        ? "border-[#C45A3B] bg-[#C45A3B]/5"
+                        : "border-[#0F0F0F]/10 bg-white hover:border-[#0F0F0F]/20"
+                    }`}
+                  >
+                    <div
+                      className={`w-5 h-5 rounded-md flex items-center justify-center flex-shrink-0 mt-0.5 transition-colors ${
+                        isEnabled
+                          ? "bg-[#C45A3B] text-white"
+                          : "border-2 border-[#0F0F0F]/20"
+                      }`}
+                    >
+                      {isEnabled && <Check className="w-3 h-3" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm font-medium ${isEnabled ? "text-[#0F0F0F]" : "text-[#0F0F0F]/70"}`}>
+                        {info.label}
+                      </p>
+                      <p className="text-xs text-[#0F0F0F]/40 mt-0.5">
+                        {info.description}
+                      </p>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {error && (

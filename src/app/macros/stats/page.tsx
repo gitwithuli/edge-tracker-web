@@ -21,6 +21,17 @@ import {
   Check,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const DAYS_OF_WEEK = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTHS = [
@@ -256,12 +267,36 @@ function MacroEntryCard({
             >
               <Pencil className="w-3.5 h-3.5" />
             </button>
-            <button
-              onClick={() => onDelete(log.id)}
-              className="p-1.5 rounded-lg hover:bg-[#C45A3B]/10 transition-colors text-[#0F0F0F]/40 hover:text-[#C45A3B]"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-            </button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <button
+                  className="p-1.5 rounded-lg hover:bg-[#C45A3B]/10 transition-colors text-[#0F0F0F]/40 hover:text-[#C45A3B]"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
+              </AlertDialogTrigger>
+              <AlertDialogContent className="bg-[#FAF7F2] border-[#0F0F0F]/10">
+                <AlertDialogHeader>
+                  <AlertDialogTitle style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}>
+                    Delete macro log?
+                  </AlertDialogTitle>
+                  <AlertDialogDescription className="text-[#0F0F0F]/60">
+                    This will permanently delete this macro entry. This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel className="rounded-full border-[#0F0F0F]/10 hover:bg-[#0F0F0F]/5">
+                    Cancel
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => onDelete(log.id)}
+                    className="rounded-full bg-[#C45A3B] hover:bg-[#C45A3B]/90"
+                  >
+                    Delete
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </div>
       </div>

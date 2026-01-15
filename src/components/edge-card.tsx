@@ -105,6 +105,7 @@ export const EdgeCard = memo(function EdgeCard({ edge, onAddLog, onDeleteLog, on
       <CardFooter className="flex flex-col gap-3 pt-4 border-t border-zinc-900/50">
         <LogDialog
           edgeName={edge.name}
+          edgeId={edge.id}
           onSave={onAddLog}
           trigger={
             <Button className="w-full gap-2 bg-white text-black hover:bg-zinc-200 font-bold tracking-tight">

@@ -3,7 +3,9 @@
 import { useEffect, useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useEdgeStore } from "@/hooks/use-edge-store";
-import { ArrowLeft, Play, Rewind, Plus, TrendingUp, TrendingDown, Target, Clock, Calendar } from "lucide-react";
+import { ArrowLeft, Play, Rewind, Plus, TrendingUp, TrendingDown, Target, Clock, Calendar, DollarSign, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { FUTURES_SYMBOLS, type FuturesSymbol } from "@/lib/constants";
+import { formatCurrencyCompact } from "@/lib/utils";
 import { LogDialog } from "@/components/log-dialog";
 import { HistorySheet } from "@/components/history-sheet";
 import {
@@ -15,17 +17,7 @@ import {
 import { TRADING_DAYS } from "@/lib/constants";
 import type { LogType } from "@/lib/types";
 import Link from "next/link";
-
-function GrainOverlay() {
-  return (
-    <div
-      className="pointer-events-none fixed inset-0 z-50 opacity-[0.03]"
-      style={{
-        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-      }}
-    />
-  );
-}
+import { GrainOverlay } from "@/components/grain-overlay";
 
 export default function EdgeDetailPage() {
   const params = useParams();
@@ -86,6 +78,90 @@ export default function EdgeDetailPage() {
         return rateB - rateA;
       })[0];
 
+    const hasPriceTracking = edge?.enabledFields?.includes('entryExitPrices') ?? false;
+
+    let pnl: number | null = null;
+    let dollarPnl: number | null = null;
+    let longStats: { count: number; wins: number; winRate: number; pnl: number; dollarPnl: number | null } | null = null;
+    let shortStats: { count: number; wins: number; winRate: number; pnl: number; dollarPnl: number | null } | null = null;
+
+    if (hasPriceTracking) {
+      const logsWithPrices = occurred.filter(
+        (l) => l.entryPrice != null && l.exitPrice != null && l.direction != null
+      );
+      if (logsWithPrices.length > 0) {
+        let totalDollarPnl = 0;
+        let hasDollarPnl = false;
+
+        pnl = logsWithPrices.reduce((sum, l) => {
+          const entry = l.entryPrice as number;
+          const exit = l.exitPrice as number;
+          const tradePnl = l.direction === 'LONG' ? exit - entry : entry - exit;
+          const logSymbol = l.symbol as FuturesSymbol | null;
+          const contracts = l.positionSize || 1;
+          if (logSymbol && FUTURES_SYMBOLS[logSymbol]) {
+            totalDollarPnl += tradePnl * FUTURES_SYMBOLS[logSymbol].multiplier * contracts;
+            hasDollarPnl = true;
+          }
+          return sum + tradePnl;
+        }, 0);
+
+        if (hasDollarPnl) {
+          dollarPnl = totalDollarPnl;
+        }
+
+        // Calculate Long stats
+        const longLogs = logsWithPrices.filter((l) => l.direction === 'LONG');
+        if (longLogs.length > 0) {
+          const longWins = longLogs.filter((l) => l.outcome === 'WIN').length;
+          let longDollarPnl = 0;
+          let hasLongDollarPnl = false;
+          const longPnl = longLogs.reduce((sum, l) => {
+            const tradePnl = (l.exitPrice as number) - (l.entryPrice as number);
+            const logSymbol = l.symbol as FuturesSymbol | null;
+            const contracts = l.positionSize || 1;
+            if (logSymbol && FUTURES_SYMBOLS[logSymbol]) {
+              longDollarPnl += tradePnl * FUTURES_SYMBOLS[logSymbol].multiplier * contracts;
+              hasLongDollarPnl = true;
+            }
+            return sum + tradePnl;
+          }, 0);
+          longStats = {
+            count: longLogs.length,
+            wins: longWins,
+            winRate: Math.round((longWins / longLogs.length) * 100),
+            pnl: longPnl,
+            dollarPnl: hasLongDollarPnl ? longDollarPnl : null,
+          };
+        }
+
+        // Calculate Short stats
+        const shortLogs = logsWithPrices.filter((l) => l.direction === 'SHORT');
+        if (shortLogs.length > 0) {
+          const shortWins = shortLogs.filter((l) => l.outcome === 'WIN').length;
+          let shortDollarPnl = 0;
+          let hasShortDollarPnl = false;
+          const shortPnl = shortLogs.reduce((sum, l) => {
+            const tradePnl = (l.entryPrice as number) - (l.exitPrice as number);
+            const logSymbol = l.symbol as FuturesSymbol | null;
+            const contracts = l.positionSize || 1;
+            if (logSymbol && FUTURES_SYMBOLS[logSymbol]) {
+              shortDollarPnl += tradePnl * FUTURES_SYMBOLS[logSymbol].multiplier * contracts;
+              hasShortDollarPnl = true;
+            }
+            return sum + tradePnl;
+          }, 0);
+          shortStats = {
+            count: shortLogs.length,
+            wins: shortWins,
+            winRate: Math.round((shortWins / shortLogs.length) * 100),
+            pnl: shortPnl,
+            dollarPnl: hasShortDollarPnl ? shortDollarPnl : null,
+          };
+        }
+      }
+    }
+
     return {
       totalLogs,
       occurrences,
@@ -96,8 +172,13 @@ export default function EdgeDetailPage() {
       avgDuration,
       dayOccurrences,
       bestDay: bestDay ? { day: bestDay[0], ...bestDay[1] } : null,
+      pnl,
+      dollarPnl,
+      hasPriceTracking,
+      longStats,
+      shortStats,
     };
-  }, [filteredLogs]);
+  }, [filteredLogs, edge]);
 
   if (!isLoaded || !user) {
     return null;
@@ -166,6 +247,7 @@ export default function EdgeDetailPage() {
 
             <LogDialog
               edgeName={edge.name}
+              edgeId={edge.id}
               defaultLogType={activeView}
               onSave={(data) => addLog(edge.id, data)}
               trigger={
@@ -310,6 +392,99 @@ export default function EdgeDetailPage() {
                 <p className="text-sm text-[#0F0F0F]/40">Need more data</p>
               )}
             </div>
+
+            {/* P&L Card - only shown when price tracking is enabled */}
+            {stats.hasPriceTracking && stats.pnl !== null && (
+              <div className="bg-white border border-[#0F0F0F]/5 rounded-2xl p-4 sm:p-5">
+                <div className="flex items-center gap-2 mb-2">
+                  <DollarSign className={`w-4 h-4 ${(stats.dollarPnl ?? stats.pnl) >= 0 ? 'text-[#8B9A7D]' : 'text-[#C45A3B]'}`} />
+                  <span className="text-[10px] tracking-[0.15em] uppercase text-[#0F0F0F]/40">
+                    Total P&L
+                  </span>
+                </div>
+                {stats.dollarPnl !== null ? (
+                  <>
+                    <p
+                      className={`text-2xl sm:text-3xl font-medium ${stats.dollarPnl >= 0 ? 'text-[#8B9A7D]' : 'text-[#C45A3B]'}`}
+                      style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                    >
+                      {formatCurrencyCompact(stats.dollarPnl)}
+                    </p>
+                    <p className="text-xs text-[#0F0F0F]/40">{stats.pnl >= 0 ? '+' : ''}{stats.pnl.toFixed(2)} pts</p>
+                  </>
+                ) : (
+                  <>
+                    <p
+                      className={`text-2xl sm:text-3xl font-medium ${stats.pnl >= 0 ? 'text-[#8B9A7D]' : 'text-[#C45A3B]'}`}
+                      style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                    >
+                      {stats.pnl >= 0 ? '+' : ''}{stats.pnl.toFixed(2)}
+                    </p>
+                    <p className="text-xs text-[#0F0F0F]/40">points (no symbol set)</p>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* Long Stats Card */}
+            {stats.hasPriceTracking && stats.longStats && (
+              <div className="bg-white border border-[#8B9A7D]/20 rounded-2xl p-4 sm:p-5">
+                <div className="flex items-center gap-2 mb-2">
+                  <ArrowUpRight className="w-4 h-4 text-[#8B9A7D]" />
+                  <span className="text-[10px] tracking-[0.15em] uppercase text-[#0F0F0F]/40">Long Trades</span>
+                </div>
+                <div className="flex items-baseline gap-2">
+                  <p
+                    className="text-2xl sm:text-3xl font-medium text-[#0F0F0F]"
+                    style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                  >
+                    {stats.longStats.winRate}%
+                  </p>
+                  <span className={`text-sm font-medium ${stats.longStats.pnl >= 0 ? 'text-[#8B9A7D]' : 'text-[#C45A3B]'}`}>
+                    {stats.longStats.dollarPnl !== null
+                      ? formatCurrencyCompact(stats.longStats.dollarPnl)
+                      : `${stats.longStats.pnl >= 0 ? '+' : ''}${stats.longStats.pnl.toFixed(2)}`
+                    }
+                  </span>
+                </div>
+                <p className="text-xs text-[#0F0F0F]/40">
+                  <span className="text-[#8B9A7D]">{stats.longStats.wins}W</span>
+                  {' / '}
+                  <span className="text-[#C45A3B]">{stats.longStats.count - stats.longStats.wins}L</span>
+                  {' • '}{stats.longStats.count} trades
+                </p>
+              </div>
+            )}
+
+            {/* Short Stats Card */}
+            {stats.hasPriceTracking && stats.shortStats && (
+              <div className="bg-white border border-[#C45A3B]/20 rounded-2xl p-4 sm:p-5">
+                <div className="flex items-center gap-2 mb-2">
+                  <ArrowDownRight className="w-4 h-4 text-[#C45A3B]" />
+                  <span className="text-[10px] tracking-[0.15em] uppercase text-[#0F0F0F]/40">Short Trades</span>
+                </div>
+                <div className="flex items-baseline gap-2">
+                  <p
+                    className="text-2xl sm:text-3xl font-medium text-[#0F0F0F]"
+                    style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                  >
+                    {stats.shortStats.winRate}%
+                  </p>
+                  <span className={`text-sm font-medium ${stats.shortStats.pnl >= 0 ? 'text-[#8B9A7D]' : 'text-[#C45A3B]'}`}>
+                    {stats.shortStats.dollarPnl !== null
+                      ? formatCurrencyCompact(stats.shortStats.dollarPnl)
+                      : `${stats.shortStats.pnl >= 0 ? '+' : ''}${stats.shortStats.pnl.toFixed(2)}`
+                    }
+                  </span>
+                </div>
+                <p className="text-xs text-[#0F0F0F]/40">
+                  <span className="text-[#8B9A7D]">{stats.shortStats.wins}W</span>
+                  {' / '}
+                  <span className="text-[#C45A3B]">{stats.shortStats.count - stats.shortStats.wins}L</span>
+                  {' • '}{stats.shortStats.count} trades
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Occurrence by Day Chart */}

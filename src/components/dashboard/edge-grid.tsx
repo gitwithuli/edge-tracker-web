@@ -184,6 +184,7 @@ export function EdgeGrid({ edgesWithLogs, onAddLog, onDeleteLog, onUpdateLog, de
             <div className="flex gap-2 pt-2">
               <LogDialog
                 edgeName={edge.name}
+                edgeId={edge.id}
                 defaultLogType={defaultLogType}
                 onSave={(data) => onAddLog(edge.id, data)}
                 trigger={

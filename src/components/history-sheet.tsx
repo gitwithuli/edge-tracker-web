@@ -256,6 +256,7 @@ export const HistorySheet = memo(function HistorySheet({ edge, onDeleteLog, onUp
                                 >
                                   <LogDialog
                                     initialData={log}
+                                    edgeId={log.edgeId}
                                     onSave={(newData, newEdgeId) => onUpdateLog(String(log.id), newData, newEdgeId)}
                                     trigger={
                                       <div className="relative flex cursor-pointer items-center rounded-lg px-3 py-2 text-sm hover:bg-[#0F0F0F]/5 w-full font-medium transition-colors">

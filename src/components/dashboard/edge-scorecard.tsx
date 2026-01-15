@@ -1,12 +1,22 @@
 "use client";
 
 import { useMemo } from "react";
-import { Target, TrendingUp, ArrowRight } from "lucide-react";
+import { Target, TrendingUp, ArrowRight, DollarSign, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import type { EdgeWithLogs } from "@/lib/types";
+import { FUTURES_SYMBOLS, type FuturesSymbol } from "@/lib/constants";
+import { formatCurrencyCompact } from "@/lib/utils";
 import Link from "next/link";
 
 interface EdgeScorecardProps {
   edgesWithLogs: EdgeWithLogs[];
+}
+
+interface DirectionStats {
+  count: number;
+  wins: number;
+  winRate: number;
+  pnl: number;
+  dollarPnl: number | null;
 }
 
 interface EdgeScore {
@@ -17,6 +27,11 @@ interface EdgeScore {
   totalLogs: number;
   wins: number;
   losses: number;
+  pnl: number | null;
+  dollarPnl: number | null;
+  hasPriceTracking: boolean;
+  longStats: DirectionStats | null;
+  shortStats: DirectionStats | null;
 }
 
 export function EdgeScorecard({ edgesWithLogs }: EdgeScorecardProps) {
@@ -32,6 +47,90 @@ export function EdgeScorecard({ edgesWithLogs }: EdgeScorecardProps) {
         const losses = occurredLogs.filter((l) => l.outcome === "LOSS").length;
         const winRate = occurrences > 0 ? Math.round((wins / occurrences) * 100) : 0;
 
+        const hasPriceTracking = edge.enabledFields?.includes('entryExitPrices') ?? false;
+
+        let pnl: number | null = null;
+        let dollarPnl: number | null = null;
+        let longStats: DirectionStats | null = null;
+        let shortStats: DirectionStats | null = null;
+
+        if (hasPriceTracking) {
+          const logsWithPrices = occurredLogs.filter(
+            (l) => l.entryPrice != null && l.exitPrice != null && l.direction != null
+          );
+          if (logsWithPrices.length > 0) {
+            let totalDollarPnl = 0;
+            let hasDollarPnl = false;
+
+            pnl = logsWithPrices.reduce((sum, l) => {
+              const entry = l.entryPrice as number;
+              const exit = l.exitPrice as number;
+              const tradePnl = l.direction === 'LONG' ? exit - entry : entry - exit;
+              const logSymbol = l.symbol as FuturesSymbol | null;
+              const contracts = l.positionSize || 1;
+              if (logSymbol && FUTURES_SYMBOLS[logSymbol]) {
+                totalDollarPnl += tradePnl * FUTURES_SYMBOLS[logSymbol].multiplier * contracts;
+                hasDollarPnl = true;
+              }
+              return sum + tradePnl;
+            }, 0);
+
+            if (hasDollarPnl) {
+              dollarPnl = totalDollarPnl;
+            }
+
+            // Calculate Long stats
+            const longLogs = logsWithPrices.filter((l) => l.direction === 'LONG');
+            if (longLogs.length > 0) {
+              const longWins = longLogs.filter((l) => l.outcome === 'WIN').length;
+              let longDollarPnl = 0;
+              let hasLongDollarPnl = false;
+              const longPnl = longLogs.reduce((sum, l) => {
+                const tradePnl = (l.exitPrice as number) - (l.entryPrice as number);
+                const logSymbol = l.symbol as FuturesSymbol | null;
+                const contracts = l.positionSize || 1;
+                if (logSymbol && FUTURES_SYMBOLS[logSymbol]) {
+                  longDollarPnl += tradePnl * FUTURES_SYMBOLS[logSymbol].multiplier * contracts;
+                  hasLongDollarPnl = true;
+                }
+                return sum + tradePnl;
+              }, 0);
+              longStats = {
+                count: longLogs.length,
+                wins: longWins,
+                winRate: Math.round((longWins / longLogs.length) * 100),
+                pnl: longPnl,
+                dollarPnl: hasLongDollarPnl ? longDollarPnl : null,
+              };
+            }
+
+            // Calculate Short stats
+            const shortLogs = logsWithPrices.filter((l) => l.direction === 'SHORT');
+            if (shortLogs.length > 0) {
+              const shortWins = shortLogs.filter((l) => l.outcome === 'WIN').length;
+              let shortDollarPnl = 0;
+              let hasShortDollarPnl = false;
+              const shortPnl = shortLogs.reduce((sum, l) => {
+                const tradePnl = (l.entryPrice as number) - (l.exitPrice as number);
+                const logSymbol = l.symbol as FuturesSymbol | null;
+                const contracts = l.positionSize || 1;
+                if (logSymbol && FUTURES_SYMBOLS[logSymbol]) {
+                  shortDollarPnl += tradePnl * FUTURES_SYMBOLS[logSymbol].multiplier * contracts;
+                  hasShortDollarPnl = true;
+                }
+                return sum + tradePnl;
+              }, 0);
+              shortStats = {
+                count: shortLogs.length,
+                wins: shortWins,
+                winRate: Math.round((shortWins / shortLogs.length) * 100),
+                pnl: shortPnl,
+                dollarPnl: hasShortDollarPnl ? shortDollarPnl : null,
+              };
+            }
+          }
+        }
+
         return {
           id: edge.id,
           name: edge.name,
@@ -40,6 +139,11 @@ export function EdgeScorecard({ edgesWithLogs }: EdgeScorecardProps) {
           totalLogs,
           wins,
           losses,
+          pnl,
+          dollarPnl,
+          hasPriceTracking,
+          longStats,
+          shortStats,
         };
       })
       .sort((a, b) => {
@@ -165,6 +269,88 @@ export function EdgeScorecard({ edgesWithLogs }: EdgeScorecardProps) {
                     <span className="text-[#C45A3B]">{score.losses}L</span>
                   </p>
                 </div>
+
+                {/* P&L + Long/Short Breakdown - only shown when price tracking is enabled */}
+                {score.hasPriceTracking && score.pnl !== null && (
+                  <div className="col-span-2 pt-2 border-t border-[#0F0F0F]/5 mt-2 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <DollarSign className="w-3 h-3 text-[#0F0F0F]/30" />
+                        <span className="text-[10px] text-[#0F0F0F]/40 uppercase tracking-wider">
+                          Total P&L
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        {score.dollarPnl !== null ? (
+                          <span
+                            className={`text-sm font-medium ${
+                              score.dollarPnl >= 0 ? "text-[#8B9A7D]" : "text-[#C45A3B]"
+                            }`}
+                            style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                          >
+                            {formatCurrencyCompact(score.dollarPnl)}
+                          </span>
+                        ) : (
+                          <span
+                            className={`text-sm font-medium ${
+                              score.pnl >= 0 ? "text-[#8B9A7D]" : "text-[#C45A3B]"
+                            }`}
+                            style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                          >
+                            {score.pnl >= 0 ? "+" : ""}{score.pnl.toFixed(2)} pts
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Long/Short Breakdown */}
+                    {(score.longStats || score.shortStats) && (
+                      <div className="grid grid-cols-2 gap-3 pt-1">
+                        {/* Long Stats */}
+                        {score.longStats && (
+                          <div className="bg-[#8B9A7D]/5 rounded-lg p-2">
+                            <div className="flex items-center gap-1 mb-1">
+                              <ArrowUpRight className="w-3 h-3 text-[#8B9A7D]" />
+                              <span className="text-[9px] text-[#0F0F0F]/50 uppercase tracking-wider">Long</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] text-[#0F0F0F]/40">
+                                {score.longStats.wins}W/{score.longStats.count - score.longStats.wins}L ({score.longStats.winRate}%)
+                              </span>
+                              <span className={`text-xs font-medium ${score.longStats.pnl >= 0 ? "text-[#8B9A7D]" : "text-[#C45A3B]"}`}>
+                                {score.longStats.dollarPnl !== null
+                                  ? formatCurrencyCompact(score.longStats.dollarPnl)
+                                  : `${score.longStats.pnl >= 0 ? "+" : ""}${score.longStats.pnl.toFixed(2)}`
+                                }
+                              </span>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Short Stats */}
+                        {score.shortStats && (
+                          <div className="bg-[#C45A3B]/5 rounded-lg p-2">
+                            <div className="flex items-center gap-1 mb-1">
+                              <ArrowDownRight className="w-3 h-3 text-[#C45A3B]" />
+                              <span className="text-[9px] text-[#0F0F0F]/50 uppercase tracking-wider">Short</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] text-[#0F0F0F]/40">
+                                {score.shortStats.wins}W/{score.shortStats.count - score.shortStats.wins}L ({score.shortStats.winRate}%)
+                              </span>
+                              <span className={`text-xs font-medium ${score.shortStats.pnl >= 0 ? "text-[#8B9A7D]" : "text-[#C45A3B]"}`}>
+                                {score.shortStats.dollarPnl !== null
+                                  ? formatCurrencyCompact(score.shortStats.dollarPnl)
+                                  : `${score.shortStats.pnl >= 0 ? "+" : ""}${score.shortStats.pnl.toFixed(2)}`
+                                }
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </Link>
           );
