@@ -55,7 +55,7 @@ function MacroCard({
   return (
     <div
       className={cn(
-        "rounded-2xl border p-5 transition-all duration-500",
+        "rounded-2xl border p-4 sm:p-5 transition-all duration-500",
         status === 'active'
           ? "bg-[#C45A3B]/10 border-[#C45A3B] shadow-lg shadow-[#C45A3B]/10"
           : status === 'upcoming'
@@ -92,7 +92,7 @@ function MacroCard({
           </div>
           <h3
             className={cn(
-              "text-lg font-medium",
+              "text-base sm:text-lg font-medium",
               status === 'passed' && !hasLog ? "text-[#0F0F0F]/40" : "text-[#0F0F0F]"
             )}
             style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
@@ -102,14 +102,14 @@ function MacroCard({
         </div>
 
         <div className={cn(
-          "text-right",
+          "text-right flex-shrink-0",
           status === 'active' ? "text-[#C45A3B]" : "text-[#0F0F0F]/40"
         )}>
-          <div className="text-xs uppercase tracking-wider mb-1">
+          <div className="text-[10px] sm:text-xs uppercase tracking-wider mb-0.5 sm:mb-1">
             {status === 'active' ? 'Remaining' : status === 'upcoming' ? 'Starts in' : 'Ended'}
           </div>
           {status !== 'passed' && (
-            <div className="text-2xl font-mono font-bold tabular-nums">
+            <div className="text-xl sm:text-2xl font-mono font-bold tabular-nums">
               {status === 'active'
                 ? `${minutesRemaining}m`
                 : `${minutesUntil}m ${secondsRemaining !== undefined ? `${secondsRemaining}s` : ''}`
@@ -119,8 +119,8 @@ function MacroCard({
         </div>
       </div>
 
-      <div className="flex items-center gap-2 text-sm text-[#0F0F0F]/50">
-        <Clock className="w-3.5 h-3.5" />
+      <div className="flex items-center gap-2 text-xs sm:text-sm text-[#0F0F0F]/50">
+        <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
         <span>
           {formatMacroTime(macro.startHour, macro.startMinute)} — {formatMacroTime(macro.endHour, macro.endMinute)}
         </span>
@@ -159,39 +159,39 @@ function MacroCard({
             <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 mb-2">
               Direction
             </div>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
               <button
                 onClick={() => onLog({ direction: 'BULLISH' })}
                 className={cn(
-                  "h-10 rounded-xl border transition-colors flex items-center justify-center gap-1.5 text-sm font-medium",
+                  "h-9 sm:h-10 rounded-xl border transition-colors flex items-center justify-center gap-1 sm:gap-1.5 text-xs sm:text-sm font-medium",
                   todayLog?.direction === 'BULLISH'
                     ? "bg-[#8B9A7D] text-white border-[#8B9A7D]"
                     : "border-[#8B9A7D]/30 text-[#8B9A7D] hover:bg-[#8B9A7D] hover:text-white"
                 )}
               >
-                <ArrowUp className="w-4 h-4" /> Bullish
+                <ArrowUp className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> <span className="hidden sm:inline">Bullish</span><span className="sm:hidden">Bull</span>
               </button>
               <button
                 onClick={() => onLog({ direction: 'BEARISH' })}
                 className={cn(
-                  "h-10 rounded-xl border transition-colors flex items-center justify-center gap-1.5 text-sm font-medium",
+                  "h-9 sm:h-10 rounded-xl border transition-colors flex items-center justify-center gap-1 sm:gap-1.5 text-xs sm:text-sm font-medium",
                   todayLog?.direction === 'BEARISH'
                     ? "bg-[#C45A3B] text-white border-[#C45A3B]"
                     : "border-[#C45A3B]/30 text-[#C45A3B] hover:bg-[#C45A3B] hover:text-white"
                 )}
               >
-                <ArrowDown className="w-4 h-4" /> Bearish
+                <ArrowDown className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> <span className="hidden sm:inline">Bearish</span><span className="sm:hidden">Bear</span>
               </button>
               <button
                 onClick={() => onLog({ direction: 'CONSOLIDATION' })}
                 className={cn(
-                  "h-10 rounded-xl border transition-colors flex items-center justify-center gap-1.5 text-sm font-medium",
+                  "h-9 sm:h-10 rounded-xl border transition-colors flex items-center justify-center gap-1 sm:gap-1.5 text-xs sm:text-sm font-medium",
                   todayLog?.direction === 'CONSOLIDATION'
                     ? "bg-[#0F0F0F]/20 text-[#0F0F0F] border-[#0F0F0F]/20"
                     : "border-[#0F0F0F]/10 text-[#0F0F0F]/50 hover:bg-[#0F0F0F]/5"
                 )}
               >
-                <Minus className="w-4 h-4" /> Chop
+                <Minus className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Chop
               </button>
             </div>
           </div>
@@ -201,28 +201,28 @@ function MacroCard({
             <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 mb-2">
               Displacement Quality
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
               <button
                 onClick={() => onLog({ displacementQuality: 'CLEAN' })}
                 className={cn(
-                  "h-10 rounded-xl border transition-colors flex items-center justify-center gap-1.5 text-sm font-medium",
+                  "h-9 sm:h-10 rounded-xl border transition-colors flex items-center justify-center gap-1 sm:gap-1.5 text-xs sm:text-sm font-medium",
                   todayLog?.displacementQuality === 'CLEAN'
                     ? "bg-[#8B9A7D] text-white border-[#8B9A7D]"
                     : "border-[#0F0F0F]/10 text-[#0F0F0F]/60 hover:bg-[#0F0F0F]/5"
                 )}
               >
-                <Activity className="w-4 h-4" /> Low Resistance
+                <Activity className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> <span className="hidden sm:inline">Low Resistance</span><span className="sm:hidden">Low</span>
               </button>
               <button
                 onClick={() => onLog({ displacementQuality: 'CHOPPY' })}
                 className={cn(
-                  "h-10 rounded-xl border transition-colors flex items-center justify-center gap-1.5 text-sm font-medium",
+                  "h-9 sm:h-10 rounded-xl border transition-colors flex items-center justify-center gap-1 sm:gap-1.5 text-xs sm:text-sm font-medium",
                   todayLog?.displacementQuality === 'CHOPPY'
                     ? "bg-[#C45A3B] text-white border-[#C45A3B]"
                     : "border-[#0F0F0F]/10 text-[#0F0F0F]/60 hover:bg-[#0F0F0F]/5"
                 )}
               >
-                <Activity className="w-4 h-4" /> High Resistance
+                <Activity className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> <span className="hidden sm:inline">High Resistance</span><span className="sm:hidden">High</span>
               </button>
             </div>
           </div>
@@ -232,11 +232,11 @@ function MacroCard({
             <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 mb-2">
               Liquidity Sweep
             </div>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
               <button
                 onClick={() => onLog({ liquiditySweep: 'HIGHS' })}
                 className={cn(
-                  "h-10 rounded-xl border transition-colors flex items-center justify-center text-sm font-medium",
+                  "h-9 sm:h-10 rounded-xl border transition-colors flex items-center justify-center text-xs sm:text-sm font-medium",
                   todayLog?.liquiditySweep === 'HIGHS'
                     ? "bg-[#8B9A7D] text-white border-[#8B9A7D]"
                     : "border-[#0F0F0F]/10 text-[#0F0F0F]/60 hover:bg-[#0F0F0F]/5"
@@ -247,7 +247,7 @@ function MacroCard({
               <button
                 onClick={() => onLog({ liquiditySweep: 'LOWS' })}
                 className={cn(
-                  "h-10 rounded-xl border transition-colors flex items-center justify-center text-sm font-medium",
+                  "h-9 sm:h-10 rounded-xl border transition-colors flex items-center justify-center text-xs sm:text-sm font-medium",
                   todayLog?.liquiditySweep === 'LOWS'
                     ? "bg-[#C45A3B] text-white border-[#C45A3B]"
                     : "border-[#0F0F0F]/10 text-[#0F0F0F]/60 hover:bg-[#0F0F0F]/5"
@@ -258,7 +258,7 @@ function MacroCard({
               <button
                 onClick={() => onLog({ liquiditySweep: 'BOTH' })}
                 className={cn(
-                  "h-10 rounded-xl border transition-colors flex items-center justify-center text-sm font-medium",
+                  "h-9 sm:h-10 rounded-xl border transition-colors flex items-center justify-center text-xs sm:text-sm font-medium",
                   todayLog?.liquiditySweep === 'BOTH'
                     ? "bg-[#0F0F0F] text-white border-[#0F0F0F]"
                     : "border-[#0F0F0F]/10 text-[#0F0F0F]/60 hover:bg-[#0F0F0F]/5"
@@ -269,7 +269,7 @@ function MacroCard({
               <button
                 onClick={() => onLog({ liquiditySweep: 'NONE' })}
                 className={cn(
-                  "h-10 rounded-xl border transition-colors flex items-center justify-center text-sm font-medium",
+                  "h-9 sm:h-10 rounded-xl border transition-colors flex items-center justify-center text-xs sm:text-sm font-medium",
                   todayLog?.liquiditySweep === 'NONE'
                     ? "bg-[#0F0F0F]/20 text-[#0F0F0F] border-[#0F0F0F]/20"
                     : "border-[#0F0F0F]/10 text-[#0F0F0F]/60 hover:bg-[#0F0F0F]/5"
@@ -406,7 +406,7 @@ export default function MacrosPage() {
     secondsToNextMacro,
     macroStatuses,
     isTradingHours,
-  } = useMacroTime();
+  } = useMacroTime(showAsiaMacros);
 
   useEffect(() => {
     setMounted(true);
@@ -454,20 +454,20 @@ export default function MacrosPage() {
     <div className="min-h-screen bg-[#FAF7F2] text-[#0F0F0F]">
       {/* Header */}
       <header className="border-b border-[#0F0F0F]/10 bg-[#FAF7F2]/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-4xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-4">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center">
+          <div className="flex items-center gap-2 sm:gap-4">
             <button
               onClick={() => router.push('/dashboard')}
-              className="p-2 -ml-2 rounded-full hover:bg-[#0F0F0F]/5 transition-colors"
+              className="p-1.5 sm:p-2 -ml-1 sm:-ml-2 rounded-full hover:bg-[#0F0F0F]/5 transition-colors"
             >
-              <ChevronLeft className="w-5 h-5 text-[#0F0F0F]/60" />
+              <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 text-[#0F0F0F]/60" />
             </button>
             <div>
-              <div className="text-xs tracking-[0.2em] uppercase text-[#0F0F0F]/40 mb-0.5">
+              <div className="text-[10px] sm:text-xs tracking-[0.2em] uppercase text-[#0F0F0F]/40 mb-0.5">
                 Macro Tracker
               </div>
               <h1
-                className="text-xl font-medium"
+                className="text-base sm:text-xl font-medium"
                 style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
               >
                 Time Windows
@@ -475,13 +475,13 @@ export default function MacrosPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             <Link
               href="/macros/stats"
-              className="p-2 rounded-full hover:bg-[#0F0F0F]/5 transition-colors"
+              className="p-1.5 sm:p-2 rounded-full hover:bg-[#0F0F0F]/5 transition-colors"
               title="View Statistics"
             >
-              <BarChart3 className="w-5 h-5 text-[#0F0F0F]/60" />
+              <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-[#0F0F0F]/60" />
             </Link>
 
             {/* Settings Dropdown */}
@@ -489,12 +489,12 @@ export default function MacrosPage() {
               <button
                 onClick={() => setShowSettings(!showSettings)}
                 className={cn(
-                  "p-2 rounded-full transition-colors",
+                  "p-1.5 sm:p-2 rounded-full transition-colors",
                   showSettings ? "bg-[#0F0F0F]/10" : "hover:bg-[#0F0F0F]/5"
                 )}
                 title="Settings"
               >
-                <Settings className="w-5 h-5 text-[#0F0F0F]/60" />
+                <Settings className="w-4 h-4 sm:w-5 sm:h-5 text-[#0F0F0F]/60" />
               </button>
 
               {showSettings && (
@@ -503,7 +503,7 @@ export default function MacrosPage() {
                     className="fixed inset-0 z-40"
                     onClick={() => setShowSettings(false)}
                   />
-                  <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-xl border border-[#0F0F0F]/10 shadow-lg z-50 p-4">
+                  <div className="absolute right-0 top-full mt-2 w-56 sm:w-64 bg-white rounded-xl border border-[#0F0F0F]/10 shadow-lg z-50 p-3 sm:p-4">
                     <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 mb-3">Settings</div>
                     <label className="flex items-center justify-between cursor-pointer group">
                       <div className="flex items-center gap-2">
@@ -548,11 +548,11 @@ export default function MacrosPage() {
             </div>
 
             <div className="text-right">
-              <div className="text-xs tracking-wider uppercase text-[#0F0F0F]/40 mb-1">
-                {isTradingHours ? 'Market Open' : 'Market Closed'} • ET
+              <div className="text-[10px] sm:text-xs tracking-wider uppercase text-[#0F0F0F]/40 mb-0.5 sm:mb-1">
+                <span className="hidden sm:inline">{isTradingHours ? 'Market Open' : 'Market Closed'} • </span>ET
               </div>
               <div
-                className="text-2xl font-mono font-bold tabular-nums text-[#0F0F0F]"
+                className="text-lg sm:text-2xl font-mono font-bold tabular-nums text-[#0F0F0F]"
               >
                 {formatCurrentTime()}
               </div>
@@ -561,10 +561,10 @@ export default function MacrosPage() {
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-6 py-8">
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {/* Today's Summary */}
         {loggedCount > 0 && (
-          <div className="mb-8 p-4 rounded-2xl bg-white/50 border border-[#0F0F0F]/10">
+          <div className="mb-6 sm:mb-8 p-3 sm:p-4 rounded-2xl bg-white/50 border border-[#0F0F0F]/10">
             <div className="text-xs tracking-[0.15em] uppercase text-[#0F0F0F]/40 mb-2">Today's Summary</div>
             <div className="flex flex-wrap items-center gap-4 sm:gap-6">
               <div className="flex items-center gap-2">

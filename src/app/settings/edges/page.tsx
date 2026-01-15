@@ -86,53 +86,53 @@ export default function EdgeSettingsPage() {
       <div className="min-h-screen bg-[#FAF7F2] text-[#0F0F0F] selection:bg-[#C45A3B]/20">
         {/* Header */}
         <header className="border-b border-[#0F0F0F]/5 bg-[#FAF7F2]/80 backdrop-blur-md sticky top-0 z-40">
-          <div className="max-w-3xl mx-auto px-6 sm:px-8 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-4">
+          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4 flex items-center justify-between">
+            <div className="flex items-center gap-2 sm:gap-4">
               <Link
                 href="/dashboard"
-                className="inline-flex items-center gap-2 text-[#0F0F0F]/40 hover:text-[#0F0F0F] transition-colors text-sm"
+                className="inline-flex items-center gap-1.5 sm:gap-2 text-[#0F0F0F]/40 hover:text-[#0F0F0F] transition-colors text-sm"
               >
-                <ArrowLeft className="w-4 h-4" />
+                <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 <span className="hidden sm:inline">Back</span>
               </Link>
               <div className="h-4 w-px bg-[#0F0F0F]/10" />
-              <Link href="/dashboard" className="flex items-center gap-2">
-                <img src="/logo-icon-transparent.png" alt="Edge of ICT" className="w-16 h-16" />
+              <Link href="/dashboard" className="flex items-center gap-1.5 sm:gap-2">
+                <img src="/logo-icon-transparent.png" alt="Edge of ICT" className="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16" />
                 <span
-                  className="text-sm tracking-[0.08em] font-medium"
+                  className="hidden sm:inline text-xs sm:text-sm tracking-[0.08em] font-medium"
                   style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
                 >
-                  EDGE <span className="text-[#0F0F0F]/40 text-xs">OF</span> ICT
+                  EDGE <span className="text-[#0F0F0F]/40 text-[10px] sm:text-xs">OF</span> ICT
                 </span>
               </Link>
             </div>
           </div>
         </header>
 
-        <main className="max-w-3xl mx-auto px-6 sm:px-8 py-8 sm:py-12">
+        <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
           <div
-            className={`flex items-start justify-between mb-10 opacity-0 ${mounted ? 'animate-slide-up' : ''}`}
+            className={`flex items-start justify-between mb-6 sm:mb-8 lg:mb-10 opacity-0 ${mounted ? 'animate-slide-up' : ''}`}
             style={{ animationDelay: '0.1s' }}
           >
             <div>
-              <p className="text-[#C45A3B] text-xs tracking-[0.3em] uppercase font-medium mb-3">
+              <p className="text-[#C45A3B] text-[10px] sm:text-xs tracking-[0.3em] uppercase font-medium mb-2 sm:mb-3">
                 Settings
               </p>
               <h1
-                className="text-3xl sm:text-4xl tracking-tight"
+                className="text-2xl sm:text-3xl lg:text-4xl tracking-tight"
                 style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
               >
                 My <span className="italic text-[#0F0F0F]/60">Edges</span>
               </h1>
-              <p className="text-[#0F0F0F]/40 text-sm mt-2">
+              <p className="text-[#0F0F0F]/40 text-xs sm:text-sm mt-1.5 sm:mt-2">
                 Manage your trading strategies and models.
               </p>
             </div>
 
             <EdgeFormDialog
               trigger={
-                <button className="inline-flex items-center gap-2 bg-[#0F0F0F] text-[#FAF7F2] px-4 py-2.5 rounded-full text-sm font-medium hover:bg-[#C45A3B] transition-colors duration-300">
-                  <Plus className="w-4 h-4" />
+                <button className="inline-flex items-center gap-1.5 sm:gap-2 bg-[#0F0F0F] text-[#FAF7F2] px-3 sm:px-4 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-medium hover:bg-[#C45A3B] transition-colors duration-300">
+                  <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   <span className="hidden sm:inline">New Edge</span>
                 </button>
               }
@@ -141,33 +141,33 @@ export default function EdgeSettingsPage() {
 
           {edges.length === 0 ? (
             <div
-              className={`p-8 sm:p-12 rounded-2xl border-2 border-dashed border-[#0F0F0F]/10 text-center opacity-0 ${mounted ? 'animate-slide-up' : ''}`}
+              className={`p-6 sm:p-8 lg:p-12 rounded-xl sm:rounded-2xl border-2 border-dashed border-[#0F0F0F]/10 text-center opacity-0 ${mounted ? 'animate-slide-up' : ''}`}
               style={{ animationDelay: '0.2s' }}
             >
-              <div className="w-14 h-14 mx-auto mb-5 rounded-full bg-[#0F0F0F]/5 flex items-center justify-center">
-                <Target className="w-7 h-7 text-[#0F0F0F]/30" />
+              <div className="w-12 h-12 sm:w-14 sm:h-14 mx-auto mb-4 sm:mb-5 rounded-full bg-[#0F0F0F]/5 flex items-center justify-center">
+                <Target className="w-6 h-6 sm:w-7 sm:h-7 text-[#0F0F0F]/30" />
               </div>
               <h3
-                className="text-xl mb-2"
+                className="text-lg sm:text-xl mb-2"
                 style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
               >
                 No edges yet
               </h3>
-              <p className="text-sm text-[#0F0F0F]/40 mb-6 max-w-sm mx-auto">
+              <p className="text-xs sm:text-sm text-[#0F0F0F]/40 mb-4 sm:mb-6 max-w-sm mx-auto">
                 Create your first trading edge to start tracking occurrences.
                 Common edges include Silver Bullet, London Killzone, etc.
               </p>
               <EdgeFormDialog
                 trigger={
-                  <button className="inline-flex items-center gap-2 bg-[#0F0F0F] text-[#FAF7F2] px-5 py-2.5 rounded-full text-sm font-medium hover:bg-[#C45A3B] transition-colors duration-300">
-                    <Plus className="w-4 h-4" />
+                  <button className="inline-flex items-center gap-1.5 sm:gap-2 bg-[#0F0F0F] text-[#FAF7F2] px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-medium hover:bg-[#C45A3B] transition-colors duration-300">
+                    <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     Create Your First Edge
                   </button>
                 }
               />
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               {edges.map((edge, i) => {
                 const logCount = getLogCount(edge.id);
                 const isDeleting = loadingStates.deletingEdgeId === edge.id;
@@ -175,46 +175,46 @@ export default function EdgeSettingsPage() {
                 return (
                   <div
                     key={edge.id}
-                    className={`p-5 sm:p-6 rounded-2xl bg-white border border-[#0F0F0F]/5 hover:border-[#0F0F0F]/10 transition-all duration-300 opacity-0 ${mounted ? 'animate-slide-up' : ''}`}
+                    className={`p-4 sm:p-5 lg:p-6 rounded-xl sm:rounded-2xl bg-white border border-[#0F0F0F]/5 hover:border-[#0F0F0F]/10 transition-all duration-300 opacity-0 ${mounted ? 'animate-slide-up' : ''}`}
                     style={{ animationDelay: `${0.15 + i * 0.05}s` }}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1 min-w-0">
                         <h3
-                          className="text-lg font-normal tracking-tight text-[#0F0F0F]"
+                          className="text-base sm:text-lg font-normal tracking-tight text-[#0F0F0F]"
                           style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
                         >
                           {edge.name}
                         </h3>
                         {edge.description && (
-                          <p className="text-sm text-[#0F0F0F]/40 mt-1 line-clamp-2">
+                          <p className="text-xs sm:text-sm text-[#0F0F0F]/40 mt-1 line-clamp-2">
                             {edge.description}
                           </p>
                         )}
-                        <p className="text-xs text-[#0F0F0F]/30 mt-3 uppercase tracking-wider">
+                        <p className="text-[10px] sm:text-xs text-[#0F0F0F]/30 mt-2 sm:mt-3 uppercase tracking-wider">
                           {logCount} day{logCount !== 1 ? "s" : ""} logged
                         </p>
                       </div>
 
-                      <div className="flex items-center gap-1 ml-4">
+                      <div className="flex items-center gap-0.5 sm:gap-1 ml-2 sm:ml-4">
                         <EdgeFormDialog
                           edge={edge}
                           trigger={
-                            <button className="p-2.5 rounded-full text-[#0F0F0F]/30 hover:text-[#0F0F0F] hover:bg-[#0F0F0F]/5 transition-all duration-300">
-                              <Pencil className="w-4 h-4" />
+                            <button className="p-2 sm:p-2.5 rounded-full text-[#0F0F0F]/30 hover:text-[#0F0F0F] hover:bg-[#0F0F0F]/5 transition-all duration-300">
+                              <Pencil className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                             </button>
                           }
                         />
 
                         <button
-                          className="p-2.5 rounded-full text-[#0F0F0F]/30 hover:text-[#C45A3B] hover:bg-[#C45A3B]/5 transition-all duration-300 disabled:opacity-50"
+                          className="p-2 sm:p-2.5 rounded-full text-[#0F0F0F]/30 hover:text-[#C45A3B] hover:bg-[#C45A3B]/5 transition-all duration-300 disabled:opacity-50"
                           onClick={() => setDeleteTarget({ id: edge.id, name: edge.name })}
                           disabled={isDeleting}
                         >
                           {isDeleting ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" />
                           ) : (
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                           )}
                         </button>
                       </div>
@@ -227,9 +227,9 @@ export default function EdgeSettingsPage() {
         </main>
 
         {/* Footer */}
-        <footer className="border-t border-[#0F0F0F]/5 py-6 mt-12">
-          <div className="max-w-3xl mx-auto px-6 sm:px-8 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-[#0F0F0F]/30">
-            <span className="flex items-center gap-2 tracking-[0.15em] uppercase"><img src="/logo-icon-transparent.png" alt="" className="w-5 h-5" />Edge of ICT</span>
+        <footer className="border-t border-[#0F0F0F]/5 py-4 sm:py-6 mt-8 sm:mt-12">
+          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-[#0F0F0F]/30">
+            <span className="flex items-center gap-2 tracking-[0.15em] uppercase"><img src="/logo-icon-transparent.png" alt="" className="w-4 h-4 sm:w-5 sm:h-5" />Edge of ICT</span>
             <span>Built for ICT traders</span>
           </div>
         </footer>

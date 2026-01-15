@@ -528,14 +528,14 @@ export default function MacroStatsPage() {
       const avg = Math.round(total / count);
       if (avg > bestMacro.avg) {
         const macro = ALL_MACROS.find(m => m.id === id);
-        bestMacro = { id, avg, name: macro?.shortName || id };
+        bestMacro = { id, avg, name: macro?.name || id };
       }
     });
 
-    // Day of week analysis
+    // Day of week analysis (parse as local time to avoid timezone shifts)
     const dayStats: Record<number, { bullish: number; bearish: number; total: number }> = {};
     logsWithData.forEach(log => {
-      const day = new Date(log.date).getDay();
+      const day = new Date(log.date + 'T12:00:00').getDay();
       if (!dayStats[day]) {
         dayStats[day] = { bullish: 0, bearish: 0, total: 0 };
       }
@@ -625,20 +625,20 @@ export default function MacroStatsPage() {
     <div className="min-h-screen bg-[#FAF7F2] text-[#0F0F0F]">
       {/* Header */}
       <header className="border-b border-[#0F0F0F]/10 bg-[#FAF7F2]/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-4">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center">
+          <div className="flex items-center gap-2 sm:gap-4">
             <button
               onClick={() => router.push('/macros')}
-              className="p-2 -ml-2 rounded-full hover:bg-[#0F0F0F]/5 transition-colors"
+              className="p-1.5 sm:p-2 -ml-1 sm:-ml-2 rounded-full hover:bg-[#0F0F0F]/5 transition-colors"
             >
-              <ChevronLeft className="w-5 h-5 text-[#0F0F0F]/60" />
+              <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 text-[#0F0F0F]/60" />
             </button>
             <div>
-              <div className="text-xs tracking-[0.2em] uppercase text-[#0F0F0F]/40 mb-0.5">
+              <div className="text-[10px] sm:text-xs tracking-[0.2em] uppercase text-[#0F0F0F]/40 mb-0.5">
                 Macro Tracker
               </div>
               <h1
-                className="text-xl font-medium"
+                className="text-base sm:text-xl font-medium"
                 style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
               >
                 Statistics
@@ -648,113 +648,113 @@ export default function MacroStatsPage() {
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-6 py-8">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {/* Stats Overview */}
-        <section className="mb-10">
-          <div className="flex items-center gap-3 mb-6">
-            <BarChart3 className="w-4 h-4 text-[#0F0F0F]/40" />
-            <span className="text-xs tracking-[0.2em] uppercase text-[#0F0F0F]/40">Overview</span>
+        <section className="mb-8 sm:mb-10">
+          <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+            <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#0F0F0F]/40" />
+            <span className="text-[10px] sm:text-xs tracking-[0.2em] uppercase text-[#0F0F0F]/40">Overview</span>
             <div className="flex-1 h-px bg-[#0F0F0F]/10" />
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="p-4 rounded-2xl bg-white border border-[#0F0F0F]/10">
-              <div className="text-xs text-[#0F0F0F]/40 uppercase tracking-wider mb-1">Total Logged</div>
-              <div className="text-3xl font-bold text-[#0F0F0F]">{stats.totalLogs}</div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
+            <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white border border-[#0F0F0F]/10">
+              <div className="text-[10px] sm:text-xs text-[#0F0F0F]/40 uppercase tracking-wider mb-1">Total Logged</div>
+              <div className="text-2xl sm:text-3xl font-bold text-[#0F0F0F]">{stats.totalLogs}</div>
             </div>
-            <div className="p-4 rounded-2xl bg-white border border-[#0F0F0F]/10">
-              <div className="text-xs text-[#0F0F0F]/40 uppercase tracking-wider mb-1">Avg Points</div>
-              <div className="text-3xl font-bold text-[#0F0F0F]">{stats.avgPoints}</div>
+            <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white border border-[#0F0F0F]/10">
+              <div className="text-[10px] sm:text-xs text-[#0F0F0F]/40 uppercase tracking-wider mb-1">Avg Points</div>
+              <div className="text-2xl sm:text-3xl font-bold text-[#0F0F0F]">{stats.avgPoints}</div>
             </div>
-            <div className="p-4 rounded-2xl bg-white border border-[#0F0F0F]/10">
-              <div className="text-xs text-[#0F0F0F]/40 uppercase tracking-wider mb-1">Best Macro</div>
-              <div className="text-xl font-bold text-[#0F0F0F] truncate">{stats.bestMacro.name || '—'}</div>
+            <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white border border-[#0F0F0F]/10">
+              <div className="text-[10px] sm:text-xs text-[#0F0F0F]/40 uppercase tracking-wider mb-1">Best Macro</div>
+              <div className="text-base sm:text-xl font-bold text-[#0F0F0F] truncate">{stats.bestMacro.name || '—'}</div>
               {stats.bestMacro.avg > 0 && (
-                <div className="text-xs text-[#0F0F0F]/40">{stats.bestMacro.avg} pts avg</div>
+                <div className="text-[10px] sm:text-xs text-[#0F0F0F]/40">{stats.bestMacro.avg} pts avg</div>
               )}
             </div>
-            <div className="p-4 rounded-2xl bg-white border border-[#0F0F0F]/10">
-              <div className="text-xs text-[#0F0F0F]/40 uppercase tracking-wider mb-1">Best Day</div>
-              <div className="text-xl font-bold text-[#0F0F0F]">{stats.bestDay || '—'}</div>
-              <div className="text-xs text-[#0F0F0F]/40">Most directional</div>
+            <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white border border-[#0F0F0F]/10">
+              <div className="text-[10px] sm:text-xs text-[#0F0F0F]/40 uppercase tracking-wider mb-1">Best Day</div>
+              <div className="text-base sm:text-xl font-bold text-[#0F0F0F]">{stats.bestDay || '—'}</div>
+              <div className="text-[10px] sm:text-xs text-[#0F0F0F]/40">Most directional</div>
             </div>
           </div>
 
           {/* Direction & Resistance Breakdown */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-            <div className="p-4 rounded-2xl bg-white border border-[#0F0F0F]/10">
-              <div className="text-xs text-[#0F0F0F]/40 uppercase tracking-wider mb-3">Direction Breakdown</div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 mt-3 sm:mt-4">
+            <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white border border-[#0F0F0F]/10">
+              <div className="text-[10px] sm:text-xs text-[#0F0F0F]/40 uppercase tracking-wider mb-2 sm:mb-3">Direction Breakdown</div>
               <div className="space-y-2">
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-1.5 text-[#8B9A7D] w-24">
-                    <ArrowUp className="w-4 h-4" />
-                    <span className="text-sm font-medium">Bullish</span>
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="flex items-center gap-1 sm:gap-1.5 text-[#8B9A7D] w-16 sm:w-24">
+                    <ArrowUp className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <span className="text-xs sm:text-sm font-medium">Bullish</span>
                   </div>
-                  <div className="flex-1 h-2 bg-[#0F0F0F]/5 rounded-full overflow-hidden">
+                  <div className="flex-1 h-1.5 sm:h-2 bg-[#0F0F0F]/5 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-[#8B9A7D] rounded-full transition-all"
                       style={{ width: `${stats.bullishRate}%` }}
                     />
                   </div>
-                  <span className="text-sm font-medium w-12 text-right">{stats.bullishRate}%</span>
+                  <span className="text-xs sm:text-sm font-medium w-10 sm:w-12 text-right">{stats.bullishRate}%</span>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-1.5 text-[#C45A3B] w-24">
-                    <ArrowDown className="w-4 h-4" />
-                    <span className="text-sm font-medium">Bearish</span>
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="flex items-center gap-1 sm:gap-1.5 text-[#C45A3B] w-16 sm:w-24">
+                    <ArrowDown className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <span className="text-xs sm:text-sm font-medium">Bearish</span>
                   </div>
-                  <div className="flex-1 h-2 bg-[#0F0F0F]/5 rounded-full overflow-hidden">
+                  <div className="flex-1 h-1.5 sm:h-2 bg-[#0F0F0F]/5 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-[#C45A3B] rounded-full transition-all"
                       style={{ width: `${stats.bearishRate}%` }}
                     />
                   </div>
-                  <span className="text-sm font-medium w-12 text-right">{stats.bearishRate}%</span>
+                  <span className="text-xs sm:text-sm font-medium w-10 sm:w-12 text-right">{stats.bearishRate}%</span>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-1.5 text-[#0F0F0F]/50 w-24">
-                    <Minus className="w-4 h-4" />
-                    <span className="text-sm font-medium">Chop</span>
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="flex items-center gap-1 sm:gap-1.5 text-[#0F0F0F]/50 w-16 sm:w-24">
+                    <Minus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <span className="text-xs sm:text-sm font-medium">Chop</span>
                   </div>
-                  <div className="flex-1 h-2 bg-[#0F0F0F]/5 rounded-full overflow-hidden">
+                  <div className="flex-1 h-1.5 sm:h-2 bg-[#0F0F0F]/5 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-[#0F0F0F]/20 rounded-full transition-all"
                       style={{ width: `${100 - stats.bullishRate - stats.bearishRate}%` }}
                     />
                   </div>
-                  <span className="text-sm font-medium w-12 text-right">{100 - stats.bullishRate - stats.bearishRate}%</span>
+                  <span className="text-xs sm:text-sm font-medium w-10 sm:w-12 text-right">{100 - stats.bullishRate - stats.bearishRate}%</span>
                 </div>
               </div>
             </div>
 
-            <div className="p-4 rounded-2xl bg-white border border-[#0F0F0F]/10">
-              <div className="text-xs text-[#0F0F0F]/40 uppercase tracking-wider mb-3">Resistance Breakdown</div>
+            <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white border border-[#0F0F0F]/10">
+              <div className="text-[10px] sm:text-xs text-[#0F0F0F]/40 uppercase tracking-wider mb-2 sm:mb-3">Resistance Breakdown</div>
               <div className="space-y-2">
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-1.5 text-[#8B9A7D] w-24">
-                    <Activity className="w-4 h-4" />
-                    <span className="text-sm font-medium">Low</span>
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="flex items-center gap-1 sm:gap-1.5 text-[#8B9A7D] w-16 sm:w-24">
+                    <Activity className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <span className="text-xs sm:text-sm font-medium">Low</span>
                   </div>
-                  <div className="flex-1 h-2 bg-[#0F0F0F]/5 rounded-full overflow-hidden">
+                  <div className="flex-1 h-1.5 sm:h-2 bg-[#0F0F0F]/5 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-[#8B9A7D] rounded-full transition-all"
                       style={{ width: `${stats.totalLogs > 0 ? Math.round((stats.lowResistanceCount / (stats.lowResistanceCount + stats.highResistanceCount || 1)) * 100) : 0}%` }}
                     />
                   </div>
-                  <span className="text-sm font-medium w-12 text-right">{stats.lowResistanceCount}</span>
+                  <span className="text-xs sm:text-sm font-medium w-10 sm:w-12 text-right">{stats.lowResistanceCount}</span>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-1.5 text-[#C45A3B] w-24">
-                    <Activity className="w-4 h-4" />
-                    <span className="text-sm font-medium">High</span>
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="flex items-center gap-1 sm:gap-1.5 text-[#C45A3B] w-16 sm:w-24">
+                    <Activity className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <span className="text-xs sm:text-sm font-medium">High</span>
                   </div>
-                  <div className="flex-1 h-2 bg-[#0F0F0F]/5 rounded-full overflow-hidden">
+                  <div className="flex-1 h-1.5 sm:h-2 bg-[#0F0F0F]/5 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-[#C45A3B] rounded-full transition-all"
                       style={{ width: `${stats.totalLogs > 0 ? Math.round((stats.highResistanceCount / (stats.lowResistanceCount + stats.highResistanceCount || 1)) * 100) : 0}%` }}
                     />
                   </div>
-                  <span className="text-sm font-medium w-12 text-right">{stats.highResistanceCount}</span>
+                  <span className="text-xs sm:text-sm font-medium w-10 sm:w-12 text-right">{stats.highResistanceCount}</span>
                 </div>
               </div>
             </div>
@@ -763,53 +763,54 @@ export default function MacroStatsPage() {
 
         {/* Calendar Section */}
         <section>
-          <div className="flex items-center gap-3 mb-6">
-            <Calendar className="w-4 h-4 text-[#0F0F0F]/40" />
-            <span className="text-xs tracking-[0.2em] uppercase text-[#0F0F0F]/40">Calendar</span>
+          <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+            <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#0F0F0F]/40" />
+            <span className="text-[10px] sm:text-xs tracking-[0.2em] uppercase text-[#0F0F0F]/40">Calendar</span>
             <div className="flex-1 h-px bg-[#0F0F0F]/10" />
           </div>
 
-          <div className="rounded-2xl bg-white border border-[#0F0F0F]/10 overflow-hidden">
+          <div className="rounded-xl sm:rounded-2xl bg-white border border-[#0F0F0F]/10 overflow-hidden">
             {/* Calendar Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-[#0F0F0F]/10">
-              <h3 className="font-medium" style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}>
+            <div className="flex items-center justify-between px-3 sm:px-4 py-2 sm:py-3 border-b border-[#0F0F0F]/10">
+              <h3 className="text-sm sm:text-base font-medium" style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}>
                 {MONTHS[currentMonth]} {currentYear}
               </h3>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 sm:gap-2">
                 <button
                   onClick={goToPrevMonth}
-                  className="p-2 rounded-lg hover:bg-[#0F0F0F]/5 transition-colors"
+                  className="p-1.5 sm:p-2 rounded-lg hover:bg-[#0F0F0F]/5 transition-colors"
                 >
-                  <ChevronLeft className="w-4 h-4" />
+                  <ChevronLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </button>
                 <button
                   onClick={goToToday}
-                  className="px-3 py-1.5 text-sm font-medium rounded-lg hover:bg-[#0F0F0F]/5 transition-colors"
+                  className="px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium rounded-lg hover:bg-[#0F0F0F]/5 transition-colors"
                 >
                   Today
                 </button>
                 <button
                   onClick={goToNextMonth}
-                  className="p-2 rounded-lg hover:bg-[#0F0F0F]/5 transition-colors"
+                  className="p-1.5 sm:p-2 rounded-lg hover:bg-[#0F0F0F]/5 transition-colors"
                 >
-                  <ChevronRight className="w-4 h-4" />
+                  <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </button>
               </div>
             </div>
 
             {/* Calendar Grid */}
-            <div className="p-2">
+            <div className="p-1.5 sm:p-2">
               {/* Day headers */}
-              <div className="grid grid-cols-7 mb-1">
+              <div className="grid grid-cols-7 mb-0.5 sm:mb-1">
                 {DAYS_OF_WEEK.map(day => (
-                  <div key={day} className="text-center text-xs text-[#0F0F0F]/40 font-medium py-2">
-                    {day}
+                  <div key={day} className="text-center text-[10px] sm:text-xs text-[#0F0F0F]/40 font-medium py-1 sm:py-2">
+                    {day.slice(0, 1)}
+                    <span className="hidden sm:inline">{day.slice(1)}</span>
                   </div>
                 ))}
               </div>
 
               {/* Calendar days */}
-              <div className="grid grid-cols-7 gap-1">
+              <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
                 {calendarDays.map(({ date, isCurrentMonth }, idx) => {
                   const dateKey = formatDateKey(date);
                   const indicators = getDayIndicators(date);
@@ -821,7 +822,7 @@ export default function MacroStatsPage() {
                       key={idx}
                       onClick={() => setSelectedDate(dateKey)}
                       className={cn(
-                        "relative aspect-square p-1 rounded-xl transition-all flex flex-col items-center justify-start",
+                        "relative aspect-square p-0.5 sm:p-1 rounded-lg sm:rounded-xl transition-all flex flex-col items-center justify-start",
                         isCurrentMonth ? "text-[#0F0F0F]" : "text-[#0F0F0F]/30",
                         isSelected && "bg-[#0F0F0F] text-white",
                         !isSelected && isTodayDate && "bg-[#C45A3B]/10",
@@ -829,7 +830,7 @@ export default function MacroStatsPage() {
                       )}
                     >
                       <span className={cn(
-                        "text-sm font-medium",
+                        "text-xs sm:text-sm font-medium",
                         isTodayDate && !isSelected && "text-[#C45A3B]"
                       )}>
                         {date.getDate()}
@@ -837,22 +838,22 @@ export default function MacroStatsPage() {
 
                       {/* Indicators */}
                       {indicators && (
-                        <div className="flex gap-0.5 mt-1">
+                        <div className="flex gap-0.5 mt-0.5 sm:mt-1">
                           {indicators.bullish > 0 && (
                             <div className={cn(
-                              "w-1.5 h-1.5 rounded-full",
+                              "w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full",
                               isSelected ? "bg-[#8B9A7D]" : "bg-[#8B9A7D]"
                             )} />
                           )}
                           {indicators.bearish > 0 && (
                             <div className={cn(
-                              "w-1.5 h-1.5 rounded-full",
+                              "w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full",
                               isSelected ? "bg-[#C45A3B]" : "bg-[#C45A3B]"
                             )} />
                           )}
                           {indicators.count > indicators.bullish + indicators.bearish && (
                             <div className={cn(
-                              "w-1.5 h-1.5 rounded-full",
+                              "w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full",
                               isSelected ? "bg-white/50" : "bg-[#0F0F0F]/20"
                             )} />
                           )}
@@ -867,23 +868,23 @@ export default function MacroStatsPage() {
 
           {/* Selected Day Panel */}
           {selectedDate && (
-            <div className="mt-4 rounded-2xl bg-white border border-[#0F0F0F]/10 overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-3 border-b border-[#0F0F0F]/10">
-                <h4 className="font-medium">
+            <div className="mt-3 sm:mt-4 rounded-xl sm:rounded-2xl bg-white border border-[#0F0F0F]/10 overflow-hidden">
+              <div className="flex items-center justify-between px-3 sm:px-4 py-2 sm:py-3 border-b border-[#0F0F0F]/10">
+                <h4 className="text-sm sm:text-base font-medium">
                   {new Date(selectedDate + 'T12:00:00').toLocaleDateString('en-US', {
-                    weekday: 'long',
-                    month: 'long',
+                    weekday: 'short',
+                    month: 'short',
                     day: 'numeric',
                     year: 'numeric'
                   })}
                 </h4>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 sm:gap-2">
                   {!isAddingEntry && (
                     <button
                       onClick={() => setIsAddingEntry(true)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0F0F0F] text-white text-sm font-medium hover:bg-[#C45A3B] transition-colors"
+                      className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-[#0F0F0F] text-white text-xs sm:text-sm font-medium hover:bg-[#C45A3B] transition-colors"
                     >
-                      <Plus className="w-3.5 h-3.5" />
+                      <Plus className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                       Add
                     </button>
                   )}
@@ -892,14 +893,14 @@ export default function MacroStatsPage() {
                       setSelectedDate(null);
                       setIsAddingEntry(false);
                     }}
-                    className="p-1.5 rounded-lg hover:bg-[#0F0F0F]/5 transition-colors"
+                    className="p-1 sm:p-1.5 rounded-lg hover:bg-[#0F0F0F]/5 transition-colors"
                   >
-                    <X className="w-4 h-4" />
+                    <X className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   </button>
                 </div>
               </div>
 
-              <div className="p-4 space-y-3">
+              <div className="p-3 sm:p-4 space-y-2 sm:space-y-3">
                 {isAddingEntry && (
                   <AddEntryForm
                     date={selectedDate}

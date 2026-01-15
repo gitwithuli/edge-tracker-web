@@ -107,17 +107,17 @@ export default function DashboardPage() {
       <div className="min-h-screen bg-[#FAF7F2] text-[#0F0F0F] selection:bg-[#C45A3B]/20">
         {/* Header */}
         <header className="border-b border-[#0F0F0F]/5 bg-[#FAF7F2]/80 backdrop-blur-md sticky top-0 z-40">
-          <div className="max-w-6xl mx-auto px-6 sm:px-8 py-4 flex justify-between items-center">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4 flex justify-between items-center">
             <Link
               href="/dashboard"
-              className={`flex items-center gap-2 opacity-0 ${mounted ? 'animate-fade-in' : ''}`}
+              className={`flex items-center gap-1.5 sm:gap-2 opacity-0 ${mounted ? 'animate-fade-in' : ''}`}
             >
-              <img src="/logo-icon-transparent.png" alt="Edge of ICT" className="w-20 h-20" />
+              <img src="/logo-icon-transparent.png" alt="Edge of ICT" className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20" />
               <span
-                className="text-sm tracking-[0.08em] font-medium"
+                className="hidden sm:inline text-xs md:text-sm tracking-[0.08em] font-medium"
                 style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
               >
-                EDGE <span className="text-[#0F0F0F]/40 text-xs">OF</span> ICT
+                EDGE <span className="text-[#0F0F0F]/40 text-[10px] md:text-xs">OF</span> ICT
               </span>
             </Link>
 
@@ -173,19 +173,19 @@ export default function DashboardPage() {
           </div>
         </header>
 
-        <main className="max-w-6xl mx-auto px-6 sm:px-8 py-8 sm:py-12">
+        <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
           {/* Welcome section with View Toggle */}
           <div
-            className={`mb-10 sm:mb-12 opacity-0 ${mounted ? 'animate-slide-up' : ''}`}
+            className={`mb-8 sm:mb-10 lg:mb-12 opacity-0 ${mounted ? 'animate-slide-up' : ''}`}
             style={{ animationDelay: '0.1s' }}
           >
-            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6">
+            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 sm:gap-6">
               <div>
-                <p className="text-[#C45A3B] text-xs tracking-[0.3em] uppercase font-medium mb-3">
+                <p className="text-[#C45A3B] text-[10px] sm:text-xs tracking-[0.3em] uppercase font-medium mb-2 sm:mb-3">
                   Dashboard
                 </p>
                 <h1
-                  className="text-3xl sm:text-4xl tracking-tight"
+                  className="text-2xl sm:text-3xl lg:text-4xl tracking-tight"
                   style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
                 >
                   Track your <span className="italic text-[#0F0F0F]/60">edge</span>
@@ -193,28 +193,30 @@ export default function DashboardPage() {
               </div>
 
               {/* View Toggle */}
-              <div className="flex p-1 bg-[#0F0F0F]/5 rounded-full">
+              <div className="flex p-0.5 sm:p-1 bg-[#0F0F0F]/5 rounded-full">
                 <button
                   onClick={() => setActiveView("FRONTTEST")}
-                  className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 ${
+                  className={`flex items-center gap-1 sm:gap-2 px-2.5 sm:px-5 py-1.5 sm:py-2.5 rounded-full text-[11px] sm:text-sm font-medium transition-all duration-300 ${
                     activeView === "FRONTTEST"
                       ? "bg-[#0F0F0F] text-[#FAF7F2] shadow-sm"
                       : "text-[#0F0F0F]/50 hover:text-[#0F0F0F]"
                   }`}
                 >
-                  <Play className="w-4 h-4" />
-                  Live Trading
+                  <Play className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span className="hidden sm:inline">Live Trading</span>
+                  <span className="sm:hidden">Live</span>
                 </button>
                 <button
                   onClick={() => setActiveView("BACKTEST")}
-                  className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 ${
+                  className={`flex items-center gap-1 sm:gap-2 px-2.5 sm:px-5 py-1.5 sm:py-2.5 rounded-full text-[11px] sm:text-sm font-medium transition-all duration-300 ${
                     activeView === "BACKTEST"
                       ? "bg-[#0F0F0F] text-[#FAF7F2] shadow-sm"
                       : "text-[#0F0F0F]/50 hover:text-[#0F0F0F]"
                   }`}
                 >
-                  <Rewind className="w-4 h-4" />
-                  Backtest
+                  <Rewind className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span className="hidden sm:inline">Backtest</span>
+                  <span className="sm:hidden">Back</span>
                 </button>
               </div>
             </div>
@@ -222,7 +224,7 @@ export default function DashboardPage() {
 
           {/* Stats Cards */}
           <section
-            className={`mb-10 sm:mb-12 opacity-0 ${mounted ? 'animate-slide-up' : ''}`}
+            className={`mb-8 sm:mb-10 lg:mb-12 opacity-0 ${mounted ? 'animate-slide-up' : ''}`}
             style={{ animationDelay: '0.2s' }}
           >
             <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
@@ -249,7 +251,7 @@ export default function DashboardPage() {
           {/* Backtest-specific Statistics */}
           {isBacktest && filteredLogs.length > 0 && (
             <section
-              className={`mb-10 sm:mb-12 opacity-0 ${mounted ? 'animate-slide-up' : ''}`}
+              className={`mb-8 sm:mb-10 lg:mb-12 opacity-0 ${mounted ? 'animate-slide-up' : ''}`}
               style={{ animationDelay: '0.25s' }}
             >
               <div className="flex items-center gap-4 mb-6">
@@ -264,9 +266,9 @@ export default function DashboardPage() {
           )}
 
           {/* Main Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
             {/* Left Column - Chart + Edges */}
-            <div className="lg:col-span-2 space-y-8">
+            <div className="lg:col-span-2 space-y-6 sm:space-y-8">
               <div
                 className={`opacity-0 ${mounted ? 'animate-slide-up' : ''}`}
                 style={{ animationDelay: '0.3s' }}
@@ -298,9 +300,9 @@ export default function DashboardPage() {
         </main>
 
         {/* Footer */}
-        <footer className="border-t border-[#0F0F0F]/5 py-6 mt-12">
-          <div className="max-w-6xl mx-auto px-6 sm:px-8 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-[#0F0F0F]/30">
-            <span className="flex items-center gap-2 tracking-[0.15em] uppercase"><img src="/logo-icon-transparent.png" alt="" className="w-5 h-5" />Edge of ICT</span>
+        <footer className="border-t border-[#0F0F0F]/5 py-4 sm:py-6 mt-8 sm:mt-12">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-[#0F0F0F]/30">
+            <span className="flex items-center gap-2 tracking-[0.15em] uppercase"><img src="/logo-icon-transparent.png" alt="" className="w-4 h-4 sm:w-5 sm:h-5" />Edge of ICT</span>
             <span>Built for ICT traders</span>
           </div>
         </footer>

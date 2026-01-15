@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import {
   STANDARD_MACROS,
+  ALL_MACROS,
   MacroWindow,
   isWithinMacro,
   getMinutesUntilMacro,
@@ -40,8 +41,10 @@ function getETTime(date: Date): { hour: number; minute: number; second: number }
   };
 }
 
-export function useMacroTime(): UseMacroTimeReturn {
+export function useMacroTime(includeAsia = false): UseMacroTimeReturn {
   const [currentTime, setCurrentTime] = useState(new Date());
+
+  const macros = includeAsia ? ALL_MACROS : STANDARD_MACROS;
 
   // Update every second
   useEffect(() => {
@@ -57,14 +60,14 @@ export function useMacroTime(): UseMacroTimeReturn {
 
   // Find active macro
   const activeMacro = useMemo(() => {
-    return STANDARD_MACROS.find(macro => isWithinMacro(macro, etHour, etMinute)) || null;
-  }, [etHour, etMinute]);
+    return macros.find(macro => isWithinMacro(macro, etHour, etMinute)) || null;
+  }, [macros, etHour, etMinute]);
 
   // Calculate all macro statuses
   const macroStatuses = useMemo((): MacroStatus[] => {
     const currentMinutes = etHour * 60 + etMinute;
 
-    return STANDARD_MACROS.map(macro => {
+    return macros.map(macro => {
       const startMinutes = macro.startHour * 60 + macro.startMinute;
       const endMinutes = macro.endHour * 60 + macro.endMinute;
 
@@ -84,7 +87,7 @@ export function useMacroTime(): UseMacroTimeReturn {
         minutesRemaining: getMinutesRemainingInMacro(macro, etHour, etMinute),
       };
     });
-  }, [etHour, etMinute]);
+  }, [macros, etHour, etMinute]);
 
   // Find next macro
   const nextMacro = useMemo(() => {

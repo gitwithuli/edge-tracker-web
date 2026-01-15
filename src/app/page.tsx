@@ -120,28 +120,28 @@ export default function LandingPage() {
       <div className="min-h-screen bg-[#FAF7F2] text-[#0F0F0F] selection:bg-[#C45A3B]/20 overflow-x-hidden">
         {/* Navigation */}
         <nav
-          className={`max-w-6xl mx-auto px-6 sm:px-8 py-6 sm:py-8 flex justify-between items-center opacity-0 ${mounted ? 'animate-fade-in' : ''}`}
+          className={`max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 flex justify-between items-center opacity-0 ${mounted ? 'animate-fade-in' : ''}`}
           style={{ animationDelay: '0.1s' }}
         >
-          <Link href="/dashboard" className="flex items-center gap-2">
-            <img src="/logo-icon-transparent.png" alt="Edge of ICT" className="w-20 h-20" />
+          <Link href="/dashboard" className="flex items-center gap-1.5 min-[400px]:gap-2">
+            <img src="/logo-icon-transparent.png" alt="Edge of ICT" className="w-10 h-10 min-[400px]:w-12 min-[400px]:h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20" />
             <span
-              className="text-sm tracking-[0.08em] font-medium"
+              className="hidden min-[400px]:inline text-[10px] min-[400px]:text-xs sm:text-sm tracking-[0.08em] font-medium"
               style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
             >
-              EDGE <span className="text-[#0F0F0F]/40 text-xs">OF</span> ICT
+              EDGE <span className="text-[#0F0F0F]/40 text-[8px] min-[400px]:text-[10px] sm:text-xs">OF</span> ICT
             </span>
           </Link>
-          <div className="flex items-center gap-6 sm:gap-8">
+          <div className="flex items-center gap-3 sm:gap-6 lg:gap-8">
             <Link
               href="/login"
-              className="text-sm text-[#0F0F0F]/60 hover:text-[#0F0F0F] transition-colors duration-300"
+              className="text-xs sm:text-sm text-[#0F0F0F]/60 hover:text-[#0F0F0F] transition-colors duration-300"
             >
               Sign in
             </Link>
             <Link
               href="/login"
-              className="text-sm bg-[#0F0F0F] text-[#FAF7F2] px-5 py-2.5 rounded-full hover:bg-[#0F0F0F]/80 transition-all duration-300"
+              className="text-xs sm:text-sm bg-[#0F0F0F] text-[#FAF7F2] px-3 sm:px-5 py-2 sm:py-2.5 rounded-full hover:bg-[#0F0F0F]/80 transition-all duration-300"
             >
               Get Started
             </Link>
