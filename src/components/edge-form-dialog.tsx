@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Check } from "lucide-react";
 import type { Edge, EdgeInput } from "@/lib/types";
 import { useEdgeStore } from "@/hooks/use-edge-store";
@@ -14,27 +15,45 @@ interface EdgeFormDialogProps {
   edge?: Edge;
   trigger: React.ReactNode;
   onSuccess?: () => void;
+  defaultParentEdgeId?: string; // For creating sub-edges from a parent edge page
 }
 
-export function EdgeFormDialog({ edge, trigger, onSuccess }: EdgeFormDialogProps) {
+export function EdgeFormDialog({ edge, trigger, onSuccess, defaultParentEdgeId }: EdgeFormDialogProps) {
   const [open, setOpen] = useState(false);
-  const { addEdge, updateEdge } = useEdgeStore();
+  const { addEdge, updateEdge, edges, getSubEdges } = useEdgeStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [name, setName] = useState(edge?.name || "");
   const [description, setDescription] = useState(edge?.description || "");
   const [enabledFields, setEnabledFields] = useState<OptionalFieldGroup[]>(edge?.enabledFields || []);
+  const [parentEdgeId, setParentEdgeId] = useState<string | null>(edge?.parentEdgeId || defaultParentEdgeId || null);
   const [error, setError] = useState<string | null>(null);
+
+  // Get available parent edges (only top-level edges that aren't the current edge)
+  // Also exclude edges that have this edge as their parent (prevent circular references)
+  const availableParentEdges = edges.filter(e => {
+    // Cannot be own parent
+    if (edge && e.id === edge.id) return false;
+    // Cannot select an edge that is already a sub-edge
+    if (e.parentEdgeId) return false;
+    // Cannot select an edge that has this edge as a sub-edge (prevents cycles)
+    if (edge) {
+      const subEdges = getSubEdges(edge.id);
+      if (subEdges.some(sub => sub.id === e.id)) return false;
+    }
+    return true;
+  });
 
   useEffect(() => {
     if (open) {
       setName(edge?.name || "");
       setDescription(edge?.description || "");
       setEnabledFields(edge?.enabledFields || []);
+      setParentEdgeId(edge?.parentEdgeId || defaultParentEdgeId || null);
       setError(null);
       setIsSubmitting(false);
     }
-  }, [open, edge]);
+  }, [open, edge, defaultParentEdgeId]);
 
   const toggleField = (field: OptionalFieldGroup) => {
     setEnabledFields(prev =>
@@ -64,6 +83,7 @@ export function EdgeFormDialog({ edge, trigger, onSuccess }: EdgeFormDialogProps
       name: name.trim(),
       description: description.trim(),
       enabledFields,
+      parentEdgeId: parentEdgeId || null,
     };
 
     try {
@@ -133,6 +153,35 @@ export function EdgeFormDialog({ edge, trigger, onSuccess }: EdgeFormDialogProps
             />
             <p className="text-xs text-[#0F0F0F]/30">{description.length}/500</p>
           </div>
+
+          {/* Parent Edge Selector (for sub-edges) */}
+          {availableParentEdges.length > 0 && (
+            <div className="space-y-2">
+              <Label className="text-[#0F0F0F]/40 text-xs uppercase tracking-[0.15em]">
+                Parent Edge (Optional)
+              </Label>
+              <Select
+                value={parentEdgeId || "none"}
+                onValueChange={(value) => setParentEdgeId(value === "none" ? null : value)}
+                disabled={isSubmitting}
+              >
+                <SelectTrigger className="bg-white border-[#0F0F0F]/10 text-[#0F0F0F] rounded-xl h-11 focus:border-[#C45A3B] focus:ring-[#C45A3B]/20">
+                  <SelectValue placeholder="Select parent edge" />
+                </SelectTrigger>
+                <SelectContent className="bg-white border-[#0F0F0F]/10">
+                  <SelectItem value="none">None (Standalone edge)</SelectItem>
+                  {availableParentEdges.map((parentEdge) => (
+                    <SelectItem key={parentEdge.id} value={parentEdge.id}>
+                      {parentEdge.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-[#0F0F0F]/30">
+                Make this a sub-edge of another edge to group them together
+              </p>
+            </div>
+          )}
 
           {/* Optional Tracking Fields */}
           <div className="space-y-3 pt-2">

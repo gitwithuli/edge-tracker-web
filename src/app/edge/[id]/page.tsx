@@ -3,11 +3,12 @@
 import { useEffect, useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useEdgeStore } from "@/hooks/use-edge-store";
-import { ArrowLeft, Play, Rewind, Plus, TrendingUp, TrendingDown, Target, Clock, Calendar, DollarSign, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { ArrowLeft, Play, Rewind, Plus, TrendingUp, TrendingDown, Target, Clock, Calendar, DollarSign, ArrowUpRight, ArrowDownRight, Layers, ChevronRight } from "lucide-react";
 import { FUTURES_SYMBOLS, type FuturesSymbol } from "@/lib/constants";
 import { formatCurrencyCompact } from "@/lib/utils";
 import { LogDialog } from "@/components/log-dialog";
 import { HistorySheet } from "@/components/history-sheet";
+import { EdgeFormDialog } from "@/components/edge-form-dialog";
 import {
   DateRangeFilter,
   filterLogsByDateRange,
@@ -24,7 +25,7 @@ export default function EdgeDetailPage() {
   const router = useRouter();
   const edgeId = params.id as string;
 
-  const { edges, logs, isLoaded, user, addLog, deleteLog, updateLog } = useEdgeStore();
+  const { edges, logs, isLoaded, user, addLog, deleteLog, updateLog, getSubEdges, getParentEdge } = useEdgeStore();
   const [mounted, setMounted] = useState(false);
   const [activeView, setActiveView] = useState<LogType>("FRONTTEST");
   const [dateRange, setDateRange] = useState<DateRange>(getDefaultDateRange);
@@ -35,7 +36,22 @@ export default function EdgeDetailPage() {
 
   const edge = useMemo(() => edges.find(e => e.id === edgeId), [edges, edgeId]);
 
-  const edgeLogs = useMemo(() => logs.filter(l => l.edgeId === edgeId), [logs, edgeId]);
+  // Get sub-edges and parent edge
+  const subEdges = useMemo(() => getSubEdges(edgeId), [edgeId, getSubEdges, edges]);
+  const parentEdge = useMemo(() => getParentEdge(edgeId), [edgeId, getParentEdge, edges]);
+  const hasSubEdges = subEdges.length > 0;
+
+  // Include sub-edge logs in the stats when this is a parent edge
+  const edgeLogs = useMemo(() => {
+    const thisEdgeLogs = logs.filter(l => l.edgeId === edgeId);
+    if (hasSubEdges) {
+      // Include logs from all sub-edges
+      const subEdgeIds = subEdges.map(e => e.id);
+      const subEdgeLogs = logs.filter(l => subEdgeIds.includes(l.edgeId));
+      return [...thisEdgeLogs, ...subEdgeLogs];
+    }
+    return thisEdgeLogs;
+  }, [logs, edgeId, hasSubEdges, subEdges]);
 
   const filteredLogs = useMemo(() => {
     const logsByType = edgeLogs.filter(l => (l.logType || 'FRONTTEST') === activeView);
@@ -266,19 +282,99 @@ export default function EdgeDetailPage() {
             className={`mb-8 opacity-0 ${mounted ? 'animate-slide-up' : ''}`}
             style={{ animationDelay: '0.1s' }}
           >
+            {/* Parent Edge Link */}
+            {parentEdge && (
+              <Link
+                href={`/edge/${parentEdge.id}`}
+                className="inline-flex items-center gap-2 text-xs text-[#0F0F0F]/40 hover:text-[#C45A3B] transition-colors mb-3"
+              >
+                <Layers className="w-3 h-3" />
+                <span>Part of <span className="font-medium">{parentEdge.name}</span></span>
+                <ChevronRight className="w-3 h-3" />
+              </Link>
+            )}
             <p className="text-[#C45A3B] text-xs tracking-[0.3em] uppercase font-medium mb-3">
-              Edge Performance
+              {hasSubEdges ? 'Edge Group' : 'Edge Performance'}
             </p>
-            <h1
-              className="text-3xl sm:text-4xl tracking-tight mb-2"
-              style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
-            >
-              {edge.name}
-            </h1>
-            {edge.description && (
-              <p className="text-[#0F0F0F]/50 text-sm max-w-lg">{edge.description}</p>
+            <div className="flex items-start justify-between">
+              <div>
+                <h1
+                  className="text-3xl sm:text-4xl tracking-tight mb-2"
+                  style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                >
+                  {edge.name}
+                </h1>
+                {edge.description && (
+                  <p className="text-[#0F0F0F]/50 text-sm max-w-lg">{edge.description}</p>
+                )}
+              </div>
+              {/* Add Sub-Edge Button - only show if this edge has no parent (can be a parent) */}
+              {!edge.parentEdgeId && (
+                <EdgeFormDialog
+                  defaultParentEdgeId={edge.id}
+                  trigger={
+                    <button className="flex items-center gap-2 text-xs text-[#0F0F0F]/40 hover:text-[#C45A3B] transition-colors border border-[#0F0F0F]/10 hover:border-[#C45A3B]/30 px-3 py-1.5 rounded-full">
+                      <Plus className="w-3 h-3" />
+                      Add Sub-Edge
+                    </button>
+                  }
+                />
+              )}
+            </div>
+            {/* Sub-edges indicator */}
+            {hasSubEdges && (
+              <div className="flex items-center gap-2 mt-3">
+                <Layers className="w-4 h-4 text-[#C45A3B]" />
+                <span className="text-xs text-[#0F0F0F]/50">
+                  {subEdges.length} sub-edge{subEdges.length !== 1 ? 's' : ''} • Combined stats shown below
+                </span>
+              </div>
             )}
           </div>
+
+          {/* Sub-edges Grid (if parent edge) */}
+          {hasSubEdges && (
+            <div
+              className={`mb-8 opacity-0 ${mounted ? 'animate-slide-up' : ''}`}
+              style={{ animationDelay: '0.15s' }}
+            >
+              <div className="flex items-center gap-4 mb-4">
+                <h3 className="text-sm tracking-[0.15em] uppercase text-[#0F0F0F]/40">
+                  Sub-Edges
+                </h3>
+                <div className="flex-1 h-px bg-[#0F0F0F]/10" />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {subEdges.map(subEdge => {
+                  const subEdgeLogs = logs.filter(l => l.edgeId === subEdge.id);
+                  const subOccurred = subEdgeLogs.filter(l => l.result === 'OCCURRED');
+                  const subWins = subOccurred.filter(l => l.outcome === 'WIN').length;
+                  const subWinRate = subOccurred.length > 0 ? Math.round((subWins / subOccurred.length) * 100) : 0;
+                  return (
+                    <Link
+                      key={subEdge.id}
+                      href={`/edge/${subEdge.id}`}
+                      className="p-4 rounded-xl bg-white border border-[#0F0F0F]/5 hover:border-[#C45A3B]/30 transition-all group"
+                    >
+                      <p className="text-sm font-medium text-[#0F0F0F] group-hover:text-[#C45A3B] transition-colors mb-1">
+                        {subEdge.name}
+                      </p>
+                      <div className="flex items-center gap-2 text-xs text-[#0F0F0F]/40">
+                        <span>{subEdgeLogs.length} days</span>
+                        <span>•</span>
+                        <span className={subWinRate >= 50 ? 'text-[#8B9A7D]' : 'text-[#C45A3B]'}>
+                          {subWinRate}% WR
+                        </span>
+                        <span>•</span>
+                        <span className="text-[#8B9A7D]">{subWins}W</span>
+                        <span className="text-[#C45A3B]">{subOccurred.length - subWins}L</span>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* View Toggle + Date Filter */}
           <div

@@ -100,6 +100,7 @@ export const edgeInputSchema = z.object({
   description: z.string().max(500).default(""),
   enabledFields: z.array(z.enum(OPTIONAL_FIELD_GROUPS)).default([]),
   symbol: z.enum(FUTURES_SYMBOL_LIST as unknown as [string, ...string[]]).nullable().optional(),
+  parentEdgeId: z.string().nullable().optional(), // For sub-edges
 });
 
 export type EdgeInput = z.infer<typeof edgeInputSchema>;
@@ -112,6 +113,7 @@ export const edgeSchema = z.object({
   description: z.string().max(500).default(""),
   enabledFields: z.array(z.enum(OPTIONAL_FIELD_GROUPS)).default([]),
   symbol: z.string().nullable().optional(),
+  parentEdgeId: z.string().nullable().optional(), // For sub-edges
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),
 });

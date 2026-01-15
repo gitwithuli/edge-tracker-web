@@ -38,6 +38,9 @@ interface EdgeStore {
   // Computed
   getEdgesWithLogs: () => EdgeWithLogs[];
   getLogsByEdge: (edgeId: string) => TradeLog[];
+  getSubEdges: (parentEdgeId: string) => Edge[];
+  getParentEdge: (edgeId: string) => Edge | undefined;
+  getParentEdges: () => Edge[]; // Edges that have no parent (top-level)
 
   // Setters
   setUser: (user: User | null) => void;
@@ -91,6 +94,7 @@ function mapDbToEdge(row: Record<string, unknown>): Edge {
     description: (row.description as string) || '',
     enabledFields: (row.enabled_fields as OptionalFieldGroup[]) || [],
     symbol: (row.symbol as string) || null,
+    parentEdgeId: (row.parent_edge_id as string) || null,
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
   };
@@ -155,6 +159,23 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
   // Computed: Get logs for a specific edge
   getLogsByEdge: (edgeId: string) => {
     return get().logs.filter(log => log.edgeId === edgeId);
+  },
+
+  // Computed: Get sub-edges for a parent edge
+  getSubEdges: (parentEdgeId: string) => {
+    return get().edges.filter(edge => edge.parentEdgeId === parentEdgeId);
+  },
+
+  // Computed: Get parent edge for a sub-edge
+  getParentEdge: (edgeId: string) => {
+    const edge = get().edges.find(e => e.id === edgeId);
+    if (!edge?.parentEdgeId) return undefined;
+    return get().edges.find(e => e.id === edge.parentEdgeId);
+  },
+
+  // Computed: Get all top-level edges (no parent)
+  getParentEdges: () => {
+    return get().edges.filter(edge => !edge.parentEdgeId);
   },
 
   setUser: (user) => set({ user, isLoaded: true }),
@@ -247,6 +268,7 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
           description: data.description || '',
           enabled_fields: data.enabledFields || [],
           symbol: data.symbol || null,
+          parent_edge_id: data.parentEdgeId || null,
         }])
         .select()
         .single();
@@ -296,6 +318,7 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
           description: data.description || '',
           enabled_fields: data.enabledFields || [],
           symbol: data.symbol || null,
+          parent_edge_id: data.parentEdgeId || null,
         })
         .eq('id', edgeId);
 
