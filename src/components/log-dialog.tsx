@@ -133,6 +133,18 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, initialData
     }
   }, [open, initialData, defaultLogType, edgeId]);
 
+  // Auto-calculate exit time from entry time + duration
+  useEffect(() => {
+    if (entryTime && duration && parseInt(duration) > 0) {
+      const [hours, minutes] = entryTime.split(':').map(Number);
+      const totalMinutes = hours * 60 + minutes + parseInt(duration);
+      const exitHours = Math.floor(totalMinutes / 60) % 24;
+      const exitMinutes = totalMinutes % 60;
+      const calculatedExit = `${exitHours.toString().padStart(2, '0')}:${exitMinutes.toString().padStart(2, '0')}`;
+      setExitTime(calculatedExit);
+    }
+  }, [entryTime, duration]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 

@@ -2,12 +2,11 @@
 
 import { useState, useEffect, useMemo } from "react";
 import {
-  STANDARD_MACROS,
-  ALL_MACROS,
   MacroWindow,
   isWithinMacro,
   getMinutesUntilMacro,
   getMinutesRemainingInMacro,
+  getMacrosForDisplay,
 } from "@/lib/macro-constants";
 
 export interface MacroStatus {
@@ -41,10 +40,12 @@ function getETTime(date: Date): { hour: number; minute: number; second: number }
   };
 }
 
-export function useMacroTime(includeAsia = false): UseMacroTimeReturn {
+export function useMacroTime(includeAsia = false, includeLondon = true): UseMacroTimeReturn {
   const [currentTime, setCurrentTime] = useState(new Date());
 
-  const macros = includeAsia ? ALL_MACROS : STANDARD_MACROS;
+  const macros = useMemo(() => {
+    return getMacrosForDisplay({ includeAsia, includeLondon });
+  }, [includeAsia, includeLondon]);
 
   // Update every second
   useEffect(() => {

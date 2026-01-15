@@ -13,11 +13,16 @@ export interface MacroWindow {
   endMinute: number;
   category: MacroCategory;
   isAsia?: boolean;
+  isLondon?: boolean;
   description?: string;
 }
 
 // Helper to generate hourly macro window
-function createHourlyMacro(hour: number, category: MacroCategory, isAsia = false): MacroWindow {
+function createHourlyMacro(
+  hour: number,
+  category: MacroCategory,
+  options: { isAsia?: boolean; isLondon?: boolean } = {}
+): MacroWindow {
   const nextHour = (hour + 1) % 24;
   const period = hour >= 12 ? 'PM' : 'AM';
   const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
@@ -30,26 +35,27 @@ function createHourlyMacro(hour: number, category: MacroCategory, isAsia = false
     endHour: nextHour,
     endMinute: 10,
     category,
-    isAsia,
+    isAsia: options.isAsia,
+    isLondon: options.isLondon,
     description: `${category.charAt(0).toUpperCase() + category.slice(1)} session macro`,
   };
 }
 
-// Overnight macros (12 AM - 4 AM ET) - After midnight futures trading
+// Overnight/London macros (12 AM - 6 AM ET) - Optional, toggled with London setting
 export const OVERNIGHT_MACROS: MacroWindow[] = [
-  createHourlyMacro(0, 'overnight'),   // 00:50 - 01:10
-  createHourlyMacro(1, 'overnight'),   // 01:50 - 02:10
-  createHourlyMacro(2, 'overnight'),   // 02:50 - 03:10
-  createHourlyMacro(3, 'overnight'),   // 03:50 - 04:10
+  createHourlyMacro(0, 'overnight', { isLondon: true }),   // 00:50 - 01:10
+  createHourlyMacro(1, 'overnight', { isLondon: true }),   // 01:50 - 02:10
+  createHourlyMacro(2, 'overnight', { isLondon: true }),   // 02:50 - 03:10
+  createHourlyMacro(3, 'overnight', { isLondon: true }),   // 03:50 - 04:10
 ];
 
 // London session macros (4 AM - 9 AM ET)
 export const LONDON_MACROS: MacroWindow[] = [
-  createHourlyMacro(4, 'london'),    // 04:50 - 05:10
-  createHourlyMacro(5, 'london'),    // 05:50 - 06:10
-  createHourlyMacro(6, 'london'),    // 06:50 - 07:10
-  createHourlyMacro(7, 'london'),    // 07:50 - 08:10
-  createHourlyMacro(8, 'london'),    // 08:50 - 09:10
+  createHourlyMacro(4, 'london', { isLondon: true }),    // 04:50 - 05:10 (London toggle)
+  createHourlyMacro(5, 'london', { isLondon: true }),    // 05:50 - 06:10 (London toggle)
+  createHourlyMacro(6, 'london'),    // 06:50 - 07:10 (always shown)
+  createHourlyMacro(7, 'london'),    // 07:50 - 08:10 (always shown)
+  createHourlyMacro(8, 'london'),    // 08:50 - 09:10 (always shown)
 ];
 
 // RTH session macros (9 AM - 2 PM ET)
@@ -100,12 +106,12 @@ export const RTH_CLOSE_MACROS: MacroWindow[] = [
 
 // Asia session macros (6 PM - 12 AM ET) - Optional, disabled by default
 export const ASIA_MACROS: MacroWindow[] = [
-  createHourlyMacro(18, 'asia', true),  // 18:50 - 19:10
-  createHourlyMacro(19, 'asia', true),  // 19:50 - 20:10
-  createHourlyMacro(20, 'asia', true),  // 20:50 - 21:10
-  createHourlyMacro(21, 'asia', true),  // 21:50 - 22:10
-  createHourlyMacro(22, 'asia', true),  // 22:50 - 23:10
-  createHourlyMacro(23, 'asia', true),  // 23:50 - 00:10
+  createHourlyMacro(18, 'asia', { isAsia: true }),  // 18:50 - 19:10
+  createHourlyMacro(19, 'asia', { isAsia: true }),  // 19:50 - 20:10
+  createHourlyMacro(20, 'asia', { isAsia: true }),  // 20:50 - 21:10
+  createHourlyMacro(21, 'asia', { isAsia: true }),  // 21:50 - 22:10
+  createHourlyMacro(22, 'asia', { isAsia: true }),  // 22:50 - 23:10
+  createHourlyMacro(23, 'asia', { isAsia: true }),  // 23:50 - 00:10
 ];
 
 // Standard macros (non-Asia) - shown on dashboard by default
@@ -130,9 +136,18 @@ export const ALL_MACROS: MacroWindow[] = [
   return aMinutes - bMinutes;
 });
 
-// Filter macros by Asia setting
-export function getMacrosForDisplay(includeAsia: boolean): MacroWindow[] {
-  return includeAsia ? ALL_MACROS : STANDARD_MACROS;
+// Filter macros by session settings
+export function getMacrosForDisplay(options: {
+  includeAsia?: boolean;
+  includeLondon?: boolean;
+} = {}): MacroWindow[] {
+  const { includeAsia = false, includeLondon = true } = options;
+
+  return ALL_MACROS.filter(macro => {
+    if (macro.isAsia && !includeAsia) return false;
+    if (macro.isLondon && !includeLondon) return false;
+    return true;
+  });
 }
 
 // Macro log data types (tape-reading analysis, not trade outcomes)

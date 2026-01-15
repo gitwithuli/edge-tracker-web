@@ -379,7 +379,7 @@ function MacroCard({
 export default function MacrosPage() {
   const router = useRouter();
   const { user, isLoaded } = useEdgeStore();
-  const { logs, logMacro, getLogForMacroToday, getTodaysLogs, addTvLink, removeTvLink, showAsiaMacros, setShowAsiaMacros } = useMacroStore();
+  const { logs, logMacro, getLogForMacroToday, getTodaysLogs, addTvLink, removeTvLink, showAsiaMacros, setShowAsiaMacros, showLondonMacros, setShowLondonMacros } = useMacroStore();
   const [showSettings, setShowSettings] = useState(false);
 
   const exportMacroData = () => {
@@ -406,7 +406,7 @@ export default function MacrosPage() {
     secondsToNextMacro,
     macroStatuses,
     isTradingHours,
-  } = useMacroTime(showAsiaMacros);
+  } = useMacroTime(showAsiaMacros, showLondonMacros);
 
   useEffect(() => {
     setMounted(true);
@@ -504,11 +504,39 @@ export default function MacrosPage() {
                     onClick={() => setShowSettings(false)}
                   />
                   <div className="absolute right-0 top-full mt-2 w-56 sm:w-64 bg-white rounded-xl border border-[#0F0F0F]/10 shadow-lg z-50 p-3 sm:p-4">
-                    <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 mb-3">Settings</div>
+                    <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 mb-3">Sessions</div>
+
+                    <label className="flex items-center justify-between cursor-pointer group mb-3">
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-[#0F0F0F]/40" />
+                        <div>
+                          <span className="text-sm font-medium">London</span>
+                          <p className="text-[10px] text-[#0F0F0F]/40">00:50 - 05:50 ET</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setShowLondonMacros(!showLondonMacros)}
+                        className={cn(
+                          "relative w-10 h-6 rounded-full transition-colors",
+                          showLondonMacros ? "bg-[#C45A3B]" : "bg-[#0F0F0F]/20"
+                        )}
+                      >
+                        <div
+                          className={cn(
+                            "absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-transform",
+                            showLondonMacros ? "translate-x-5" : "translate-x-1"
+                          )}
+                        />
+                      </button>
+                    </label>
+
                     <label className="flex items-center justify-between cursor-pointer group">
                       <div className="flex items-center gap-2">
                         <Moon className="w-4 h-4 text-[#0F0F0F]/40" />
-                        <span className="text-sm font-medium">Asia Session</span>
+                        <div>
+                          <span className="text-sm font-medium">Asia</span>
+                          <p className="text-[10px] text-[#0F0F0F]/40">18:50 - 23:50 ET</p>
+                        </div>
                       </div>
                       <button
                         onClick={() => setShowAsiaMacros(!showAsiaMacros)}
@@ -525,8 +553,8 @@ export default function MacrosPage() {
                         />
                       </button>
                     </label>
-                    <p className="text-xs text-[#0F0F0F]/40 mt-2">
-                      Enable to track 6PM-12AM ET macros
+                    <p className="text-xs text-[#0F0F0F]/40 mt-3">
+                      NY session (06:50-15:50) always shown
                     </p>
 
                     <div className="border-t border-[#0F0F0F]/10 mt-4 pt-4">
@@ -673,7 +701,7 @@ export default function MacrosPage() {
               Completed Today ({passedMacros.length})
             </div>
             <div className="space-y-3">
-              {passedMacros.map(({ macro }) => (
+              {passedMacros.slice().reverse().map(({ macro }) => (
                 <MacroCard
                   key={macro.id}
                   macro={macro}

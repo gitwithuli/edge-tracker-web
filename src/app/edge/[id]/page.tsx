@@ -578,41 +578,72 @@ export default function EdgeDetailPage() {
               </div>
             ) : (
               <div className="space-y-2">
-                {filteredLogs.slice(0, 10).map(log => (
-                  <div
-                    key={log.id}
-                    className="p-4 rounded-xl bg-white border border-[#0F0F0F]/5 flex items-center justify-between"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={`w-2 h-2 rounded-full ${
-                        log.result === "OCCURRED"
-                          ? log.outcome === "WIN" ? "bg-[#8B9A7D]" : "bg-[#C45A3B]"
-                          : "bg-[#0F0F0F]/20"
-                      }`} />
-                      <div>
-                        <p className="text-sm font-medium text-[#0F0F0F]">
-                          {log.result === "OCCURRED" ? (
-                            <span className="flex items-center gap-1">
-                              {log.outcome === "WIN" ? (
-                                <><TrendingUp className="w-3 h-3 text-[#8B9A7D]" /> Win</>
-                              ) : (
-                                <><TrendingDown className="w-3 h-3 text-[#C45A3B]" /> Loss</>
-                              )}
-                            </span>
-                          ) : (
-                            "No Setup"
-                          )}
-                        </p>
-                        <p className="text-xs text-[#0F0F0F]/40">
-                          {log.dayOfWeek} • {log.date}
-                        </p>
+                {filteredLogs.slice(0, 10).map(log => {
+                  const hasPrices = log.entryPrice != null && log.exitPrice != null && log.direction;
+                  let tradePnl: number | null = null;
+                  let dollarPnl: number | null = null;
+
+                  if (hasPrices) {
+                    const entry = log.entryPrice as number;
+                    const exit = log.exitPrice as number;
+                    tradePnl = log.direction === 'LONG' ? exit - entry : entry - exit;
+                    const logSymbol = log.symbol as FuturesSymbol | null;
+                    const contracts = log.positionSize || 1;
+                    if (logSymbol && FUTURES_SYMBOLS[logSymbol]) {
+                      dollarPnl = tradePnl * FUTURES_SYMBOLS[logSymbol].multiplier * contracts;
+                    }
+                  }
+
+                  return (
+                    <div
+                      key={log.id}
+                      className="p-4 rounded-xl bg-white border border-[#0F0F0F]/5 flex items-center justify-between"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-2 h-2 rounded-full ${
+                          log.result === "OCCURRED"
+                            ? log.outcome === "WIN" ? "bg-[#8B9A7D]" : "bg-[#C45A3B]"
+                            : "bg-[#0F0F0F]/20"
+                        }`} />
+                        <div>
+                          <p className="text-sm font-medium text-[#0F0F0F]">
+                            {log.result === "OCCURRED" ? (
+                              <span className="flex items-center gap-1">
+                                {log.outcome === "WIN" ? (
+                                  <><TrendingUp className="w-3 h-3 text-[#8B9A7D]" /> Win</>
+                                ) : (
+                                  <><TrendingDown className="w-3 h-3 text-[#C45A3B]" /> Loss</>
+                                )}
+                              </span>
+                            ) : (
+                              "No Setup"
+                            )}
+                          </p>
+                          <p className="text-xs text-[#0F0F0F]/40">
+                            {log.dayOfWeek} • {log.date}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 text-right">
+                        {log.result === "OCCURRED" && tradePnl !== null && (
+                          <div>
+                            <p className={`text-sm font-medium ${tradePnl >= 0 ? 'text-[#8B9A7D]' : 'text-[#C45A3B]'}`}>
+                              {tradePnl >= 0 ? '+' : ''}{tradePnl.toFixed(2)} pts
+                            </p>
+                            {dollarPnl !== null && (
+                              <p className="text-[10px] text-[#0F0F0F]/30">
+                                {formatCurrencyCompact(dollarPnl)}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                        {log.result === "OCCURRED" && (
+                          <span className="text-xs text-[#0F0F0F]/40 min-w-[32px]">{log.durationMinutes}m</span>
+                        )}
                       </div>
                     </div>
-                    {log.result === "OCCURRED" && (
-                      <span className="text-xs text-[#0F0F0F]/40">{log.durationMinutes}m</span>
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
                 {filteredLogs.length > 10 && (
                   <p className="text-center text-xs text-[#0F0F0F]/40 pt-2">
                     +{filteredLogs.length - 10} more entries

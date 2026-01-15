@@ -33,6 +33,7 @@ export type MacroLogInput = Partial<MacroLogData> & {
 interface MacroStore {
   logs: MacroLog[];
   showAsiaMacros: boolean;
+  showLondonMacros: boolean;
 
   // Actions
   logMacro: (macroId: string, data: MacroLogInput) => void;
@@ -42,6 +43,7 @@ interface MacroStore {
   addTvLink: (macroId: string, link: string) => void;
   removeTvLink: (macroId: string, linkIndex: number) => void;
   setShowAsiaMacros: (show: boolean) => void;
+  setShowLondonMacros: (show: boolean) => void;
 
   // Queries
   getLogForMacroToday: (macroId: string) => MacroLog | undefined;
@@ -59,9 +61,14 @@ export const useMacroStore = create<MacroStore>()(
     (set, get) => ({
       logs: [],
       showAsiaMacros: false,
+      showLondonMacros: true,
 
       setShowAsiaMacros: (show) => {
         set({ showAsiaMacros: show });
+      },
+
+      setShowLondonMacros: (show) => {
+        set({ showLondonMacros: show });
       },
 
       logMacro: (macroId, data) => {

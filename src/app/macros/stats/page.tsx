@@ -337,12 +337,14 @@ function AddEntryForm({
   onAdd,
   onCancel,
   showAsiaMacros,
+  showLondonMacros,
 }: {
   date: string;
   existingMacroIds: string[];
   onAdd: (macroId: string, data: MacroLogInput) => void;
   onCancel: () => void;
   showAsiaMacros: boolean;
+  showLondonMacros: boolean;
 }) {
   const [selectedMacro, setSelectedMacro] = useState<string>('');
   const [formData, setFormData] = useState<MacroLogInput>({
@@ -352,7 +354,7 @@ function AddEntryForm({
     liquiditySweep: null,
   });
 
-  const macroList = getMacrosForDisplay(showAsiaMacros);
+  const macroList = getMacrosForDisplay({ includeAsia: showAsiaMacros, includeLondon: showLondonMacros });
   const availableMacros = macroList.filter(m => !existingMacroIds.includes(m.id));
 
   const handleSubmit = () => {
@@ -499,7 +501,7 @@ function AddEntryForm({
 export default function MacroStatsPage() {
   const router = useRouter();
   const { user, isLoaded } = useEdgeStore();
-  const { logs, updateLog, deleteLog, logMacroForDate, showAsiaMacros } = useMacroStore();
+  const { logs, updateLog, deleteLog, logMacroForDate, showAsiaMacros, showLondonMacros, setShowAsiaMacros, setShowLondonMacros } = useMacroStore();
   const [mounted, setMounted] = useState(false);
   const [isAddingEntry, setIsAddingEntry] = useState(false);
 
@@ -684,6 +686,36 @@ export default function MacroStatsPage() {
       </header>
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        {/* Session Toggles */}
+        <div className="flex flex-wrap items-center gap-3 mb-6 sm:mb-8">
+          <span className="text-xs text-[#0F0F0F]/40 uppercase tracking-wider">Sessions:</span>
+          <button
+            onClick={() => setShowLondonMacros(!showLondonMacros)}
+            className={cn(
+              "px-3 py-1.5 rounded-full text-xs font-medium transition-colors border",
+              showLondonMacros
+                ? "bg-[#0F0F0F] text-white border-[#0F0F0F]"
+                : "bg-transparent text-[#0F0F0F]/60 border-[#0F0F0F]/20 hover:border-[#0F0F0F]/40"
+            )}
+          >
+            London (00:50-05:50)
+          </button>
+          <button
+            onClick={() => setShowAsiaMacros(!showAsiaMacros)}
+            className={cn(
+              "px-3 py-1.5 rounded-full text-xs font-medium transition-colors border",
+              showAsiaMacros
+                ? "bg-[#0F0F0F] text-white border-[#0F0F0F]"
+                : "bg-transparent text-[#0F0F0F]/60 border-[#0F0F0F]/20 hover:border-[#0F0F0F]/40"
+            )}
+          >
+            Asia (18:50-23:50)
+          </button>
+          <span className="text-[10px] text-[#0F0F0F]/30 hidden sm:inline">
+            NY session (06:50-15:50) always shown
+          </span>
+        </div>
+
         {/* Stats Overview */}
         <section className="mb-8 sm:mb-10">
           <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
@@ -946,6 +978,7 @@ export default function MacroStatsPage() {
                     }}
                     onCancel={() => setIsAddingEntry(false)}
                     showAsiaMacros={showAsiaMacros}
+                    showLondonMacros={showLondonMacros}
                   />
                 )}
 
