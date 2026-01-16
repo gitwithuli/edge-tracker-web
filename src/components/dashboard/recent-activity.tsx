@@ -1,9 +1,9 @@
 "use client";
 
 import { useMemo } from "react";
-import { ExternalLink, Clock, TrendingUp, TrendingDown, X } from "lucide-react";
+import { Clock, TrendingUp, TrendingDown, X, ExternalLink } from "lucide-react";
 import type { TradeLog, EdgeWithLogs } from "@/lib/types";
-import { getTVImageUrl, formatCurrencyCompact } from "@/lib/utils";
+import { formatCurrencyCompact } from "@/lib/utils";
 import { FUTURES_SYMBOLS, type FuturesSymbol } from "@/lib/constants";
 import Link from "next/link";
 
@@ -41,7 +41,6 @@ export function RecentActivity({ logs, edgesWithLogs, limit = 5 }: RecentActivit
       return {
         ...log,
         edgeName: edgeNames[log.edgeId] || "Unknown Edge",
-        imageUrl: firstLink ? getTVImageUrl(firstLink) : null,
         firstTvLink: firstLink,
         tvLinksCount: tvLinks.length,
         tradePnl,
@@ -57,7 +56,7 @@ export function RecentActivity({ logs, edgesWithLogs, limit = 5 }: RecentActivit
 
     if (diffDays === 0) return "Today";
     if (diffDays === 1) return "Yesterday";
-    if (diffDays < 7) return `${diffDays} days ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
 
     return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   };
@@ -79,43 +78,60 @@ export function RecentActivity({ logs, edgesWithLogs, limit = 5 }: RecentActivit
           No activity yet. Log your first day to see it here.
         </p>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {recentLogs.map((log) => (
-            <div
+            <Link
               key={log.id}
-              className="p-4 rounded-xl bg-[#0F0F0F]/[0.02] hover:bg-[#0F0F0F]/[0.04] transition-colors duration-300"
+              href={`/edge/${log.edgeId}`}
+              className="block p-3 rounded-xl bg-[#0F0F0F]/[0.02] hover:bg-[#0F0F0F]/[0.04] transition-colors duration-300"
             >
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  {log.result === "OCCURRED" ? (
-                    <div className={`w-7 h-7 rounded-full flex items-center justify-center ${
-                      log.outcome === "WIN" ? "bg-[#8B9A7D]/20" : "bg-[#C45A3B]/20"
-                    }`}>
-                      {log.outcome === "WIN" ? (
-                        <TrendingUp className="w-3.5 h-3.5 text-[#8B9A7D]" />
-                      ) : (
-                        <TrendingDown className="w-3.5 h-3.5 text-[#C45A3B]" />
-                      )}
-                    </div>
-                  ) : (
-                    <div className="w-7 h-7 rounded-full bg-[#0F0F0F]/5 flex items-center justify-center">
-                      <X className="w-3.5 h-3.5 text-[#0F0F0F]/30" />
-                    </div>
-                  )}
-                  <div>
+              {/* Row 1: Icon + Name + P&L */}
+              <div className="flex items-center gap-3">
+                {log.result === "OCCURRED" ? (
+                  <div className={`w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center ${
+                    log.outcome === "WIN" ? "bg-[#8B9A7D]/20" : "bg-[#C45A3B]/20"
+                  }`}>
+                    {log.outcome === "WIN" ? (
+                      <TrendingUp className="w-4 h-4 text-[#8B9A7D]" />
+                    ) : (
+                      <TrendingDown className="w-4 h-4 text-[#C45A3B]" />
+                    )}
+                  </div>
+                ) : (
+                  <div className="w-8 h-8 rounded-full flex-shrink-0 bg-[#0F0F0F]/5 flex items-center justify-center">
+                    <X className="w-4 h-4 text-[#0F0F0F]/30" />
+                  </div>
+                )}
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
                     <span
-                      className="font-normal text-sm text-[#0F0F0F]"
+                      className="font-normal text-sm text-[#0F0F0F] truncate"
                       style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
                     >
                       {log.edgeName}
                     </span>
-                    <div className="flex items-center gap-2 text-xs text-[#0F0F0F]/40 mt-0.5">
+                    {log.tradePnl !== null && (
+                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0 ${
+                        log.tradePnl >= 0 ? 'text-[#8B9A7D] bg-[#8B9A7D]/10' : 'text-[#C45A3B] bg-[#C45A3B]/10'
+                      }`}>
+                        {log.dollarPnl !== null
+                          ? formatCurrencyCompact(log.dollarPnl)
+                          : `${log.tradePnl >= 0 ? '+' : ''}${log.tradePnl.toFixed(1)}`
+                        }
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Row 2: Meta info */}
+                  <div className="flex items-center justify-between mt-1">
+                    <div className="flex items-center gap-1.5 text-[11px] text-[#0F0F0F]/40">
                       <span>{log.dayOfWeek.slice(0, 3)}</span>
-                      <span className="w-1 h-1 rounded-full bg-[#0F0F0F]/20" />
+                      <span>•</span>
                       <span>{formatDate(log.date)}</span>
                       {log.result === "OCCURRED" && log.durationMinutes && (
                         <>
-                          <span className="w-1 h-1 rounded-full bg-[#0F0F0F]/20" />
+                          <span>•</span>
                           <span className="flex items-center gap-0.5">
                             <Clock className="w-3 h-3" />
                             {log.durationMinutes}m
@@ -123,41 +139,25 @@ export function RecentActivity({ logs, edgesWithLogs, limit = 5 }: RecentActivit
                         </>
                       )}
                     </div>
+
+                    <div className="flex items-center gap-2">
+                      {log.firstTvLink && (
+                        <span
+                          onClick={(e) => {
+                            e.preventDefault();
+                            window.open(log.firstTvLink!, '_blank');
+                          }}
+                          className="text-[10px] text-[#0F0F0F]/30 hover:text-[#C45A3B] bg-[#0F0F0F]/5 px-1.5 py-0.5 rounded transition-colors flex items-center gap-1"
+                        >
+                          <ExternalLink className="w-2.5 h-2.5" />
+                          {log.tvLinksCount > 1 ? log.tvLinksCount : ''}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  {/* P&L badge if available */}
-                  {log.tradePnl !== null && (
-                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                      log.tradePnl >= 0 ? 'text-[#8B9A7D] bg-[#8B9A7D]/10' : 'text-[#C45A3B] bg-[#C45A3B]/10'
-                    }`}>
-                      {log.dollarPnl !== null
-                        ? formatCurrencyCompact(log.dollarPnl)
-                        : `${log.tradePnl >= 0 ? '+' : ''}${log.tradePnl.toFixed(1)}`
-                      }
-                    </span>
-                  )}
-                  {/* TV link */}
-                  {log.firstTvLink && (
-                    <a
-                      href={log.firstTvLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[10px] text-[#0F0F0F]/30 hover:text-[#C45A3B] bg-[#0F0F0F]/5 px-1.5 py-0.5 rounded transition-colors"
-                    >
-                      {log.tvLinksCount > 1 ? `${log.tvLinksCount} charts` : 'chart'}
-                    </a>
-                  )}
-                  {/* View Edge link */}
-                  <Link
-                    href={`/edge/${log.edgeId}`}
-                    className="text-[10px] text-[#C45A3B] hover:underline"
-                  >
-                    view
-                  </Link>
-                </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}
