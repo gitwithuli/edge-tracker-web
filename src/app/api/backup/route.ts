@@ -42,6 +42,20 @@ export async function GET() {
       );
     }
 
+    // Fetch all macro logs for this user
+    const { data: macroLogs, error: macroLogsError } = await supabase
+      .from("macro_logs")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("date", { ascending: false });
+
+    if (macroLogsError) {
+      return NextResponse.json(
+        { error: `Failed to fetch macro logs: ${macroLogsError.message}` },
+        { status: 500 }
+      );
+    }
+
     const backup = {
       exportedAt: new Date().toISOString(),
       userId: user.id,
@@ -49,9 +63,11 @@ export async function GET() {
       stats: {
         totalEdges: edges?.length || 0,
         totalLogs: logs?.length || 0,
+        totalMacroLogs: macroLogs?.length || 0,
       },
       edges: edges || [],
       logs: logs || [],
+      macroLogs: macroLogs || [],
     };
 
     const filename = `edgeofict-backup-${new Date().toISOString().split("T")[0]}.json`;
