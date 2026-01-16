@@ -260,7 +260,12 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
     set({ loadingStates: { ...get().loadingStates, addingEdge: true }, error: null });
 
     try {
-      const { data: newEdge, error } = await supabase
+      // Add timeout to prevent hanging
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('Request timed out')), 15000);
+      });
+
+      const insertPromise = supabase
         .from('edges')
         .insert([{
           user_id: user.id,
@@ -272,6 +277,8 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
         }])
         .select()
         .single();
+
+      const { data: newEdge, error } = await Promise.race([insertPromise, timeoutPromise]);
 
       if (error) {
         set({ error: `Failed to create edge: ${error.message}` });
@@ -286,9 +293,13 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
       }
 
       return null;
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('addEdge error:', err);
-      toast.error('Failed to create edge');
+      if (err instanceof Error && err.message === 'Request timed out') {
+        toast.error('Request timed out. Please check your connection and try again.');
+      } else {
+        toast.error('Failed to create edge');
+      }
       return null;
     } finally {
       set({ loadingStates: { ...get().loadingStates, addingEdge: false } });
