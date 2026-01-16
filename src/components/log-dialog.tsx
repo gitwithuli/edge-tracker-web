@@ -253,8 +253,8 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, initialData
         )}
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-[440px] bg-[#FAF7F2] border-[#0F0F0F]/10 text-[#0F0F0F] p-0 overflow-hidden">
-        <DialogHeader className="p-6 pb-0">
+      <DialogContent className="sm:max-w-[440px] max-h-[90vh] bg-[#FAF7F2] border-[#0F0F0F]/10 text-[#0F0F0F] p-0 flex flex-col overflow-hidden">
+        <DialogHeader className="p-6 pb-0 shrink-0">
           <DialogTitle
             className="text-xl tracking-tight"
             style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
@@ -263,7 +263,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, initialData
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="p-6 pt-4 space-y-5">
+        <form onSubmit={handleSubmit} className="p-6 pt-4 space-y-5 overflow-y-auto flex-1">
           {/* Edge Selector - when editing OR when no specific edge provided */}
           {((isEditing || !edgeId) && edges.length > 1) && (
             <div className="space-y-2">
