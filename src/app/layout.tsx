@@ -16,6 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://edgeofict.com"),
   title: "Edge of ICT",
   description: "Track your trading edges with surgical precision",
   icons: {
