@@ -102,7 +102,7 @@ export default function DashboardPage() {
               href="/dashboard"
               className={`flex items-center gap-1.5 sm:gap-2 opacity-0 ${mounted ? 'animate-fade-in' : ''}`}
             >
-              <img src="/logo-icon-transparent.png" alt="Edge of ICT" className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20" />
+              <img src="/logo-icon-transparent.png" alt="Edge of ICT" className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 xl:w-14 xl:h-14 2xl:w-16 2xl:h-16" />
               <span
                 className="hidden sm:inline text-xs md:text-sm tracking-[0.08em] font-medium"
                 style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}

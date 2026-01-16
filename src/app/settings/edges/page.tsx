@@ -87,7 +87,7 @@ export default function EdgeSettingsPage() {
               </Link>
               <div className="h-4 w-px bg-[#0F0F0F]/10" />
               <Link href="/dashboard" className="flex items-center gap-1.5 sm:gap-2">
-                <img src="/logo-icon-transparent.png" alt="Edge of ICT" className="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16" />
+                <img src="/logo-icon-transparent.png" alt="Edge of ICT" className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 xl:w-14 xl:h-14 2xl:w-16 2xl:h-16" />
                 <span
                   className="hidden sm:inline text-xs sm:text-sm tracking-[0.08em] font-medium"
                   style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
