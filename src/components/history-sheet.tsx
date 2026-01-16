@@ -88,7 +88,7 @@ export const HistorySheet = memo(function HistorySheet({ edge, onDeleteLog, onUp
             "bg-[#FAF7F2] border-[#0F0F0F]/10 text-[#0F0F0F] p-0 flex flex-col",
             isFullScreen
               ? "!w-screen !max-w-none"
-              : "w-[400px] sm:w-[540px] sm:!max-w-[540px]"
+              : "w-full sm:w-[540px] sm:!max-w-[540px]"
           )}
         >
           <SheetHeader className="p-6 pb-4 border-b border-[#0F0F0F]/10 flex flex-row items-center justify-between gap-4 shrink-0">
