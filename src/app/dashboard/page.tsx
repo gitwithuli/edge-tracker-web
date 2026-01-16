@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useEdgeStore } from "@/hooks/use-edge-store";
 import { LogOut, Plus, Settings, Play, Rewind, BarChart3, Download, Timer } from "lucide-react";
+import { EconomicCalendarSidebar } from "@/components/dashboard/economic-calendar";
 import { StatsCards } from "@/components/dashboard/stats-cards";
 import { EdgeScorecard } from "@/components/dashboard/edge-scorecard";
 import { EdgeGrid } from "@/components/dashboard/edge-grid";
@@ -138,6 +139,8 @@ export default function DashboardPage() {
               >
                 <Timer className="w-4 h-4" aria-hidden="true" />
               </Link>
+
+              <EconomicCalendarSidebar />
 
               <a
                 href="/api/backup"
