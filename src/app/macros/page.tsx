@@ -379,7 +379,7 @@ function MacroCard({
 export default function MacrosPage() {
   const router = useRouter();
   const { user, isLoaded } = useEdgeStore();
-  const { logs, logMacro, getLogForMacroToday, getTodaysLogs, addTvLink, removeTvLink, showAsiaMacros, setShowAsiaMacros, showLondonMacros, setShowLondonMacros } = useMacroStore();
+  const { logs, isLoaded: macrosLoaded, fetchLogs, logMacro, getLogForMacroToday, getTodaysLogs, addTvLink, removeTvLink, showAsiaMacros, setShowAsiaMacros, showLondonMacros, setShowLondonMacros } = useMacroStore();
   const [showSettings, setShowSettings] = useState(false);
 
   const exportMacroData = () => {
@@ -417,6 +417,12 @@ export default function MacrosPage() {
       router.push("/login");
     }
   }, [isLoaded, user, router]);
+
+  useEffect(() => {
+    if (isLoaded && user && !macrosLoaded) {
+      fetchLogs();
+    }
+  }, [isLoaded, user, macrosLoaded, fetchLogs]);
 
   if (!isLoaded || !user || !mounted) {
     return (

@@ -3,6 +3,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { toast } from 'sonner';
+import { supabase } from '@/lib/supabase';
 import type {
   MacroDirection,
   DisplacementQuality,
@@ -32,18 +33,21 @@ export type MacroLogInput = Partial<MacroLogData> & {
 
 interface MacroStore {
   logs: MacroLog[];
+  isLoaded: boolean;
   showAsiaMacros: boolean;
   showLondonMacros: boolean;
 
   // Actions
-  logMacro: (macroId: string, data: MacroLogInput) => void;
-  logMacroForDate: (macroId: string, date: string, data: MacroLogInput) => void;
-  updateLog: (logId: string, updates: Partial<MacroLogData & { note: string; tvLinks: string[] }>) => void;
-  deleteLog: (logId: string) => void;
-  addTvLink: (macroId: string, link: string) => void;
-  removeTvLink: (macroId: string, linkIndex: number) => void;
+  fetchLogs: () => Promise<void>;
+  logMacro: (macroId: string, data: MacroLogInput) => Promise<void>;
+  logMacroForDate: (macroId: string, date: string, data: MacroLogInput) => Promise<void>;
+  updateLog: (logId: string, updates: Partial<MacroLogData & { note: string; tvLinks: string[] }>) => Promise<void>;
+  deleteLog: (logId: string) => Promise<void>;
+  addTvLink: (macroId: string, link: string) => Promise<void>;
+  removeTvLink: (macroId: string, linkIndex: number) => Promise<void>;
   setShowAsiaMacros: (show: boolean) => void;
   setShowLondonMacros: (show: boolean) => void;
+  migrateFromLocalStorage: () => Promise<void>;
 
   // Queries
   getLogForMacroToday: (macroId: string) => MacroLog | undefined;
@@ -56,160 +60,366 @@ function getTodayDate(): string {
   return new Date().toISOString().split('T')[0];
 }
 
-export const useMacroStore = create<MacroStore>()(
+// Map database row to MacroLog type
+function mapDbToMacroLog(row: Record<string, unknown>): MacroLog {
+  return {
+    id: row.id as string,
+    macroId: row.macro_id as string,
+    date: row.date as string,
+    pointsMoved: row.points_moved as number | null,
+    direction: row.direction as MacroDirection | null,
+    displacementQuality: row.displacement_quality as DisplacementQuality | null,
+    liquiditySweep: row.liquidity_sweep as LiquiditySweep | null,
+    note: (row.note as string) || '',
+    tvLinks: (row.tv_links as string[]) || [],
+    createdAt: row.created_at as string,
+  };
+}
+
+// UI preferences store (kept in localStorage)
+interface MacroPreferences {
+  showAsiaMacros: boolean;
+  showLondonMacros: boolean;
+}
+
+const usePreferencesStore = create<MacroPreferences>()(
   persist(
-    (set, get) => ({
-      logs: [],
+    (): MacroPreferences => ({
       showAsiaMacros: false,
       showLondonMacros: true,
-
-      setShowAsiaMacros: (show) => {
-        set({ showAsiaMacros: show });
-      },
-
-      setShowLondonMacros: (show) => {
-        set({ showLondonMacros: show });
-      },
-
-      logMacro: (macroId, data) => {
-        const today = getTodayDate();
-        get().logMacroForDate(macroId, today, data);
-      },
-
-      logMacroForDate: (macroId, date, data) => {
-        const existing = get().logs.find(
-          log => log.macroId === macroId && log.date === date
-        );
-
-        if (existing) {
-          // Update existing log
-          set({
-            logs: get().logs.map(log =>
-              log.id === existing.id
-                ? {
-                    ...log,
-                    pointsMoved: data.pointsMoved ?? log.pointsMoved,
-                    direction: data.direction ?? log.direction,
-                    displacementQuality: data.displacementQuality ?? log.displacementQuality,
-                    liquiditySweep: data.liquiditySweep ?? log.liquiditySweep,
-                    note: data.note ?? log.note,
-                    tvLinks: data.tvLinks ?? log.tvLinks,
-                  }
-                : log
-            ),
-          });
-          toast.success('Macro log updated');
-        } else {
-          // Create new log
-          const newLog: MacroLog = {
-            id: `macro-${Date.now()}`,
-            macroId,
-            date,
-            pointsMoved: data.pointsMoved ?? null,
-            direction: data.direction ?? null,
-            displacementQuality: data.displacementQuality ?? null,
-            liquiditySweep: data.liquiditySweep ?? null,
-            note: data.note ?? '',
-            tvLinks: data.tvLinks ?? [],
-            createdAt: new Date().toISOString(),
-          };
-          set({ logs: [...get().logs, newLog] });
-          toast.success('Macro logged');
-        }
-      },
-
-      updateLog: (logId, updates) => {
-        set({
-          logs: get().logs.map(log =>
-            log.id === logId ? { ...log, ...updates } : log
-          ),
-        });
-        toast.success('Log updated');
-      },
-
-      deleteLog: (logId) => {
-        set({
-          logs: get().logs.filter(log => log.id !== logId),
-        });
-        toast.success('Log deleted');
-      },
-
-      addTvLink: (macroId, link) => {
-        const today = getTodayDate();
-        const existing = get().logs.find(
-          log => log.macroId === macroId && log.date === today
-        );
-
-        if (existing) {
-          set({
-            logs: get().logs.map(log =>
-              log.id === existing.id
-                ? { ...log, tvLinks: [...log.tvLinks, link] }
-                : log
-            ),
-          });
-        } else {
-          // Create a new log with empty data if none exists
-          const newLog: MacroLog = {
-            id: `macro-${Date.now()}`,
-            macroId,
-            date: today,
-            pointsMoved: null,
-            direction: null,
-            displacementQuality: null,
-            liquiditySweep: null,
-            note: '',
-            tvLinks: [link],
-            createdAt: new Date().toISOString(),
-          };
-          set({ logs: [...get().logs, newLog] });
-        }
-        toast.success('Screenshot link added');
-      },
-
-      removeTvLink: (macroId, linkIndex) => {
-        const today = getTodayDate();
-        const existing = get().logs.find(
-          log => log.macroId === macroId && log.date === today
-        );
-
-        if (existing) {
-          const newLinks = existing.tvLinks.filter((_, i) => i !== linkIndex);
-          set({
-            logs: get().logs.map(log =>
-              log.id === existing.id
-                ? { ...log, tvLinks: newLinks }
-                : log
-            ),
-          });
-          toast.success('Screenshot link removed');
-        }
-      },
-
-      getLogForMacroToday: (macroId) => {
-        const today = getTodayDate();
-        return get().logs.find(
-          log => log.macroId === macroId && log.date === today
-        );
-      },
-
-      getLogForMacroOnDate: (macroId, date) => {
-        return get().logs.find(
-          log => log.macroId === macroId && log.date === date
-        );
-      },
-
-      getLogsForDate: (date) => {
-        return get().logs.filter(log => log.date === date);
-      },
-
-      getTodaysLogs: () => {
-        const today = getTodayDate();
-        return get().logs.filter(log => log.date === today);
-      },
     }),
-    {
-      name: 'macro-logs-storage',
-    }
+    { name: 'macro-preferences' }
   )
 );
+
+export const useMacroStore = create<MacroStore>()((set, get) => ({
+  logs: [],
+  isLoaded: false,
+  showAsiaMacros: usePreferencesStore.getState().showAsiaMacros,
+  showLondonMacros: usePreferencesStore.getState().showLondonMacros,
+
+  setShowAsiaMacros: (show) => {
+    set({ showAsiaMacros: show });
+    usePreferencesStore.setState({ showAsiaMacros: show });
+  },
+
+  setShowLondonMacros: (show) => {
+    set({ showLondonMacros: show });
+    usePreferencesStore.setState({ showLondonMacros: show });
+  },
+
+  fetchLogs: async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      set({ logs: [], isLoaded: true });
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('macro_logs')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('date', { ascending: false });
+
+      if (error) {
+        console.error('Failed to fetch macro logs:', error.message);
+        toast.error('Failed to load macro data');
+        set({ isLoaded: true });
+        return;
+      }
+
+      const logs = (data || []).map(mapDbToMacroLog);
+      set({ logs, isLoaded: true });
+
+      // Try to migrate localStorage data after initial fetch
+      await get().migrateFromLocalStorage();
+    } catch (err) {
+      console.error('fetchLogs error:', err);
+      set({ isLoaded: true });
+    }
+  },
+
+  migrateFromLocalStorage: async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    // Check if we have localStorage data to migrate
+    const localStorageKey = 'macro-logs-storage';
+    const stored = localStorage.getItem(localStorageKey);
+    if (!stored) return;
+
+    try {
+      const parsed = JSON.parse(stored);
+      const localLogs = parsed?.state?.logs as MacroLog[] | undefined;
+
+      if (!localLogs || localLogs.length === 0) {
+        localStorage.removeItem(localStorageKey);
+        return;
+      }
+
+      // Get existing logs to avoid duplicates
+      const existingLogs = get().logs;
+      const existingKeys = new Set(
+        existingLogs.map(l => `${l.macroId}-${l.date}`)
+      );
+
+      // Filter out logs that already exist
+      const logsToMigrate = localLogs.filter(
+        l => !existingKeys.has(`${l.macroId}-${l.date}`)
+      );
+
+      if (logsToMigrate.length === 0) {
+        localStorage.removeItem(localStorageKey);
+        return;
+      }
+
+      // Insert migrated logs
+      const insertData = logsToMigrate.map(log => ({
+        user_id: user.id,
+        macro_id: log.macroId,
+        date: log.date,
+        points_moved: log.pointsMoved,
+        direction: log.direction,
+        displacement_quality: log.displacementQuality,
+        liquidity_sweep: log.liquiditySweep,
+        note: log.note || '',
+        tv_links: log.tvLinks || [],
+      }));
+
+      const { data, error } = await supabase
+        .from('macro_logs')
+        .insert(insertData)
+        .select();
+
+      if (error) {
+        console.error('Failed to migrate macro logs:', error.message);
+        return;
+      }
+
+      if (data) {
+        const migratedLogs = data.map(mapDbToMacroLog);
+        set({ logs: [...get().logs, ...migratedLogs] });
+        toast.success(`Migrated ${migratedLogs.length} macro logs from local storage`);
+      }
+
+      // Remove localStorage after successful migration
+      localStorage.removeItem(localStorageKey);
+    } catch (err) {
+      console.error('Migration error:', err);
+    }
+  },
+
+  logMacro: async (macroId, data) => {
+    const today = getTodayDate();
+    await get().logMacroForDate(macroId, today, data);
+  },
+
+  logMacroForDate: async (macroId, date, data) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast.error('Please sign in to log macros');
+      return;
+    }
+
+    const existing = get().logs.find(
+      log => log.macroId === macroId && log.date === date
+    );
+
+    if (existing) {
+      // Update existing log
+      const updates = {
+        points_moved: data.pointsMoved ?? existing.pointsMoved,
+        direction: data.direction ?? existing.direction,
+        displacement_quality: data.displacementQuality ?? existing.displacementQuality,
+        liquidity_sweep: data.liquiditySweep ?? existing.liquiditySweep,
+        note: data.note ?? existing.note,
+        tv_links: data.tvLinks ?? existing.tvLinks,
+      };
+
+      // Optimistic update
+      set({
+        logs: get().logs.map(log =>
+          log.id === existing.id
+            ? {
+                ...log,
+                pointsMoved: updates.points_moved ?? log.pointsMoved,
+                direction: updates.direction ?? log.direction,
+                displacementQuality: updates.displacement_quality ?? log.displacementQuality,
+                liquiditySweep: updates.liquidity_sweep ?? log.liquiditySweep,
+                note: updates.note ?? log.note,
+                tvLinks: updates.tv_links ?? log.tvLinks,
+              }
+            : log
+        ),
+      });
+
+      const { error } = await supabase
+        .from('macro_logs')
+        .update(updates)
+        .eq('id', existing.id);
+
+      if (error) {
+        console.error('Failed to update macro log:', error.message);
+        toast.error('Failed to update macro log');
+        // Revert on error
+        await get().fetchLogs();
+        return;
+      }
+
+      toast.success('Macro log updated');
+    } else {
+      // Create new log
+      const tempId = `temp-${Date.now()}`;
+      const newLog: MacroLog = {
+        id: tempId,
+        macroId,
+        date,
+        pointsMoved: data.pointsMoved ?? null,
+        direction: data.direction ?? null,
+        displacementQuality: data.displacementQuality ?? null,
+        liquiditySweep: data.liquiditySweep ?? null,
+        note: data.note ?? '',
+        tvLinks: data.tvLinks ?? [],
+        createdAt: new Date().toISOString(),
+      };
+
+      // Optimistic update
+      set({ logs: [...get().logs, newLog] });
+
+      const { data: insertedData, error } = await supabase
+        .from('macro_logs')
+        .insert({
+          user_id: user.id,
+          macro_id: macroId,
+          date,
+          points_moved: data.pointsMoved ?? null,
+          direction: data.direction ?? null,
+          displacement_quality: data.displacementQuality ?? null,
+          liquidity_sweep: data.liquiditySweep ?? null,
+          note: data.note ?? '',
+          tv_links: data.tvLinks ?? [],
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Failed to create macro log:', error.message);
+        toast.error('Failed to log macro');
+        // Remove optimistic log
+        set({ logs: get().logs.filter(l => l.id !== tempId) });
+        return;
+      }
+
+      if (insertedData) {
+        const savedLog = mapDbToMacroLog(insertedData);
+        set({ logs: get().logs.map(l => l.id === tempId ? savedLog : l) });
+      }
+
+      toast.success('Macro logged');
+    }
+  },
+
+  updateLog: async (logId, updates) => {
+    const originalLogs = get().logs;
+    const log = originalLogs.find(l => l.id === logId);
+    if (!log) return;
+
+    // Optimistic update
+    set({
+      logs: originalLogs.map(l =>
+        l.id === logId ? { ...l, ...updates } : l
+      ),
+    });
+
+    const { error } = await supabase
+      .from('macro_logs')
+      .update({
+        points_moved: updates.pointsMoved,
+        direction: updates.direction,
+        displacement_quality: updates.displacementQuality,
+        liquidity_sweep: updates.liquiditySweep,
+        note: updates.note,
+        tv_links: updates.tvLinks,
+      })
+      .eq('id', logId);
+
+    if (error) {
+      console.error('Failed to update macro log:', error.message);
+      toast.error('Failed to update log');
+      set({ logs: originalLogs });
+      return;
+    }
+
+    toast.success('Log updated');
+  },
+
+  deleteLog: async (logId) => {
+    const originalLogs = get().logs;
+
+    // Optimistic delete
+    set({ logs: originalLogs.filter(log => log.id !== logId) });
+
+    const { error } = await supabase
+      .from('macro_logs')
+      .delete()
+      .eq('id', logId);
+
+    if (error) {
+      console.error('Failed to delete macro log:', error.message);
+      toast.error('Failed to delete log');
+      set({ logs: originalLogs });
+      return;
+    }
+
+    toast.success('Log deleted');
+  },
+
+  addTvLink: async (macroId, link) => {
+    const today = getTodayDate();
+    const existing = get().logs.find(
+      log => log.macroId === macroId && log.date === today
+    );
+
+    if (existing) {
+      const newLinks = [...existing.tvLinks, link];
+      await get().updateLog(existing.id, { tvLinks: newLinks });
+    } else {
+      await get().logMacroForDate(macroId, today, { tvLinks: [link] });
+    }
+  },
+
+  removeTvLink: async (macroId, linkIndex) => {
+    const today = getTodayDate();
+    const existing = get().logs.find(
+      log => log.macroId === macroId && log.date === today
+    );
+
+    if (existing) {
+      const newLinks = existing.tvLinks.filter((_, i) => i !== linkIndex);
+      await get().updateLog(existing.id, { tvLinks: newLinks });
+    }
+  },
+
+  getLogForMacroToday: (macroId) => {
+    const today = getTodayDate();
+    return get().logs.find(
+      log => log.macroId === macroId && log.date === today
+    );
+  },
+
+  getLogForMacroOnDate: (macroId, date) => {
+    return get().logs.find(
+      log => log.macroId === macroId && log.date === date
+    );
+  },
+
+  getLogsForDate: (date) => {
+    return get().logs.filter(log => log.date === date);
+  },
+
+  getTodaysLogs: () => {
+    const today = getTodayDate();
+    return get().logs.filter(log => log.date === today);
+  },
+}));

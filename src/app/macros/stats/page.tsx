@@ -501,7 +501,7 @@ function AddEntryForm({
 export default function MacroStatsPage() {
   const router = useRouter();
   const { user, isLoaded } = useEdgeStore();
-  const { logs, updateLog, deleteLog, logMacroForDate, showAsiaMacros, showLondonMacros, setShowAsiaMacros, setShowLondonMacros } = useMacroStore();
+  const { logs, isLoaded: macrosLoaded, fetchLogs, updateLog, deleteLog, logMacroForDate, showAsiaMacros, showLondonMacros, setShowAsiaMacros, setShowLondonMacros } = useMacroStore();
   const [mounted, setMounted] = useState(false);
   const [isAddingEntry, setIsAddingEntry] = useState(false);
 
@@ -520,6 +520,12 @@ export default function MacroStatsPage() {
       router.push("/login");
     }
   }, [isLoaded, user, router]);
+
+  useEffect(() => {
+    if (isLoaded && user && !macrosLoaded) {
+      fetchLogs();
+    }
+  }, [isLoaded, user, macrosLoaded, fetchLogs]);
 
   // Group logs by date
   const logsByDate = useMemo(() => {
