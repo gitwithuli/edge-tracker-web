@@ -172,7 +172,13 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, initialData
     const validLinks = tvLinks.filter(link => link.trim() !== '');
 
     // Parse optional fields (only include if field group is enabled)
-    const parseNum = (val: string) => val.trim() ? parseFloat(val) : null;
+    // Handle both comma and period decimal separators (European vs US locales)
+    const parseNum = (val: string) => {
+      if (!val.trim()) return null;
+      const normalized = val.replace(',', '.');
+      const num = parseFloat(normalized);
+      return isNaN(num) ? null : num;
+    };
 
     // Calculate outcome from direction and prices when price tracking is enabled
     let finalOutcome: OutcomeType | null = null;

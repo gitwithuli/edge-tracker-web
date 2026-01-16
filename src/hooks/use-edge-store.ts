@@ -564,7 +564,10 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
         dailyHigh: logData.dailyHigh ?? originalLog.dailyHigh ?? null,
         dailyLow: logData.dailyLow ?? originalLog.dailyLow ?? null,
         dailyClose: logData.dailyClose ?? originalLog.dailyClose ?? null,
+        nyOpen: logData.nyOpen ?? originalLog.nyOpen ?? null,
         positionSize: logData.positionSize ?? originalLog.positionSize ?? null,
+        direction: logData.direction ?? originalLog.direction ?? null,
+        symbol: logData.symbol ?? originalLog.symbol ?? null,
       };
       set({ logs: logs.map(l => l.id === logId ? updatedLog : l) });
 
