@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { Resend } from "resend";
+import { WaitlistWelcomeEmail } from "@/lib/emails/waitlist-welcome";
 
 export async function POST(request: NextRequest) {
   try {
@@ -40,6 +42,20 @@ export async function POST(request: NextRequest) {
         { error: "Failed to join waitlist" },
         { status: 500 }
       );
+    }
+
+    // Send welcome email
+    try {
+      const resend = new Resend(process.env.RESEND_API_KEY);
+      await resend.emails.send({
+        from: "Edge of ICT <hello@edgeofict.com>",
+        to: normalizedEmail,
+        subject: "You're on the waitlist",
+        react: WaitlistWelcomeEmail({ email: normalizedEmail }),
+      });
+    } catch (emailError) {
+      // Log but don't fail the request if email fails
+      console.error("Welcome email failed:", emailError);
     }
 
     return NextResponse.json(
