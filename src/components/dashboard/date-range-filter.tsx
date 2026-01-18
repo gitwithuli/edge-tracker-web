@@ -131,15 +131,15 @@ export function DateRangeFilter({ value, onChange }: DateRangeFilterProps) {
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
       {/* Preset buttons */}
-      <div className="flex items-center gap-1 p-1 bg-[#0F0F0F]/5 rounded-full">
+      <div className="flex items-center gap-1 p-1 bg-[#0F0F0F]/5 dark:bg-white/5 rounded-full">
         {PRESETS.map((preset) => (
           <button
             key={preset.value}
             onClick={() => handlePresetChange(preset.value)}
             className={`px-3 py-1.5 text-xs font-medium rounded-full transition-all duration-200 ${
               value.preset === preset.value && !showCustom
-                ? "bg-[#0F0F0F] text-[#FAF7F2]"
-                : "text-[#0F0F0F]/50 hover:text-[#0F0F0F]"
+                ? "bg-[#0F0F0F] dark:bg-white text-[#FAF7F2] dark:text-[#0F0F0F]"
+                : "text-[#0F0F0F]/50 dark:text-white/50 hover:text-[#0F0F0F] dark:hover:text-white"
             }`}
           >
             {preset.label}
@@ -149,8 +149,8 @@ export function DateRangeFilter({ value, onChange }: DateRangeFilterProps) {
           onClick={() => handlePresetChange("custom")}
           className={`px-3 py-1.5 text-xs font-medium rounded-full transition-all duration-200 flex items-center gap-1 ${
             showCustom
-              ? "bg-[#0F0F0F] text-[#FAF7F2]"
-              : "text-[#0F0F0F]/50 hover:text-[#0F0F0F]"
+              ? "bg-[#0F0F0F] dark:bg-white text-[#FAF7F2] dark:text-[#0F0F0F]"
+              : "text-[#0F0F0F]/50 dark:text-white/50 hover:text-[#0F0F0F] dark:hover:text-white"
           }`}
         >
           <CalendarIcon className="w-3 h-3" />
@@ -164,8 +164,8 @@ export function DateRangeFilter({ value, onChange }: DateRangeFilterProps) {
           <Popover open={startOpen} onOpenChange={setStartOpen}>
             <PopoverTrigger asChild>
               <button
-                className={`px-3 py-1.5 text-xs bg-white border border-[#0F0F0F]/10 rounded-lg hover:border-[#0F0F0F]/20 transition-colors flex items-center gap-2 ${
-                  startDate ? "text-[#0F0F0F]" : "text-[#0F0F0F]/40"
+                className={`px-3 py-1.5 text-xs bg-white dark:bg-white/5 border border-[#0F0F0F]/10 dark:border-white/10 rounded-lg hover:border-[#0F0F0F]/20 dark:hover:border-white/20 transition-colors flex items-center gap-2 ${
+                  startDate ? "text-[#0F0F0F] dark:text-white" : "text-[#0F0F0F]/40 dark:text-white/40"
                 }`}
               >
                 <CalendarIcon className="w-3 h-3" />
@@ -173,7 +173,7 @@ export function DateRangeFilter({ value, onChange }: DateRangeFilterProps) {
               </button>
             </PopoverTrigger>
             <PopoverContent
-              className="w-auto p-0 bg-[#FAF7F2] border-[#0F0F0F]/10 rounded-xl shadow-xl"
+              className="w-auto p-0 bg-[#FAF7F2] dark:bg-[#1a1a1a] border-[#0F0F0F]/10 dark:border-white/10 rounded-xl shadow-xl"
               align="start"
             >
               <Calendar
@@ -190,28 +190,28 @@ export function DateRangeFilter({ value, onChange }: DateRangeFilterProps) {
                 classNames={{
                   months: "flex flex-col",
                   month: "space-y-4",
-                  caption_label: "text-sm font-medium text-[#0F0F0F]",
+                  caption_label: "text-sm font-medium text-[#0F0F0F] dark:text-white",
                   nav: "flex items-center gap-1",
-                  button_previous: "size-7 bg-transparent hover:bg-[#0F0F0F]/5 rounded-full p-0 text-[#0F0F0F]/60 hover:text-[#0F0F0F]",
-                  button_next: "size-7 bg-transparent hover:bg-[#0F0F0F]/5 rounded-full p-0 text-[#0F0F0F]/60 hover:text-[#0F0F0F]",
-                  weekday: "text-[#0F0F0F]/40 text-xs font-medium w-8",
-                  day: "w-8 h-8",
+                  button_previous: "size-7 bg-transparent hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5 rounded-full p-0 text-[#0F0F0F]/60 dark:text-white/60 hover:text-[#0F0F0F] dark:hover:text-white",
+                  button_next: "size-7 bg-transparent hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5 rounded-full p-0 text-[#0F0F0F]/60 dark:text-white/60 hover:text-[#0F0F0F] dark:hover:text-white",
+                  weekday: "text-[#0F0F0F]/40 dark:text-white/40 text-xs font-medium w-8",
+                  day: "w-8 h-8 text-[#0F0F0F] dark:text-white hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5 rounded-full",
                   today: "bg-[#C45A3B]/10 text-[#C45A3B] rounded-full",
-                  selected: "bg-[#0F0F0F] text-[#FAF7F2] rounded-full hover:bg-[#0F0F0F]",
-                  outside: "text-[#0F0F0F]/20",
-                  disabled: "text-[#0F0F0F]/20",
+                  selected: "bg-[#0F0F0F] dark:bg-white text-[#FAF7F2] dark:text-[#0F0F0F] rounded-full hover:bg-[#0F0F0F] dark:hover:bg-white",
+                  outside: "text-[#0F0F0F]/20 dark:text-white/20",
+                  disabled: "text-[#0F0F0F]/20 dark:text-white/20",
                 }}
               />
             </PopoverContent>
           </Popover>
 
-          <span className="text-xs text-[#0F0F0F]/30">to</span>
+          <span className="text-xs text-[#0F0F0F]/30 dark:text-white/30">to</span>
 
           <Popover open={endOpen} onOpenChange={setEndOpen}>
             <PopoverTrigger asChild>
               <button
-                className={`px-3 py-1.5 text-xs bg-white border border-[#0F0F0F]/10 rounded-lg hover:border-[#0F0F0F]/20 transition-colors flex items-center gap-2 ${
-                  endDate ? "text-[#0F0F0F]" : "text-[#0F0F0F]/40"
+                className={`px-3 py-1.5 text-xs bg-white dark:bg-white/5 border border-[#0F0F0F]/10 dark:border-white/10 rounded-lg hover:border-[#0F0F0F]/20 dark:hover:border-white/20 transition-colors flex items-center gap-2 ${
+                  endDate ? "text-[#0F0F0F] dark:text-white" : "text-[#0F0F0F]/40 dark:text-white/40"
                 }`}
               >
                 <CalendarIcon className="w-3 h-3" />
@@ -219,7 +219,7 @@ export function DateRangeFilter({ value, onChange }: DateRangeFilterProps) {
               </button>
             </PopoverTrigger>
             <PopoverContent
-              className="w-auto p-0 bg-[#FAF7F2] border-[#0F0F0F]/10 rounded-xl shadow-xl"
+              className="w-auto p-0 bg-[#FAF7F2] dark:bg-[#1a1a1a] border-[#0F0F0F]/10 dark:border-white/10 rounded-xl shadow-xl"
               align="start"
             >
               <Calendar
@@ -236,16 +236,16 @@ export function DateRangeFilter({ value, onChange }: DateRangeFilterProps) {
                 classNames={{
                   months: "flex flex-col",
                   month: "space-y-4",
-                  caption_label: "text-sm font-medium text-[#0F0F0F]",
+                  caption_label: "text-sm font-medium text-[#0F0F0F] dark:text-white",
                   nav: "flex items-center gap-1",
-                  button_previous: "size-7 bg-transparent hover:bg-[#0F0F0F]/5 rounded-full p-0 text-[#0F0F0F]/60 hover:text-[#0F0F0F]",
-                  button_next: "size-7 bg-transparent hover:bg-[#0F0F0F]/5 rounded-full p-0 text-[#0F0F0F]/60 hover:text-[#0F0F0F]",
-                  weekday: "text-[#0F0F0F]/40 text-xs font-medium w-8",
-                  day: "w-8 h-8",
+                  button_previous: "size-7 bg-transparent hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5 rounded-full p-0 text-[#0F0F0F]/60 dark:text-white/60 hover:text-[#0F0F0F] dark:hover:text-white",
+                  button_next: "size-7 bg-transparent hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5 rounded-full p-0 text-[#0F0F0F]/60 dark:text-white/60 hover:text-[#0F0F0F] dark:hover:text-white",
+                  weekday: "text-[#0F0F0F]/40 dark:text-white/40 text-xs font-medium w-8",
+                  day: "w-8 h-8 text-[#0F0F0F] dark:text-white hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5 rounded-full",
                   today: "bg-[#C45A3B]/10 text-[#C45A3B] rounded-full",
-                  selected: "bg-[#0F0F0F] text-[#FAF7F2] rounded-full hover:bg-[#0F0F0F]",
-                  outside: "text-[#0F0F0F]/20",
-                  disabled: "text-[#0F0F0F]/20",
+                  selected: "bg-[#0F0F0F] dark:bg-white text-[#FAF7F2] dark:text-[#0F0F0F] rounded-full hover:bg-[#0F0F0F] dark:hover:bg-white",
+                  outside: "text-[#0F0F0F]/20 dark:text-white/20",
+                  disabled: "text-[#0F0F0F]/20 dark:text-white/20",
                 }}
               />
             </PopoverContent>
@@ -255,7 +255,7 @@ export function DateRangeFilter({ value, onChange }: DateRangeFilterProps) {
 
       {/* Display current range */}
       {!showCustom && value.preset !== "all" && (
-        <span className="text-xs text-[#0F0F0F]/40">{displayRange}</span>
+        <span className="text-xs text-[#0F0F0F]/40 dark:text-white/40">{displayRange}</span>
       )}
     </div>
   );

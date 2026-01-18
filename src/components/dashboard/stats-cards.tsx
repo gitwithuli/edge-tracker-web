@@ -118,19 +118,19 @@ export function StatsCards({ logs, edgesWithLogs }: StatsCardsProps) {
       {statItems.map((item, i) => (
         <div
           key={i}
-          className="p-5 sm:p-6 rounded-2xl bg-white border border-[#0F0F0F]/5 hover:border-[#0F0F0F]/10 transition-colors duration-300"
+          className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-white/[0.03] border border-[#0F0F0F]/5 dark:border-white/10 hover:border-[#0F0F0F]/10 dark:hover:border-white/20 transition-colors duration-300"
         >
           <p
-            className="text-3xl sm:text-4xl tracking-tight text-[#0F0F0F]"
+            className="text-3xl sm:text-4xl tracking-tight text-[#0F0F0F] dark:text-white"
             style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
           >
             {item.value}
           </p>
-          <p className="text-xs tracking-wider uppercase text-[#0F0F0F]/40 mt-2">
+          <p className="text-xs tracking-wider uppercase text-[#0F0F0F]/40 dark:text-white/40 mt-2">
             {item.label}
           </p>
           {item.sublabel && (
-            <p className={`text-xs mt-2 ${item.accent ? 'text-[#8B9A7D]' : 'text-[#0F0F0F]/30'}`}>
+            <p className={`text-xs mt-2 ${item.accent ? 'text-[#8B9A7D]' : 'text-[#0F0F0F]/30 dark:text-white/30'}`}>
               {item.sublabel}
             </p>
           )}

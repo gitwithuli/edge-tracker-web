@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase';
 import type { User } from '@supabase/supabase-js';
 import type { Edge, EdgeInput, TradeLog, TradeLogInput, EdgeWithLogs } from '@/lib/types';
 import type { OptionalFieldGroup } from '@/lib/schemas';
+import { enqueue, dequeue, getQueue, type QueuedOperation } from '@/lib/request-queue';
 
 interface LoadingStates {
   fetchingEdges: boolean;
@@ -68,6 +69,9 @@ interface EdgeStore {
   enrollMfa: () => Promise<MfaEnrollResult | null>;
   verifyMfa: (factorId: string, code: string) => Promise<boolean>;
   challengeMfa: (code: string) => Promise<boolean>;
+
+  // Queue
+  processPendingOperations: () => Promise<void>;
 }
 
 const initialLoadingStates: LoadingStates = {
@@ -211,6 +215,17 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
           set({ user: null, logs: [], edges: [], mfaEnabled: false });
         }
       });
+
+      // Set up visibility listener to process pending operations when tab becomes active
+      if (typeof document !== 'undefined') {
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible') {
+            get().processPendingOperations();
+          }
+        });
+        // Process any pending operations from previous session
+        setTimeout(() => get().processPendingOperations(), 2000);
+      }
     } catch (err) {
       console.error('Auth initialization failed:', err);
       set({ isLoaded: true });
@@ -259,13 +274,11 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
 
     set({ loadingStates: { ...get().loadingStates, addingEdge: true }, error: null });
 
-    try {
-      // Add timeout to prevent hanging
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Request timed out')), 15000);
-      });
+    // Queue the operation for recovery if it fails
+    const queueId = enqueue({ type: 'addEdge', payload: { data } });
 
-      const insertPromise = supabase
+    try {
+      const { data: newEdge, error } = await supabase
         .from('edges')
         .insert([{
           user_id: user.id,
@@ -278,28 +291,28 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
         .select()
         .single();
 
-      const { data: newEdge, error } = await Promise.race([insertPromise, timeoutPromise]);
-
       if (error) {
+        dequeue(queueId); // Remove from queue - server error, not retryable
         set({ error: `Failed to create edge: ${error.message}` });
         toast.error(`Failed to create edge: ${error.message}`);
         return null;
       }
 
-      if (newEdge) {
-        set({ edges: [...get().edges, mapDbToEdge(newEdge)] });
-        toast.success('Edge created successfully');
-        return newEdge.id as string;
+      if (!newEdge) {
+        dequeue(queueId);
+        set({ error: 'Failed to create edge - no data returned' });
+        toast.error('Failed to create edge. Please try again.');
+        return null;
       }
 
-      return null;
-    } catch (err: unknown) {
+      dequeue(queueId); // Success - remove from queue
+      set({ edges: [...get().edges, mapDbToEdge(newEdge)] });
+      toast.success('Edge created successfully');
+      return newEdge.id as string;
+    } catch (err) {
+      // Keep in queue for retry on visibility change
       console.error('addEdge error:', err);
-      if (err instanceof Error && err.message === 'Request timed out') {
-        toast.error('Request timed out. Please check your connection and try again.');
-      } else {
-        toast.error('Failed to create edge');
-      }
+      toast.error('Save pending - keep this tab active or return later');
       return null;
     } finally {
       set({ loadingStates: { ...get().loadingStates, addingEdge: false } });
@@ -424,6 +437,9 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
 
     set({ loadingStates: { ...get().loadingStates, addingLog: true }, error: null });
 
+    // Queue the operation for recovery if it fails
+    const queueId = enqueue({ type: 'addLog', payload: { edgeId, logData } });
+
     const tempId = `temp-${Date.now()}`;
     const logDate = logData.date || new Date().toISOString().split('T')[0];
     const logType = logData.logType || 'FRONTTEST';
@@ -458,6 +474,11 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
 
     set({ logs: [optimisticLog, ...logs] });
 
+    // Create timeout to prevent indefinite hanging
+    const timeoutId = setTimeout(() => {
+      console.warn('[addLog] Operation timed out after 30s');
+    }, 30000);
+
     try {
       const { data, error } = await supabase
         .from('logs')
@@ -473,7 +494,6 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
           tv_links: tvLinks,
           tv_link: tvLinks[0] || null,
           date: logDate,
-          // Optional fields
           entry_price: logData.entryPrice ?? null,
           exit_price: logData.exitPrice ?? null,
           entry_time: logData.entryTime ?? null,
@@ -490,21 +510,35 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
         .select()
         .single();
 
+      clearTimeout(timeoutId);
+
       if (error) {
+        dequeue(queueId); // Server error - not retryable
         set({ logs: logs.filter(l => l.id !== tempId), error: `Failed to add log: ${error.message}` });
         toast.error(`Failed to add log: ${error.message}`);
         return;
       }
 
-      if (data) {
-        const newLog = mapDbToLog(data);
-        set({ logs: get().logs.map(l => l.id === tempId ? newLog : l) });
-        toast.success('Trade logged');
+      if (!data) {
+        dequeue(queueId);
+        set({ logs: logs.filter(l => l.id !== tempId), error: 'Failed to save log - no data returned' });
+        toast.error('Failed to save log. Please try again.');
+        return;
       }
+
+      dequeue(queueId); // Success - remove from queue
+      const newLog = mapDbToLog(data);
+      set({ logs: get().logs.map(l => l.id === tempId ? newLog : l) });
+      toast.success('Trade logged');
     } catch (err) {
+      clearTimeout(timeoutId);
+      // Keep in queue for retry on visibility change
       console.error('addLog error:', err);
-      set({ logs: logs.filter(l => l.id !== tempId) });
-      toast.error('Failed to add log');
+      // Keep the optimistic log visible - it will be synced when tab becomes active
+      toast.error('Save pending - will retry when connection restored', {
+        duration: 5000,
+        description: 'Keep this tab open or return later',
+      });
     } finally {
       set({ loadingStates: { ...get().loadingStates, addingLog: false } });
     }
@@ -543,6 +577,12 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
   updateLog: async (logId, logData, newEdgeId) => {
     const { logs } = get();
 
+    // Don't attempt to update temp IDs - they haven't been saved yet
+    if (logId.startsWith('temp-')) {
+      toast.error('Please wait for the log to finish saving before editing');
+      return;
+    }
+
     set({ loadingStates: { ...get().loadingStates, updatingLogId: logId }, error: null });
 
     const originalLog = logs.find(l => l.id === logId);
@@ -552,37 +592,45 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
       return;
     }
 
+    const outcome = logData.result === 'OCCURRED' ? (logData.outcome || null) : null;
+    const tvLinks = logData.tvLinks || (logData.tvLink ? [logData.tvLink] : originalLog.tvLinks || []);
+    const targetEdgeId = newEdgeId || originalLog.edgeId;
+
+    const updatedLog: TradeLog = {
+      ...originalLog,
+      ...logData,
+      edgeId: targetEdgeId,
+      outcome,
+      tvLinks,
+      tvLink: tvLinks[0] || undefined,
+      logType: logData.logType || originalLog.logType,
+      date: logData.date || originalLog.date,
+      entryPrice: logData.entryPrice ?? originalLog.entryPrice ?? null,
+      exitPrice: logData.exitPrice ?? originalLog.exitPrice ?? null,
+      entryTime: logData.entryTime ?? originalLog.entryTime ?? null,
+      exitTime: logData.exitTime ?? originalLog.exitTime ?? null,
+      dailyOpen: logData.dailyOpen ?? originalLog.dailyOpen ?? null,
+      dailyHigh: logData.dailyHigh ?? originalLog.dailyHigh ?? null,
+      dailyLow: logData.dailyLow ?? originalLog.dailyLow ?? null,
+      dailyClose: logData.dailyClose ?? originalLog.dailyClose ?? null,
+      nyOpen: logData.nyOpen ?? originalLog.nyOpen ?? null,
+      positionSize: logData.positionSize ?? originalLog.positionSize ?? null,
+      direction: logData.direction ?? originalLog.direction ?? null,
+      symbol: logData.symbol ?? originalLog.symbol ?? null,
+    };
+
+    // Queue the operation for recovery if it fails
+    const queueId = enqueue({ type: 'updateLog', payload: { logId, logData, newEdgeId, originalLog } });
+
+    // Optimistic update
+    set({ logs: logs.map(l => l.id === logId ? updatedLog : l) });
+
+    // Create abort controller for timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
     try {
-      const outcome = logData.result === 'OCCURRED' ? (logData.outcome || null) : null;
-      const tvLinks = logData.tvLinks || (logData.tvLink ? [logData.tvLink] : originalLog.tvLinks || []);
-      const targetEdgeId = newEdgeId || originalLog.edgeId;
-
-      const updatedLog: TradeLog = {
-        ...originalLog,
-        ...logData,
-        edgeId: targetEdgeId,
-        outcome,
-        tvLinks,
-        tvLink: tvLinks[0] || undefined,
-        logType: logData.logType || originalLog.logType,
-        date: logData.date || originalLog.date,
-        // Optional fields
-        entryPrice: logData.entryPrice ?? originalLog.entryPrice ?? null,
-        exitPrice: logData.exitPrice ?? originalLog.exitPrice ?? null,
-        entryTime: logData.entryTime ?? originalLog.entryTime ?? null,
-        exitTime: logData.exitTime ?? originalLog.exitTime ?? null,
-        dailyOpen: logData.dailyOpen ?? originalLog.dailyOpen ?? null,
-        dailyHigh: logData.dailyHigh ?? originalLog.dailyHigh ?? null,
-        dailyLow: logData.dailyLow ?? originalLog.dailyLow ?? null,
-        dailyClose: logData.dailyClose ?? originalLog.dailyClose ?? null,
-        nyOpen: logData.nyOpen ?? originalLog.nyOpen ?? null,
-        positionSize: logData.positionSize ?? originalLog.positionSize ?? null,
-        direction: logData.direction ?? originalLog.direction ?? null,
-        symbol: logData.symbol ?? originalLog.symbol ?? null,
-      };
-      set({ logs: logs.map(l => l.id === logId ? updatedLog : l) });
-
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('logs')
         .update({
           edge_id: targetEdgeId,
@@ -595,7 +643,6 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
           tv_links: tvLinks,
           tv_link: tvLinks[0] || null,
           date: logData.date || originalLog.date,
-          // Optional fields
           entry_price: logData.entryPrice ?? originalLog.entryPrice ?? null,
           exit_price: logData.exitPrice ?? originalLog.exitPrice ?? null,
           entry_time: logData.entryTime ?? originalLog.entryTime ?? null,
@@ -609,19 +656,39 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
           direction: logData.direction ?? originalLog.direction ?? null,
           symbol: logData.symbol ?? originalLog.symbol ?? null,
         })
-        .eq('id', logId);
+        .eq('id', logId)
+        .select()
+        .single();
+
+      clearTimeout(timeoutId);
 
       if (error) {
+        dequeue(queueId); // Server error - not retryable
         set({ logs, error: `Failed to update log: ${error.message}` });
         toast.error(`Failed to update log: ${error.message}`);
         return;
       }
 
+      if (!data) {
+        dequeue(queueId);
+        set({ logs, error: 'Update failed - log not found in database' });
+        toast.error('Update failed - log not found. Please refresh the page.');
+        return;
+      }
+
+      dequeue(queueId); // Success - remove from queue
+      const confirmedLog = mapDbToLog(data);
+      set({ logs: get().logs.map(l => l.id === logId ? confirmedLog : l) });
       toast.success('Trade log updated');
     } catch (err) {
+      clearTimeout(timeoutId);
       console.error('updateLog error:', err);
-      set({ logs });
-      toast.error('Failed to update log');
+      // Keep in queue for retry - don't revert optimistic update
+      // The queue will recover this operation when tab becomes active
+      toast.error('Update pending - will retry when connection restored', {
+        duration: 5000,
+        description: 'Keep this tab open or return later',
+      });
     } finally {
       set({ loadingStates: { ...get().loadingStates, updatingLogId: null } });
     }
@@ -765,6 +832,144 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
       console.error('MFA challenge failed:', err);
       set({ loadingStates: { ...get().loadingStates, challengingMfa: false } });
       return false;
+    }
+  },
+
+  // === QUEUE PROCESSING ===
+
+  processPendingOperations: async () => {
+    const { user } = get();
+    if (!user) return;
+
+    const queue = getQueue();
+    if (queue.length === 0) return;
+
+    console.log(`[Queue] Processing ${queue.length} pending operations...`);
+
+    for (const op of queue) {
+      try {
+        switch (op.type) {
+          case 'addEdge': {
+            const { data: edgeData } = op.payload as { data: EdgeInput };
+            const { data, error } = await supabase
+              .from('edges')
+              .insert([{
+                user_id: user.id,
+                name: edgeData.name,
+                description: edgeData.description || '',
+                enabled_fields: edgeData.enabledFields || [],
+                symbol: edgeData.symbol || null,
+                parent_edge_id: edgeData.parentEdgeId || null,
+              }])
+              .select()
+              .single();
+
+            if (!error && data) {
+              set({ edges: [...get().edges, mapDbToEdge(data)] });
+              dequeue(op.id);
+              toast.success(`Edge "${edgeData.name}" created (recovered)`);
+            }
+            break;
+          }
+
+          case 'addLog': {
+            const { edgeId, logData } = op.payload as { edgeId: string; logData: TradeLogInput };
+            const logType = logData.logType || 'FRONTTEST';
+            const outcome = logData.result === 'OCCURRED' ? (logData.outcome || null) : null;
+            const tvLinks = logData.tvLinks || (logData.tvLink ? [logData.tvLink] : []);
+            const logDate = logData.date || new Date().toISOString().split('T')[0];
+
+            const { data, error } = await supabase
+              .from('logs')
+              .insert([{
+                user_id: user.id,
+                edge_id: edgeId,
+                result: logData.result,
+                outcome,
+                log_type: logType,
+                day_of_week: logData.dayOfWeek,
+                duration_minutes: logData.durationMinutes,
+                note: logData.note || '',
+                tv_links: tvLinks,
+                date: logDate,
+                entry_price: logData.entryPrice ?? null,
+                exit_price: logData.exitPrice ?? null,
+                entry_time: logData.entryTime ?? null,
+                exit_time: logData.exitTime ?? null,
+                direction: logData.direction ?? null,
+                symbol: logData.symbol ?? null,
+              }])
+              .select()
+              .single();
+
+            if (!error && data) {
+              const newLog = mapDbToLog(data);
+              // Remove any temp log and add the real one
+              set({ logs: [newLog, ...get().logs.filter(l => !l.id.startsWith('temp-'))] });
+              dequeue(op.id);
+              toast.success('Trade log saved (recovered)');
+            }
+            break;
+          }
+
+          case 'updateLog': {
+            const { logId, logData, newEdgeId, originalLog } = op.payload as {
+              logId: string;
+              logData: TradeLogInput;
+              newEdgeId?: string;
+              originalLog: TradeLog;
+            };
+            const outcome = logData.result === 'OCCURRED' ? (logData.outcome || null) : null;
+            const tvLinks = logData.tvLinks || (logData.tvLink ? [logData.tvLink] : originalLog.tvLinks || []);
+            const targetEdgeId = newEdgeId || originalLog.edgeId;
+
+            const { data, error } = await supabase
+              .from('logs')
+              .update({
+                edge_id: targetEdgeId,
+                result: logData.result,
+                outcome,
+                log_type: logData.logType || originalLog.logType,
+                day_of_week: logData.dayOfWeek,
+                duration_minutes: logData.durationMinutes,
+                note: logData.note || '',
+                tv_links: tvLinks,
+                tv_link: tvLinks[0] || null,
+                date: logData.date || originalLog.date,
+                entry_price: logData.entryPrice ?? originalLog.entryPrice ?? null,
+                exit_price: logData.exitPrice ?? originalLog.exitPrice ?? null,
+                entry_time: logData.entryTime ?? originalLog.entryTime ?? null,
+                exit_time: logData.exitTime ?? originalLog.exitTime ?? null,
+                daily_open: logData.dailyOpen ?? originalLog.dailyOpen ?? null,
+                daily_high: logData.dailyHigh ?? originalLog.dailyHigh ?? null,
+                daily_low: logData.dailyLow ?? originalLog.dailyLow ?? null,
+                daily_close: logData.dailyClose ?? originalLog.dailyClose ?? null,
+                ny_open: logData.nyOpen ?? originalLog.nyOpen ?? null,
+                position_size: logData.positionSize ?? originalLog.positionSize ?? null,
+                direction: logData.direction ?? originalLog.direction ?? null,
+                symbol: logData.symbol ?? originalLog.symbol ?? null,
+              })
+              .eq('id', logId)
+              .select()
+              .single();
+
+            if (!error && data) {
+              const confirmedLog = mapDbToLog(data);
+              set({ logs: get().logs.map(l => l.id === logId ? confirmedLog : l) });
+              dequeue(op.id);
+              toast.success('Trade log updated (recovered)');
+            }
+            break;
+          }
+
+          default:
+            // For other types, just remove from queue
+            dequeue(op.id);
+        }
+      } catch (err) {
+        console.error(`[Queue] Failed to process ${op.type}:`, err);
+        // Keep in queue for next retry
+      }
     }
   },
 }));

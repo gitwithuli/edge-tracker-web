@@ -27,17 +27,26 @@ export interface UseMacroTimeReturn {
   secondsToNextMacro: number;
   macroStatuses: MacroStatus[];
   isTradingHours: boolean;
+  isWeekend: boolean;
+  nextTradingDay: string;
 }
 
 // Convert local time to ET
-function getETTime(date: Date): { hour: number; minute: number; second: number } {
+function getETTime(date: Date): { hour: number; minute: number; second: number; dayOfWeek: number } {
   const etString = date.toLocaleString("en-US", { timeZone: "America/New_York" });
   const etDate = new Date(etString);
   return {
     hour: etDate.getHours(),
     minute: etDate.getMinutes(),
     second: etDate.getSeconds(),
+    dayOfWeek: etDate.getDay(), // 0 = Sunday, 6 = Saturday
   };
+}
+
+function getNextTradingDay(dayOfWeek: number): string {
+  if (dayOfWeek === 6) return "Monday"; // Saturday -> Monday
+  if (dayOfWeek === 0) return "Monday"; // Sunday -> Monday
+  return "tomorrow";
 }
 
 export function useMacroTime(includeAsia = false, includeLondon = true): UseMacroTimeReturn {
@@ -55,9 +64,13 @@ export function useMacroTime(includeAsia = false, includeLondon = true): UseMacr
     return () => clearInterval(interval);
   }, []);
 
-  const { hour: etHour, minute: etMinute, second: etSecond } = useMemo(() => {
+  const { hour: etHour, minute: etMinute, second: etSecond, dayOfWeek } = useMemo(() => {
     return getETTime(currentTime);
   }, [currentTime]);
+
+  // Check if weekend (Saturday = 6, Sunday = 0)
+  const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+  const nextTradingDay = getNextTradingDay(dayOfWeek);
 
   // Find active macro
   const activeMacro = useMemo(() => {
@@ -133,5 +146,7 @@ export function useMacroTime(includeAsia = false, includeLondon = true): UseMacr
     secondsToNextMacro,
     macroStatuses,
     isTradingHours,
+    isWeekend,
+    nextTradingDay,
   };
 }

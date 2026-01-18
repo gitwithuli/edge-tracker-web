@@ -31,6 +31,7 @@ const CURRENCY_TO_COUNTRY: Record<string, string> = {
   CAD: "CA",
   NZD: "NZ",
   CNY: "CN",
+  All: "ALL",
 };
 
 const MAJOR_CURRENCIES = ["USD", "EUR", "GBP", "JPY", "CHF", "AUD", "CAD", "NZD"];
@@ -43,8 +44,17 @@ function normalizeImpact(impact: string): "high" | "medium" | "low" | "holiday" 
   return "low";
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    // Check if it's weekend (ET timezone)
+    const now = new Date();
+    const etString = now.toLocaleString("en-US", { timeZone: "America/New_York" });
+    const etDate = new Date(etString);
+    const dayOfWeek = etDate.getDay();
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+
+    // Always use "thisweek" - ForexFactory's week runs Sat-Fri, so on weekends
+    // "thisweek" already contains the upcoming Mon-Fri trading days
     const response = await fetch(
       "https://nfs.faireconomy.media/ff_calendar_thisweek.json",
       { next: { revalidate: 300 } }
@@ -67,7 +77,7 @@ export async function GET() {
     // Get events for this week (7 days back and forward)
     const weekEvents: EconomicEvent[] = data
       .filter((e) => {
-        const isMajor = MAJOR_CURRENCIES.includes(e.country);
+        const isMajor = MAJOR_CURRENCIES.includes(e.country) || e.country === "All";
         const eventTime = new Date(e.date);
         const isInWeek = eventTime >= weekStart && eventTime <= weekEnd;
         return isMajor && isInWeek;
@@ -106,6 +116,7 @@ export async function GET() {
     return NextResponse.json({
       events: weekEvents,
       holidays,
+      isWeekend,
     });
   } catch (error) {
     console.error("Economic calendar fetch error:", error);

@@ -18,6 +18,7 @@ const COUNTRY_FLAGS: Record<string, string> = {
   CA: "\u{1F1E8}\u{1F1E6}",
   NZ: "\u{1F1F3}\u{1F1FF}",
   CN: "\u{1F1E8}\u{1F1F3}",
+  ALL: "\u{1F310}",
 };
 
 function formatEventTime(isoTime: string): string {
@@ -47,10 +48,10 @@ const IMPACT_STYLES = {
     corner: "bg-[#D4A84B]/[0.05]",
   },
   low: {
-    badge: "bg-[#0F0F0F]/10 text-[#0F0F0F]/50",
-    dot: "bg-[#0F0F0F]/30",
-    card: "from-[#0F0F0F]/[0.01] to-[#0F0F0F]/[0.02] border-[#0F0F0F]/5",
-    corner: "bg-[#0F0F0F]/[0.02]",
+    badge: "bg-[#0F0F0F]/10 dark:bg-white/10 text-[#0F0F0F]/50 dark:text-white/50",
+    dot: "bg-[#0F0F0F]/30 dark:bg-white/30",
+    card: "from-[#0F0F0F]/[0.01] to-[#0F0F0F]/[0.02] border-[#0F0F0F]/5 dark:from-white/[0.01] dark:to-white/[0.02] dark:border-white/5",
+    corner: "bg-[#0F0F0F]/[0.02] dark:bg-white/[0.02]",
   },
   holiday: {
     badge: "bg-[#8B9A7D]/15 text-[#8B9A7D]",
@@ -70,22 +71,22 @@ export function EventCard({ event, compact = false }: EventCardProps) {
       <div
         className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${
           eventPassed
-            ? "bg-[#0F0F0F]/[0.01] border-[#0F0F0F]/5 opacity-50"
+            ? "bg-[#0F0F0F]/[0.01] dark:bg-white/[0.01] border-[#0F0F0F]/5 dark:border-white/5 opacity-50"
             : `bg-gradient-to-r ${styles.card}`
         }`}
       >
         <span className="text-lg">{flag}</span>
 
         <div className="flex-1 min-w-0">
-          <p className="text-[13px] text-[#0F0F0F] truncate leading-tight">
+          <p className="text-[13px] text-[#0F0F0F] dark:text-white truncate leading-tight">
             {event.event}
           </p>
           <div className="flex items-center gap-2 mt-0.5">
-            <span className="text-[10px] text-[#0F0F0F]/40">
+            <span className="text-[10px] text-[#0F0F0F]/40 dark:text-white/40">
               {formatEventTime(event.time)}
             </span>
             {event.estimate && (
-              <span className="text-[10px] text-[#0F0F0F]/30">
+              <span className="text-[10px] text-[#0F0F0F]/30 dark:text-white/30">
                 F: {event.estimate}
               </span>
             )}
@@ -108,7 +109,7 @@ export function EventCard({ event, compact = false }: EventCardProps) {
     <div
       className={`relative p-4 rounded-xl border transition-all duration-300 ${
         eventPassed
-          ? "bg-[#0F0F0F]/[0.02] border-[#0F0F0F]/5 opacity-50"
+          ? "bg-[#0F0F0F]/[0.02] dark:bg-white/[0.02] border-[#0F0F0F]/5 dark:border-white/5 opacity-50"
           : `bg-gradient-to-br ${styles.card}`
       }`}
     >
@@ -126,28 +127,28 @@ export function EventCard({ event, compact = false }: EventCardProps) {
             {event.impact}
           </span>
         </div>
-        <span className="text-[11px] font-medium text-[#0F0F0F]/40">
+        <span className="text-[11px] font-medium text-[#0F0F0F]/40 dark:text-white/40">
           {formatEventTime(event.time)}
         </span>
       </div>
 
       <h4
-        className="text-sm text-[#0F0F0F] leading-snug mb-3"
+        className="text-sm text-[#0F0F0F] dark:text-white leading-snug mb-3"
         style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
       >
         {event.event}
       </h4>
 
-      <div className="flex items-center justify-between pt-2 border-t border-[#0F0F0F]/5">
+      <div className="flex items-center justify-between pt-2 border-t border-[#0F0F0F]/5 dark:border-white/5">
         <div className="flex items-center gap-3 text-[10px]">
           {event.estimate && (
-            <span className="text-[#0F0F0F]/50">
-              <span className="text-[#0F0F0F]/30">F:</span> {event.estimate}
+            <span className="text-[#0F0F0F]/50 dark:text-white/50">
+              <span className="text-[#0F0F0F]/30 dark:text-white/30">F:</span> {event.estimate}
             </span>
           )}
           {event.prev && (
-            <span className="text-[#0F0F0F]/50">
-              <span className="text-[#0F0F0F]/30">P:</span> {event.prev}
+            <span className="text-[#0F0F0F]/50 dark:text-white/50">
+              <span className="text-[#0F0F0F]/30 dark:text-white/30">P:</span> {event.prev}
             </span>
           )}
         </div>

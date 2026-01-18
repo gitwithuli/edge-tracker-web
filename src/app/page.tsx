@@ -1,74 +1,89 @@
 "use client";
 
-export const dynamic = "force-dynamic";
-
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { useEdgeStore } from "@/hooks/use-edge-store";
-import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { useState, useEffect } from "react";
 import { GrainOverlay } from "@/components/grain-overlay";
+import { ArrowRight, Check, Loader2, Target, BarChart3, Calendar } from "lucide-react";
 
-function CandlestickChart() {
+function FloatingCandles() {
   const candles = [
-    { open: 45, close: 62, high: 68, low: 40, bullish: true },
-    { open: 62, close: 55, high: 65, low: 50, bullish: false },
-    { open: 55, close: 70, high: 75, low: 52, bullish: true },
-    { open: 70, close: 58, high: 72, low: 55, bullish: false },
-    { open: 58, close: 78, high: 82, low: 55, bullish: true },
-    { open: 78, close: 72, high: 80, low: 68, bullish: false },
-    { open: 72, close: 85, high: 90, low: 70, bullish: true },
+    { x: 10, delay: 0, bullish: true, height: 40 },
+    { x: 25, delay: 0.3, bullish: false, height: 55 },
+    { x: 40, delay: 0.6, bullish: true, height: 35 },
+    { x: 55, delay: 0.9, bullish: true, height: 60 },
+    { x: 70, delay: 1.2, bullish: false, height: 45 },
+    { x: 85, delay: 1.5, bullish: true, height: 50 },
   ];
 
   return (
-    <svg viewBox="0 0 280 120" className="w-full h-full">
-      {candles.map((candle, i) => {
-        const x = 20 + i * 38;
-        const wickTop = 100 - candle.high;
-        const wickBottom = 100 - candle.low;
-        const bodyTop = 100 - Math.max(candle.open, candle.close);
-        const bodyHeight = Math.abs(candle.close - candle.open);
-
-        return (
-          <g
-            key={i}
-            className="opacity-0 animate-[fadeSlideUp_0.6s_ease-out_forwards]"
-            style={{ animationDelay: `${0.8 + i * 0.12}s` }}
-          >
-            <line
-              x1={x + 8}
-              y1={wickTop}
-              x2={x + 8}
-              y2={wickBottom}
-              stroke={candle.bullish ? "#8B9A7D" : "#C45A3B"}
-              strokeWidth="1.5"
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {candles.map((candle, i) => (
+        <div
+          key={i}
+          className="absolute opacity-0 animate-[floatUp_8s_ease-in-out_infinite]"
+          style={{
+            left: `${candle.x}%`,
+            bottom: "-20%",
+            animationDelay: `${candle.delay + i * 0.8}s`,
+          }}
+        >
+          <div className="flex flex-col items-center">
+            <div
+              className={`w-px ${candle.bullish ? "bg-[#8B9A7D]/20 dark:bg-[#8B9A7D]/10" : "bg-[#C45A3B]/20 dark:bg-[#C45A3B]/10"}`}
+              style={{ height: `${candle.height * 0.3}px` }}
             />
-            <rect
-              x={x}
-              y={bodyTop}
-              width="16"
-              height={Math.max(bodyHeight, 2)}
-              fill={candle.bullish ? "#8B9A7D" : "#C45A3B"}
-              rx="1"
+            <div
+              className={`w-3 rounded-sm ${candle.bullish ? "bg-[#8B9A7D]/15 dark:bg-[#8B9A7D]/8" : "bg-[#C45A3B]/15 dark:bg-[#C45A3B]/8"}`}
+              style={{ height: `${candle.height}px` }}
             />
-          </g>
-        );
-      })}
-    </svg>
+            <div
+              className={`w-px ${candle.bullish ? "bg-[#8B9A7D]/20 dark:bg-[#8B9A7D]/10" : "bg-[#C45A3B]/20 dark:bg-[#C45A3B]/10"}`}
+              style={{ height: `${candle.height * 0.4}px` }}
+            />
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
 
-export default function LandingPage() {
-  const { user, isLoaded } = useEdgeStore();
-  const router = useRouter();
+export default function WaitlistPage() {
   const [mounted, setMounted] = useState(false);
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "exists" | "error">("idle");
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     setMounted(true);
-    if (isLoaded && user) router.push("/dashboard");
-  }, [isLoaded, user, router]);
+  }, []);
 
-  if (!isLoaded) return null;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || status === "loading") return;
+
+    setStatus("loading");
+    setErrorMessage("");
+
+    try {
+      const res = await fetch("/api/waitlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setStatus(data.alreadyExists ? "exists" : "success");
+        if (!data.alreadyExists) setEmail("");
+      } else {
+        setStatus("error");
+        setErrorMessage(data.error || "Something went wrong");
+      }
+    } catch {
+      setStatus("error");
+      setErrorMessage("Connection failed. Please try again.");
+    }
+  };
 
   return (
     <>
@@ -78,7 +93,7 @@ export default function LandingPage() {
         @keyframes fadeSlideUp {
           from {
             opacity: 0;
-            transform: translateY(20px);
+            transform: translateY(24px);
           }
           to {
             opacity: 1;
@@ -91,9 +106,30 @@ export default function LandingPage() {
           to { opacity: 1; }
         }
 
-        @keyframes expandWidth {
-          from { width: 0; }
-          to { width: 100%; }
+        @keyframes floatUp {
+          0% {
+            opacity: 0;
+            transform: translateY(0);
+          }
+          10% {
+            opacity: 1;
+          }
+          90% {
+            opacity: 1;
+          }
+          100% {
+            opacity: 0;
+            transform: translateY(-120vh);
+          }
+        }
+
+        @keyframes pulse {
+          0%, 100% {
+            opacity: 1;
+          }
+          50% {
+            opacity: 0.5;
+          }
         }
 
         .animate-fade-in {
@@ -103,198 +139,237 @@ export default function LandingPage() {
         .animate-slide-up {
           animation: fadeSlideUp 0.8s ease-out forwards;
         }
+
+        .animate-pulse-slow {
+          animation: pulse 3s ease-in-out infinite;
+        }
       `}</style>
 
       <GrainOverlay />
 
-      <div className="min-h-screen bg-[#FAF7F2] text-[#0F0F0F] selection:bg-[#C45A3B]/20 overflow-x-hidden">
+      <div className="min-h-screen bg-[#FAF7F2] dark:bg-[#0F0F0F] text-[#0F0F0F] dark:text-white selection:bg-[#C45A3B]/20 overflow-hidden relative transition-colors duration-300">
+        <FloatingCandles />
+
         {/* Navigation */}
         <nav
-          className={`max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 flex justify-between items-center opacity-0 ${mounted ? 'animate-fade-in' : ''}`}
-          style={{ animationDelay: '0.1s' }}
+          className={`relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex justify-between items-center opacity-0 ${mounted ? "animate-fade-in" : ""}`}
+          style={{ animationDelay: "0.1s" }}
         >
-          <Link href="/dashboard" className="flex items-center gap-1.5 min-[400px]:gap-2">
-            <img src="/logo-icon-transparent.png" alt="Edge of ICT" className="w-10 h-10 min-[400px]:w-12 min-[400px]:h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20" />
+          <div className="flex items-center gap-2 sm:gap-3">
+            <img
+              src="/logo-icon-transparent.png"
+              alt="Edge of ICT"
+              className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14"
+            />
             <span
-              className="hidden min-[400px]:inline text-[10px] min-[400px]:text-xs sm:text-sm tracking-[0.08em] font-medium"
+              className="text-xs sm:text-sm tracking-[0.1em] font-medium"
               style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
             >
-              EDGE <span className="text-[#0F0F0F]/40 text-[8px] min-[400px]:text-[10px] sm:text-xs">OF</span> ICT
+              EDGE <span className="text-[#0F0F0F]/40 dark:text-white/40 text-[10px] sm:text-xs">OF</span> ICT
             </span>
-          </Link>
-          <div className="flex items-center gap-3 sm:gap-6 lg:gap-8">
-            <Link
-              href="/login"
-              className="text-xs sm:text-sm text-[#0F0F0F]/60 hover:text-[#0F0F0F] transition-colors duration-300"
-            >
-              Sign in
-            </Link>
-            <Link
-              href="/login"
-              className="text-xs sm:text-sm bg-[#0F0F0F] text-[#FAF7F2] px-3 sm:px-5 py-2 sm:py-2.5 rounded-full hover:bg-[#0F0F0F]/80 transition-all duration-300"
-            >
-              Get Started
-            </Link>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[#8B9A7D] animate-pulse-slow" />
+            <span className="text-[10px] sm:text-xs tracking-[0.15em] uppercase text-[#0F0F0F]/50 dark:text-white/50">
+              Building
+            </span>
           </div>
         </nav>
 
-        {/* Hero Section */}
-        <main className="max-w-6xl mx-auto px-6 sm:px-8 pt-12 sm:pt-20 pb-24 sm:pb-32">
-          <div className="grid lg:grid-cols-12 gap-12 lg:gap-8 items-start">
-            {/* Left Column - Typography */}
-            <div className="lg:col-span-7 space-y-8">
-              <p
-                className={`text-[#C45A3B] text-xs tracking-[0.3em] uppercase font-medium opacity-0 ${mounted ? 'animate-slide-up' : ''}`}
-                style={{ animationDelay: '0.2s' }}
-              >
-                Trading Journal
-              </p>
-
-              <h1
-                className={`text-[clamp(2.5rem,8vw,5.5rem)] leading-[0.95] tracking-[-0.03em] font-normal opacity-0 ${mounted ? 'animate-slide-up' : ''}`}
-                style={{
-                  fontFamily: "'Libre Baskerville', Georgia, serif",
-                  animationDelay: '0.3s'
-                }}
-              >
-                Know when
-                <br />
-                <span className="italic text-[#0F0F0F]/70">your edge</span>
-                <br />
-                appears.
-              </h1>
-
-              <div
-                className={`h-px bg-[#0F0F0F]/10 w-24 opacity-0 ${mounted ? 'animate-slide-up' : ''}`}
-                style={{ animationDelay: '0.5s' }}
-              />
-
-              <p
-                className={`text-lg sm:text-xl text-[#0F0F0F]/50 leading-relaxed max-w-md opacity-0 ${mounted ? 'animate-slide-up' : ''}`}
-                style={{ animationDelay: '0.6s' }}
-              >
-                Track the rhythm of your setups. Understand which days your edge materializes—and which days to step aside.
-              </p>
-
-              <Link
-                href="/login"
-                className={`inline-flex items-center gap-3 text-sm font-medium group opacity-0 ${mounted ? 'animate-slide-up' : ''}`}
-                style={{ animationDelay: '0.7s' }}
-              >
-                <span className="bg-[#0F0F0F] text-[#FAF7F2] px-6 py-3.5 rounded-full group-hover:bg-[#C45A3B] transition-colors duration-500">
-                  Begin tracking
-                </span>
-                <span className="w-10 h-10 rounded-full border border-[#0F0F0F]/20 flex items-center justify-center group-hover:border-[#C45A3B] group-hover:bg-[#C45A3B]/10 transition-all duration-500">
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform duration-300" />
-                </span>
-              </Link>
+        {/* Hero */}
+        <main className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 sm:pt-16 lg:pt-24 pb-16 sm:pb-24">
+          <div className="max-w-3xl mx-auto text-center">
+            {/* Badge */}
+            <div
+              className={`inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#0F0F0F]/5 dark:bg-white/5 mb-8 sm:mb-12 opacity-0 ${mounted ? "animate-slide-up" : ""}`}
+              style={{ animationDelay: "0.2s" }}
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-[#C45A3B]" />
+              <span className="text-[10px] sm:text-xs tracking-[0.2em] uppercase text-[#0F0F0F]/60 dark:text-white/60">
+                Coming Soon
+              </span>
             </div>
 
-            {/* Right Column - Chart Visualization */}
-            <div
-              className={`lg:col-span-5 lg:pt-16 opacity-0 ${mounted ? 'animate-fade-in' : ''}`}
-              style={{ animationDelay: '0.5s' }}
+            {/* Main Headline */}
+            <h1
+              className={`text-[clamp(2.25rem,7vw,4.5rem)] leading-[1.05] tracking-[-0.02em] mb-6 sm:mb-8 opacity-0 ${mounted ? "animate-slide-up" : ""}`}
+              style={{
+                fontFamily: "'Libre Baskerville', Georgia, serif",
+                animationDelay: "0.3s",
+              }}
             >
-              <div className="relative">
-                <div className="absolute -inset-8 bg-gradient-to-br from-[#C45A3B]/5 to-transparent rounded-3xl" />
-                <div className="relative bg-[#0F0F0F] rounded-2xl p-6 sm:p-8 shadow-2xl shadow-[#0F0F0F]/10">
-                  <div className="flex items-center justify-between mb-6">
-                    <span className="text-[#FAF7F2]/40 text-xs tracking-wider uppercase">This Week</span>
-                    <span className="text-[#8B9A7D] text-xs font-medium">+12.4%</span>
+              Track the <span className="italic text-[#0F0F0F]/60 dark:text-white/60">rhythm</span>
+              <br className="hidden sm:block" />
+              {" "}of your edge.
+            </h1>
+
+            {/* Subheadline */}
+            <p
+              className={`text-base sm:text-lg lg:text-xl text-[#0F0F0F]/50 dark:text-white/50 leading-relaxed max-w-xl mx-auto mb-10 sm:mb-14 opacity-0 ${mounted ? "animate-slide-up" : ""}`}
+              style={{ animationDelay: "0.4s" }}
+            >
+              Know which days your setups appear. Understand your probability windows.
+              Stop guessing—start tracking.
+            </p>
+
+            {/* Email Form */}
+            <div
+              className={`opacity-0 ${mounted ? "animate-slide-up" : ""}`}
+              style={{ animationDelay: "0.5s" }}
+            >
+              {status === "success" ? (
+                <div className="flex flex-col items-center gap-4">
+                  <div className="w-16 h-16 rounded-full bg-[#8B9A7D]/10 dark:bg-[#8B9A7D]/20 flex items-center justify-center">
+                    <Check className="w-8 h-8 text-[#8B9A7D]" />
                   </div>
-                  <div className="h-32 sm:h-40">
-                    <CandlestickChart />
-                  </div>
-                  <div className="mt-6 pt-4 border-t border-[#FAF7F2]/10 flex justify-between text-xs text-[#FAF7F2]/30">
-                    <span>Mon</span>
-                    <span>Tue</span>
-                    <span>Wed</span>
-                    <span>Thu</span>
-                    <span>Fri</span>
+                  <div>
+                    <p
+                      className="text-xl sm:text-2xl mb-2"
+                      style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                    >
+                      You&apos;re on the list.
+                    </p>
+                    <p className="text-sm text-[#0F0F0F]/50 dark:text-white/50">
+                      We&apos;ll notify you the moment we launch.
+                    </p>
                   </div>
                 </div>
-              </div>
-            </div>
-          </div>
+              ) : status === "exists" ? (
+                <div className="flex flex-col items-center gap-4">
+                  <div className="w-16 h-16 rounded-full bg-[#C45A3B]/10 dark:bg-[#C45A3B]/20 flex items-center justify-center">
+                    <Check className="w-8 h-8 text-[#C45A3B]" />
+                  </div>
+                  <div>
+                    <p
+                      className="text-xl sm:text-2xl mb-2"
+                      style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                    >
+                      Already on the list!
+                    </p>
+                    <p className="text-sm text-[#0F0F0F]/50 dark:text-white/50">
+                      We haven&apos;t forgotten you. Launch is coming.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+                  <div className="flex-1 relative">
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="Enter your email"
+                      className="w-full px-5 py-4 bg-white dark:bg-white/5 border border-[#0F0F0F]/10 dark:border-white/10 rounded-full text-sm placeholder:text-[#0F0F0F]/30 dark:placeholder:text-white/30 focus:outline-none focus:border-[#0F0F0F]/30 dark:focus:border-white/30 focus:ring-2 focus:ring-[#0F0F0F]/5 dark:focus:ring-white/5 transition-all duration-300"
+                      required
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={status === "loading"}
+                    className="inline-flex items-center justify-center gap-2 bg-[#0F0F0F] dark:bg-white text-[#FAF7F2] dark:text-[#0F0F0F] px-6 py-4 rounded-full text-sm font-medium hover:bg-[#C45A3B] dark:hover:bg-[#C45A3B] dark:hover:text-white transition-all duration-500 disabled:opacity-60"
+                  >
+                    {status === "loading" ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <>
+                        Join Waitlist
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
+                  </button>
+                </form>
+              )}
 
-          {/* Feature Grid */}
-          <div
-            className={`mt-32 sm:mt-40 grid sm:grid-cols-3 gap-px bg-[#0F0F0F]/10 rounded-2xl overflow-hidden opacity-0 ${mounted ? 'animate-fade-in' : ''}`}
-            style={{ animationDelay: '1s' }}
-          >
-            {[
-              {
-                number: "01",
-                title: "Daily Occurrence",
-                description: "Log whether your setup appeared. Track no-setup days for the complete picture."
-              },
-              {
-                number: "02",
-                title: "Frequency Patterns",
-                description: "Discover which weekdays your edge appears most. Find your probability windows."
-              },
-              {
-                number: "03",
-                title: "Visual Archive",
-                description: "Attach TradingView snapshots. Review setups at a glance without clicking through."
-              }
-            ].map((feature, i) => (
-              <div
-                key={feature.number}
-                className="bg-[#FAF7F2] p-8 sm:p-10 hover:bg-[#F5F0E8] transition-colors duration-500"
-              >
-                <span className="text-[#C45A3B] text-xs tracking-wider">{feature.number}</span>
-                <h3
-                  className="text-xl sm:text-2xl mt-4 mb-3 tracking-tight"
-                  style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
-                >
-                  {feature.title}
-                </h3>
-                <p className="text-sm text-[#0F0F0F]/50 leading-relaxed">
-                  {feature.description}
+              {status === "error" && (
+                <p className="mt-4 text-sm text-[#C45A3B]">{errorMessage}</p>
+              )}
+
+              {status === "idle" && (
+                <p className="mt-4 text-xs text-[#0F0F0F]/40 dark:text-white/40">
+                  Be the first to know when we launch. No spam, ever.
                 </p>
-              </div>
-            ))}
+              )}
+            </div>
           </div>
 
-          {/* Stats Section */}
+          {/* Feature Preview */}
           <div
-            className={`mt-24 sm:mt-32 opacity-0 ${mounted ? 'animate-fade-in' : ''}`}
-            style={{ animationDelay: '1.2s' }}
+            className={`mt-20 sm:mt-28 lg:mt-36 opacity-0 ${mounted ? "animate-fade-in" : ""}`}
+            style={{ animationDelay: "0.8s" }}
           >
-            <div className="flex items-center gap-4 mb-12">
-              <span className="text-xs tracking-[0.2em] uppercase text-[#0F0F0F]/40">Sample Analytics</span>
-              <div className="flex-1 h-px bg-[#0F0F0F]/10" />
-            </div>
+            <p className="text-center text-[10px] sm:text-xs tracking-[0.3em] uppercase text-[#0F0F0F]/40 dark:text-white/40 mb-10 sm:mb-14">
+              What&apos;s Coming
+            </p>
 
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-12">
+            <div className="grid sm:grid-cols-3 gap-6 sm:gap-8">
               {[
-                { value: "72%", label: "Occurrence Rate" },
-                { value: "Tue", label: "Peak Day" },
-                { value: "3.2", label: "Weekly Average" },
-                { value: "24", label: "Days Tracked" }
-              ].map((stat, i) => (
-                <div key={i} className="space-y-2">
-                  <p
-                    className="text-4xl sm:text-5xl lg:text-6xl tracking-tight text-[#0F0F0F]"
+                {
+                  icon: Target,
+                  title: "Track Occurrences",
+                  description:
+                    "Log whether your edge appeared each day. Build a real dataset of your setups.",
+                },
+                {
+                  icon: BarChart3,
+                  title: "Backtest Patterns",
+                  description:
+                    "Discover which days your edge shows up most. Find your probability windows.",
+                },
+                {
+                  icon: Calendar,
+                  title: "Visual Journal",
+                  description:
+                    "Attach charts. Add notes. Review your setups without digging through screenshots.",
+                },
+              ].map((feature, i) => (
+                <div
+                  key={feature.title}
+                  className="group p-6 sm:p-8 rounded-2xl bg-white/50 dark:bg-white/[0.02] border border-[#0F0F0F]/5 dark:border-white/5 hover:border-[#0F0F0F]/10 dark:hover:border-white/10 hover:bg-white dark:hover:bg-white/[0.04] transition-all duration-500"
+                >
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-[#0F0F0F]/5 dark:bg-white/5 flex items-center justify-center mb-5 group-hover:bg-[#C45A3B]/10 dark:group-hover:bg-[#C45A3B]/20 transition-colors duration-500">
+                    <feature.icon className="w-5 h-5 sm:w-6 sm:h-6 text-[#0F0F0F]/40 dark:text-white/40 group-hover:text-[#C45A3B] transition-colors duration-500" />
+                  </div>
+                  <h3
+                    className="text-base sm:text-lg mb-2 tracking-tight"
                     style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
                   >
-                    {stat.value}
-                  </p>
-                  <p className="text-xs tracking-wider uppercase text-[#0F0F0F]/40">
-                    {stat.label}
+                    {feature.title}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-[#0F0F0F]/50 dark:text-white/50 leading-relaxed">
+                    {feature.description}
                   </p>
                 </div>
               ))}
             </div>
           </div>
+
+          {/* Social Proof Placeholder */}
+          <div
+            className={`mt-20 sm:mt-28 text-center opacity-0 ${mounted ? "animate-fade-in" : ""}`}
+            style={{ animationDelay: "1s" }}
+          >
+            <div className="inline-flex items-center gap-3 px-5 py-3 rounded-full border border-[#0F0F0F]/10 dark:border-white/10">
+              <img
+                src="/ict-fractal.jpg"
+                alt="ICT"
+                className="w-8 h-8 rounded-full object-cover"
+              />
+              <span className="text-xs text-[#0F0F0F]/50 dark:text-white/50">
+                Built for ICT traders, by ICT traders
+              </span>
+            </div>
+          </div>
         </main>
 
         {/* Footer */}
-        <footer className="border-t border-[#0F0F0F]/10 py-8">
-          <div className="max-w-6xl mx-auto px-6 sm:px-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-[#0F0F0F]/40">
-            <span className="flex items-center gap-2 tracking-[0.15em] uppercase"><img src="/logo-icon-transparent.png" alt="" className="w-5 h-5" />Edge of ICT</span>
-            <span>Built for ICT traders</span>
+        <footer className="relative z-10 border-t border-[#0F0F0F]/5 dark:border-white/5 py-6 sm:py-8">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-[#0F0F0F]/40 dark:text-white/40">
+            <span className="flex items-center gap-2 tracking-[0.15em] uppercase">
+              <img src="/logo-icon-transparent.png" alt="" className="w-4 h-4 sm:w-5 sm:h-5" />
+              Edge of ICT
+            </span>
+            <span>Track your edge. Master your timing.</span>
           </div>
         </footer>
       </div>

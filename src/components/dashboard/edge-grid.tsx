@@ -11,7 +11,7 @@ interface EdgeGridProps {
   edgesWithLogs: EdgeWithLogs[];
   onAddLog: (edgeId: string, data: TradeLogInput) => void;
   onDeleteLog: (id: string) => void;
-  onUpdateLog: (id: string, data: TradeLogInput) => void;
+  onUpdateLog: (id: string, data: TradeLogInput, newEdgeId?: string) => void;
   defaultLogType?: LogType;
 }
 
@@ -128,22 +128,22 @@ export function EdgeGrid({ edgesWithLogs, onAddLog, onDeleteLog, onUpdateLog, de
 
   if (edgesWithLogs.length === 0) {
     return (
-      <div className="p-8 sm:p-12 rounded-2xl border-2 border-dashed border-[#0F0F0F]/10 text-center">
-        <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-[#0F0F0F]/5 flex items-center justify-center">
-          <Target className="w-6 h-6 text-[#0F0F0F]/30" />
+      <div className="p-8 sm:p-12 rounded-2xl border-2 border-dashed border-[#0F0F0F]/10 dark:border-white/10 text-center">
+        <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-[#0F0F0F]/5 dark:bg-white/5 flex items-center justify-center">
+          <Target className="w-6 h-6 text-[#0F0F0F]/30 dark:text-white/30" />
         </div>
         <h3
-          className="text-xl mb-2"
+          className="text-xl mb-2 dark:text-white"
           style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
         >
           No edges yet
         </h3>
-        <p className="text-sm text-[#0F0F0F]/40 mb-6 max-w-xs mx-auto">
+        <p className="text-sm text-[#0F0F0F]/40 dark:text-white/40 mb-6 max-w-xs mx-auto">
           Create your first trading edge to start tracking occurrences.
         </p>
         <Link
           href="/settings/edges"
-          className="inline-flex items-center gap-2 bg-[#0F0F0F] text-[#FAF7F2] px-5 py-2.5 rounded-full text-sm font-medium hover:bg-[#C45A3B] transition-colors duration-300"
+          className="inline-flex items-center gap-2 bg-[#0F0F0F] dark:bg-white text-[#FAF7F2] dark:text-[#0F0F0F] px-5 py-2.5 rounded-full text-sm font-medium hover:bg-[#C45A3B] dark:hover:bg-[#C45A3B] dark:hover:text-white transition-colors duration-300"
         >
           <Plus className="w-4 h-4" />
           Create Edge
@@ -156,28 +156,28 @@ export function EdgeGrid({ edgesWithLogs, onAddLog, onDeleteLog, onUpdateLog, de
   const renderEdgeCard = ({ edge, occurrenceRate, totalLogs, bestDay, winRate, wins, losses }: EdgeCardData) => (
     <div
       key={edge.id}
-      className="p-5 sm:p-6 rounded-2xl bg-white border border-[#0F0F0F]/5 hover:border-[#0F0F0F]/10 transition-all duration-300 group"
+      className="p-5 sm:p-6 rounded-2xl bg-white dark:bg-white/[0.03] border border-[#0F0F0F]/5 dark:border-white/10 hover:border-[#0F0F0F]/10 dark:hover:border-white/20 transition-all duration-300 group"
     >
       <Link href={`/edge/${edge.id}`} className="block mb-4">
         <div className="flex items-start justify-between">
           <div>
             <h4
-              className="text-lg font-normal tracking-tight text-[#0F0F0F] group-hover:text-[#C45A3B] transition-colors"
+              className="text-lg font-normal tracking-tight text-[#0F0F0F] dark:text-white group-hover:text-[#C45A3B] transition-colors"
               style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
             >
               {edge.name}
             </h4>
             {edge.description && (
-              <p className="text-xs text-[#0F0F0F]/40 mt-1 line-clamp-1">
+              <p className="text-xs text-[#0F0F0F]/40 dark:text-white/40 mt-1 line-clamp-1">
                 {edge.description}
               </p>
             )}
           </div>
           <div className="flex items-center gap-1">
-            <span className="text-xs text-[#0F0F0F]/30 uppercase tracking-wider">
+            <span className="text-xs text-[#0F0F0F]/30 dark:text-white/30 uppercase tracking-wider">
               {totalLogs} day{totalLogs !== 1 ? "s" : ""}
             </span>
-            <ArrowRight className="w-4 h-4 text-[#0F0F0F]/20 group-hover:text-[#C45A3B] group-hover:translate-x-0.5 transition-all" />
+            <ArrowRight className="w-4 h-4 text-[#0F0F0F]/20 dark:text-white/20 group-hover:text-[#C45A3B] group-hover:translate-x-0.5 transition-all" />
           </div>
         </div>
       </Link>
@@ -187,15 +187,15 @@ export function EdgeGrid({ edgesWithLogs, onAddLog, onDeleteLog, onUpdateLog, de
         {/* Occurrence rate */}
         <div>
           <div className="flex items-center justify-between text-xs mb-1.5">
-            <span className="text-[#0F0F0F]/40 uppercase tracking-wider">Occurrence</span>
+            <span className="text-[#0F0F0F]/40 dark:text-white/40 uppercase tracking-wider">Occurrence</span>
             <span
-              className="font-medium text-[#0F0F0F]"
+              className="font-medium text-[#0F0F0F] dark:text-white"
               style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
             >
               {occurrenceRate}%
             </span>
           </div>
-          <div className="h-1.5 bg-[#0F0F0F]/5 rounded-full overflow-hidden">
+          <div className="h-1.5 bg-[#0F0F0F]/5 dark:bg-white/10 rounded-full overflow-hidden">
             <div
               className="h-full bg-[#8B9A7D] rounded-full transition-all duration-700 ease-out"
               style={{ width: `${Math.max(occurrenceRate, 2)}%` }}
@@ -206,24 +206,24 @@ export function EdgeGrid({ edgesWithLogs, onAddLog, onDeleteLog, onUpdateLog, de
         {/* Win rate */}
         <div>
           <div className="flex items-center justify-between text-xs mb-1.5">
-            <span className="text-[#0F0F0F]/40 uppercase tracking-wider flex items-center gap-1">
+            <span className="text-[#0F0F0F]/40 dark:text-white/40 uppercase tracking-wider flex items-center gap-1">
               <TrendingUp className="w-3 h-3" />
               Win Rate
             </span>
             <span
-              className="font-medium text-[#0F0F0F]"
+              className="font-medium text-[#0F0F0F] dark:text-white"
               style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
             >
               {winRate}%
             </span>
           </div>
-          <div className="h-1.5 bg-[#0F0F0F]/5 rounded-full overflow-hidden">
+          <div className="h-1.5 bg-[#0F0F0F]/5 dark:bg-white/10 rounded-full overflow-hidden">
             <div
               className={`h-full rounded-full transition-all duration-700 ease-out ${winRate >= 50 ? 'bg-[#8B9A7D]' : 'bg-[#C45A3B]'}`}
               style={{ width: `${Math.max(winRate, 2)}%` }}
             />
           </div>
-          <p className="text-[10px] text-[#0F0F0F]/30 mt-1">
+          <p className="text-[10px] text-[#0F0F0F]/30 dark:text-white/30 mt-1">
             <span className="text-[#8B9A7D]">{wins}W</span> / <span className="text-[#C45A3B]">{losses}L</span>
           </p>
         </div>
@@ -231,8 +231,8 @@ export function EdgeGrid({ edgesWithLogs, onAddLog, onDeleteLog, onUpdateLog, de
 
       {/* Best day */}
       {bestDay && (
-        <p className="text-xs text-[#0F0F0F]/30 mb-4">
-          Most active: <span className="text-[#0F0F0F]/50">{bestDay}</span>
+        <p className="text-xs text-[#0F0F0F]/30 dark:text-white/30 mb-4">
+          Most active: <span className="text-[#0F0F0F]/50 dark:text-white/50">{bestDay}</span>
         </p>
       )}
 
@@ -244,7 +244,7 @@ export function EdgeGrid({ edgesWithLogs, onAddLog, onDeleteLog, onUpdateLog, de
           defaultLogType={defaultLogType}
           onSave={(data) => onAddLog(edge.id, data)}
           trigger={
-            <button className="flex-1 inline-flex items-center justify-center gap-2 bg-[#0F0F0F] text-[#FAF7F2] px-4 py-2.5 rounded-full text-sm font-medium hover:bg-[#C45A3B] transition-colors duration-300">
+            <button className="flex-1 inline-flex items-center justify-center gap-2 bg-[#0F0F0F] dark:bg-white text-[#FAF7F2] dark:text-[#0F0F0F] px-4 py-2.5 rounded-full text-sm font-medium hover:bg-[#C45A3B] dark:hover:bg-[#C45A3B] dark:hover:text-white transition-colors duration-300">
               <Plus className="w-3.5 h-3.5" />
               Log
             </button>
@@ -264,16 +264,16 @@ export function EdgeGrid({ edgesWithLogs, onAddLog, onDeleteLog, onUpdateLog, de
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
           <h3
-            className="text-lg tracking-tight"
+            className="text-lg tracking-tight dark:text-white"
             style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
           >
             Your Edges
           </h3>
-          <div className="h-px w-12 bg-[#0F0F0F]/10" />
+          <div className="h-px w-12 bg-[#0F0F0F]/10 dark:bg-white/10" />
         </div>
         <Link
           href="/settings/edges"
-          className="inline-flex items-center gap-1.5 text-xs text-[#0F0F0F]/40 hover:text-[#C45A3B] transition-colors duration-300 uppercase tracking-wider"
+          className="inline-flex items-center gap-1.5 text-xs text-[#0F0F0F]/40 dark:text-white/40 hover:text-[#C45A3B] transition-colors duration-300 uppercase tracking-wider"
         >
           <Plus className="w-3.5 h-3.5" />
           New
@@ -287,11 +287,11 @@ export function EdgeGrid({ edgesWithLogs, onAddLog, onDeleteLog, onUpdateLog, de
           return (
             <div key={parent.edge.id} className="space-y-3">
               {/* Group Header with Combined Stats */}
-              <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-[#0F0F0F]/[0.02] to-transparent border border-[#0F0F0F]/10">
+              <div className="p-5 sm:p-6 rounded-2xl bg-gradient-to-br from-[#0F0F0F]/[0.02] dark:from-white/[0.02] to-transparent border border-[#0F0F0F]/10 dark:border-white/10">
                 <div className="flex items-center justify-between mb-4">
                   <button
                     onClick={() => toggleGroup(parent.edge.id)}
-                    className="flex items-center gap-2 hover:text-[#C45A3B] transition-colors"
+                    className="flex items-center gap-2 hover:text-[#C45A3B] transition-colors dark:text-white"
                   >
                     {isExpanded ? (
                       <ChevronDown className="w-4 h-4" />
@@ -305,13 +305,13 @@ export function EdgeGrid({ edgesWithLogs, onAddLog, onDeleteLog, onUpdateLog, de
                     >
                       {parent.edge.name}
                     </h4>
-                    <span className="text-xs text-[#0F0F0F]/40 ml-2">
+                    <span className="text-xs text-[#0F0F0F]/40 dark:text-white/40 ml-2">
                       {subEdges.length} sub-edge{subEdges.length !== 1 ? 's' : ''}
                     </span>
                   </button>
                   <Link
                     href={`/edge/${parent.edge.id}`}
-                    className="text-xs text-[#0F0F0F]/40 hover:text-[#C45A3B] transition-colors flex items-center gap-1"
+                    className="text-xs text-[#0F0F0F]/40 dark:text-white/40 hover:text-[#C45A3B] transition-colors flex items-center gap-1"
                   >
                     View Group
                     <ArrowRight className="w-3 h-3" />
@@ -321,25 +321,25 @@ export function EdgeGrid({ edgesWithLogs, onAddLog, onDeleteLog, onUpdateLog, de
                 {/* Combined Stats */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
                   <div>
-                    <p className="text-[10px] text-[#0F0F0F]/40 uppercase tracking-wider mb-1">Combined Days</p>
+                    <p className="text-[10px] text-[#0F0F0F]/40 dark:text-white/40 uppercase tracking-wider mb-1">Combined Days</p>
                     <p
-                      className="text-xl font-medium"
+                      className="text-xl font-medium dark:text-white"
                       style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
                     >
                       {combinedStats.totalLogs}
                     </p>
                   </div>
                   <div>
-                    <p className="text-[10px] text-[#0F0F0F]/40 uppercase tracking-wider mb-1">Occurrence</p>
+                    <p className="text-[10px] text-[#0F0F0F]/40 dark:text-white/40 uppercase tracking-wider mb-1">Occurrence</p>
                     <p
-                      className="text-xl font-medium"
+                      className="text-xl font-medium dark:text-white"
                       style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
                     >
                       {combinedStats.occurrenceRate}%
                     </p>
                   </div>
                   <div>
-                    <p className="text-[10px] text-[#0F0F0F]/40 uppercase tracking-wider mb-1">Win Rate</p>
+                    <p className="text-[10px] text-[#0F0F0F]/40 dark:text-white/40 uppercase tracking-wider mb-1">Win Rate</p>
                     <p
                       className={`text-xl font-medium ${combinedStats.winRate >= 50 ? 'text-[#8B9A7D]' : 'text-[#C45A3B]'}`}
                       style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
@@ -348,7 +348,7 @@ export function EdgeGrid({ edgesWithLogs, onAddLog, onDeleteLog, onUpdateLog, de
                     </p>
                   </div>
                   <div>
-                    <p className="text-[10px] text-[#0F0F0F]/40 uppercase tracking-wider mb-1">W/L</p>
+                    <p className="text-[10px] text-[#0F0F0F]/40 dark:text-white/40 uppercase tracking-wider mb-1">W/L</p>
                     <p className="text-sm">
                       <span className="text-[#8B9A7D]">{combinedStats.wins}W</span>
                       {' / '}

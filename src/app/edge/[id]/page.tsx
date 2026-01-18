@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useEdgeStore } from "@/hooks/use-edge-store";
-import { ArrowLeft, Play, Rewind, Plus, TrendingUp, TrendingDown, Target, Clock, Calendar, DollarSign, ArrowUpRight, ArrowDownRight, Layers, ChevronRight } from "lucide-react";
+import { ArrowLeft, Play, Rewind, Plus, TrendingUp, TrendingDown, Target, Clock, Calendar, DollarSign, ArrowUpRight, ArrowDownRight, Layers, ChevronRight, Loader2 } from "lucide-react";
 import { FUTURES_SYMBOLS, type FuturesSymbol } from "@/lib/constants";
 import { formatCurrencyCompact } from "@/lib/utils";
 import { LogDialog } from "@/components/log-dialog";
@@ -196,8 +196,29 @@ export default function EdgeDetailPage() {
     };
   }, [filteredLogs, edge]);
 
-  if (!isLoaded || !user) {
-    return null;
+  // Redirect to login if not authenticated (after auth has loaded)
+  useEffect(() => {
+    if (isLoaded && !user) {
+      router.push('/login');
+    }
+  }, [isLoaded, user, router]);
+
+  // Show loading spinner while auth is loading
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen bg-[#FAF7F2] flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-[#0F0F0F]/40" />
+      </div>
+    );
+  }
+
+  // Show loading while redirect is in progress
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-[#FAF7F2] flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-[#0F0F0F]/40" />
+      </div>
+    );
   }
 
   if (!edge) {

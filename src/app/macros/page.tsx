@@ -59,10 +59,10 @@ function MacroCard({
         status === 'active'
           ? "bg-[#C45A3B]/10 border-[#C45A3B] shadow-lg shadow-[#C45A3B]/10"
           : status === 'upcoming'
-            ? "bg-white/50 border-[#0F0F0F]/10 hover:border-[#0F0F0F]/20"
+            ? "bg-white/50 dark:bg-white/[0.03] border-[#0F0F0F]/10 dark:border-white/10 hover:border-[#0F0F0F]/20 dark:hover:border-white/20"
             : hasLog
-              ? "bg-white/30 border-[#0F0F0F]/10"
-              : "bg-[#0F0F0F]/5 border-[#0F0F0F]/5 opacity-60"
+              ? "bg-white/30 dark:bg-white/[0.02] border-[#0F0F0F]/10 dark:border-white/10"
+              : "bg-[#0F0F0F]/5 dark:bg-white/5 border-[#0F0F0F]/5 dark:border-white/5 opacity-60"
       )}
     >
       <div className="flex items-start justify-between mb-3">
@@ -93,7 +93,7 @@ function MacroCard({
           <h3
             className={cn(
               "text-base sm:text-lg font-medium",
-              status === 'passed' && !hasLog ? "text-[#0F0F0F]/40" : "text-[#0F0F0F]"
+              status === 'passed' && !hasLog ? "text-[#0F0F0F]/40 dark:text-white/40" : "text-[#0F0F0F] dark:text-white"
             )}
             style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
           >
@@ -103,7 +103,7 @@ function MacroCard({
 
         <div className={cn(
           "text-right flex-shrink-0",
-          status === 'active' ? "text-[#C45A3B]" : "text-[#0F0F0F]/40"
+          status === 'active' ? "text-[#C45A3B]" : "text-[#0F0F0F]/40 dark:text-white/40"
         )}>
           <div className="text-[10px] sm:text-xs uppercase tracking-wider mb-0.5 sm:mb-1">
             {status === 'active' ? 'Remaining' : status === 'upcoming' ? 'Starts in' : 'Ended'}
@@ -119,7 +119,7 @@ function MacroCard({
         </div>
       </div>
 
-      <div className="flex items-center gap-2 text-xs sm:text-sm text-[#0F0F0F]/50">
+      <div className="flex items-center gap-2 text-xs sm:text-sm text-[#0F0F0F]/50 dark:text-white/50">
         <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
         <span>
           {formatMacroTime(macro.startHour, macro.startMinute)} — {formatMacroTime(macro.endHour, macro.endMinute)}
@@ -129,11 +129,11 @@ function MacroCard({
       {showLogSection && (
         <div className={cn(
           "mt-4 pt-4 border-t space-y-4",
-          status === 'active' ? "border-[#C45A3B]/20" : "border-[#0F0F0F]/10"
+          status === 'active' ? "border-[#C45A3B]/20" : "border-[#0F0F0F]/10 dark:border-white/10"
         )}>
           {/* Points Moved */}
           <div>
-            <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 mb-2">
+            <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 dark:text-white/40 mb-2">
               Points Moved
             </div>
             <div className="flex gap-2">
@@ -146,9 +146,9 @@ function MacroCard({
                   onLog({ pointsMoved: val });
                 }}
                 placeholder="e.g. 15"
-                className="flex-1 h-10 px-3 text-sm bg-white border border-[#0F0F0F]/10 rounded-xl focus:outline-none focus:border-[#C45A3B] placeholder:text-[#0F0F0F]/30"
+                className="flex-1 h-10 px-3 text-sm bg-white dark:bg-white/5 border border-[#0F0F0F]/10 dark:border-white/10 rounded-xl focus:outline-none focus:border-[#C45A3B] placeholder:text-[#0F0F0F]/30 dark:placeholder:text-white/30 dark:text-white"
               />
-              <span className="h-10 px-3 flex items-center text-sm text-[#0F0F0F]/40 bg-[#0F0F0F]/5 rounded-xl">
+              <span className="h-10 px-3 flex items-center text-sm text-[#0F0F0F]/40 dark:text-white/40 bg-[#0F0F0F]/5 dark:bg-white/5 rounded-xl">
                 pts
               </span>
             </div>
@@ -156,7 +156,7 @@ function MacroCard({
 
           {/* Direction */}
           <div>
-            <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 mb-2">
+            <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 dark:text-white/40 mb-2">
               Direction
             </div>
             <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
@@ -187,8 +187,8 @@ function MacroCard({
                 className={cn(
                   "h-9 sm:h-10 rounded-xl border transition-colors flex items-center justify-center gap-1 sm:gap-1.5 text-xs sm:text-sm font-medium",
                   todayLog?.direction === 'CONSOLIDATION'
-                    ? "bg-[#0F0F0F]/20 text-[#0F0F0F] border-[#0F0F0F]/20"
-                    : "border-[#0F0F0F]/10 text-[#0F0F0F]/50 hover:bg-[#0F0F0F]/5"
+                    ? "bg-[#0F0F0F]/20 dark:bg-white/20 text-[#0F0F0F] dark:text-white border-[#0F0F0F]/20 dark:border-white/20"
+                    : "border-[#0F0F0F]/10 dark:border-white/10 text-[#0F0F0F]/50 dark:text-white/50 hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5"
                 )}
               >
                 <Minus className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Chop
@@ -198,7 +198,7 @@ function MacroCard({
 
           {/* Displacement Quality */}
           <div>
-            <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 mb-2">
+            <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 dark:text-white/40 mb-2">
               Displacement Quality
             </div>
             <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
@@ -208,7 +208,7 @@ function MacroCard({
                   "h-9 sm:h-10 rounded-xl border transition-colors flex items-center justify-center gap-1 sm:gap-1.5 text-xs sm:text-sm font-medium",
                   todayLog?.displacementQuality === 'CLEAN'
                     ? "bg-[#8B9A7D] text-white border-[#8B9A7D]"
-                    : "border-[#0F0F0F]/10 text-[#0F0F0F]/60 hover:bg-[#0F0F0F]/5"
+                    : "border-[#0F0F0F]/10 dark:border-white/10 text-[#0F0F0F]/60 dark:text-white/60 hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5"
                 )}
               >
                 <Activity className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> <span className="hidden sm:inline">Low Resistance</span><span className="sm:hidden">Low</span>
@@ -219,7 +219,7 @@ function MacroCard({
                   "h-9 sm:h-10 rounded-xl border transition-colors flex items-center justify-center gap-1 sm:gap-1.5 text-xs sm:text-sm font-medium",
                   todayLog?.displacementQuality === 'CHOPPY'
                     ? "bg-[#C45A3B] text-white border-[#C45A3B]"
-                    : "border-[#0F0F0F]/10 text-[#0F0F0F]/60 hover:bg-[#0F0F0F]/5"
+                    : "border-[#0F0F0F]/10 dark:border-white/10 text-[#0F0F0F]/60 dark:text-white/60 hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5"
                 )}
               >
                 <Activity className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> <span className="hidden sm:inline">High Resistance</span><span className="sm:hidden">High</span>
@@ -229,7 +229,7 @@ function MacroCard({
 
           {/* Liquidity Sweep */}
           <div>
-            <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 mb-2">
+            <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 dark:text-white/40 mb-2">
               Liquidity Sweep
             </div>
             <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
@@ -239,7 +239,7 @@ function MacroCard({
                   "h-9 sm:h-10 rounded-xl border transition-colors flex items-center justify-center text-xs sm:text-sm font-medium",
                   todayLog?.liquiditySweep === 'HIGHS'
                     ? "bg-[#8B9A7D] text-white border-[#8B9A7D]"
-                    : "border-[#0F0F0F]/10 text-[#0F0F0F]/60 hover:bg-[#0F0F0F]/5"
+                    : "border-[#0F0F0F]/10 dark:border-white/10 text-[#0F0F0F]/60 dark:text-white/60 hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5"
                 )}
               >
                 Highs
@@ -250,7 +250,7 @@ function MacroCard({
                   "h-9 sm:h-10 rounded-xl border transition-colors flex items-center justify-center text-xs sm:text-sm font-medium",
                   todayLog?.liquiditySweep === 'LOWS'
                     ? "bg-[#C45A3B] text-white border-[#C45A3B]"
-                    : "border-[#0F0F0F]/10 text-[#0F0F0F]/60 hover:bg-[#0F0F0F]/5"
+                    : "border-[#0F0F0F]/10 dark:border-white/10 text-[#0F0F0F]/60 dark:text-white/60 hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5"
                 )}
               >
                 Lows
@@ -260,8 +260,8 @@ function MacroCard({
                 className={cn(
                   "h-9 sm:h-10 rounded-xl border transition-colors flex items-center justify-center text-xs sm:text-sm font-medium",
                   todayLog?.liquiditySweep === 'BOTH'
-                    ? "bg-[#0F0F0F] text-white border-[#0F0F0F]"
-                    : "border-[#0F0F0F]/10 text-[#0F0F0F]/60 hover:bg-[#0F0F0F]/5"
+                    ? "bg-[#0F0F0F] dark:bg-white text-white dark:text-[#0F0F0F] border-[#0F0F0F] dark:border-white"
+                    : "border-[#0F0F0F]/10 dark:border-white/10 text-[#0F0F0F]/60 dark:text-white/60 hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5"
                 )}
               >
                 Both
@@ -271,8 +271,8 @@ function MacroCard({
                 className={cn(
                   "h-9 sm:h-10 rounded-xl border transition-colors flex items-center justify-center text-xs sm:text-sm font-medium",
                   todayLog?.liquiditySweep === 'NONE'
-                    ? "bg-[#0F0F0F]/20 text-[#0F0F0F] border-[#0F0F0F]/20"
-                    : "border-[#0F0F0F]/10 text-[#0F0F0F]/60 hover:bg-[#0F0F0F]/5"
+                    ? "bg-[#0F0F0F]/20 dark:bg-white/20 text-[#0F0F0F] dark:text-white border-[#0F0F0F]/20 dark:border-white/20"
+                    : "border-[#0F0F0F]/10 dark:border-white/10 text-[#0F0F0F]/60 dark:text-white/60 hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5"
                 )}
               >
                 None
@@ -282,7 +282,7 @@ function MacroCard({
 
           {/* TradingView Screenshots */}
           <div>
-            <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 mb-2 flex items-center gap-1.5">
+            <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 dark:text-white/40 mb-2 flex items-center gap-1.5">
               <LinkIcon className="w-3 h-3" /> Screenshots
             </div>
 
@@ -297,17 +297,17 @@ function MacroCard({
                           href={link}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex-1 flex items-center gap-2 p-2 rounded-lg bg-[#0F0F0F]/5 hover:bg-[#0F0F0F]/10 transition-colors"
+                          className="flex-1 flex items-center gap-2 p-2 rounded-lg bg-[#0F0F0F]/5 dark:bg-white/5 hover:bg-[#0F0F0F]/10 dark:hover:bg-white/10 transition-colors"
                         >
                           <img
                             src={imageUrl}
                             alt={`Chart ${idx + 1}`}
                             className="w-16 h-10 object-cover rounded"
                           />
-                          <span className="text-xs text-[#0F0F0F]/60 truncate flex-1">
+                          <span className="text-xs text-[#0F0F0F]/60 dark:text-white/60 truncate flex-1">
                             Chart {idx + 1}
                           </span>
-                          <ExternalLink className="w-3 h-3 text-[#0F0F0F]/40" />
+                          <ExternalLink className="w-3 h-3 text-[#0F0F0F]/40 dark:text-white/40" />
                         </a>
                       ) : (
                         <a
@@ -321,7 +321,7 @@ function MacroCard({
                       )}
                       <button
                         onClick={() => onRemoveTvLink(idx)}
-                        className="p-1.5 rounded-lg text-[#0F0F0F]/30 hover:text-[#C45A3B] hover:bg-[#C45A3B]/10 transition-colors opacity-0 group-hover:opacity-100"
+                        className="p-1.5 rounded-lg text-[#0F0F0F]/30 dark:text-white/30 hover:text-[#C45A3B] hover:bg-[#C45A3B]/10 transition-colors opacity-0 group-hover:opacity-100"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -338,7 +338,7 @@ function MacroCard({
                   value={newLink}
                   onChange={(e) => setNewLink(e.target.value)}
                   placeholder="https://www.tradingview.com/x/..."
-                  className="flex-1 h-9 px-3 text-sm bg-white border border-[#0F0F0F]/10 rounded-lg focus:outline-none focus:border-[#C45A3B] placeholder:text-[#0F0F0F]/30"
+                  className="flex-1 h-9 px-3 text-sm bg-white dark:bg-white/5 border border-[#0F0F0F]/10 dark:border-white/10 rounded-lg focus:outline-none focus:border-[#C45A3B] placeholder:text-[#0F0F0F]/30 dark:placeholder:text-white/30 dark:text-white"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && newLink.trim()) {
                       onAddTvLink(newLink.trim());
@@ -356,7 +356,7 @@ function MacroCard({
                     }
                     setShowLinkInput(false);
                   }}
-                  className="h-9 px-3 rounded-lg bg-[#0F0F0F] text-white text-sm font-medium hover:bg-[#C45A3B] transition-colors"
+                  className="h-9 px-3 rounded-lg bg-[#0F0F0F] dark:bg-white text-white dark:text-[#0F0F0F] text-sm font-medium hover:bg-[#C45A3B] dark:hover:bg-[#C45A3B] dark:hover:text-white transition-colors"
                 >
                   Add
                 </button>
@@ -364,7 +364,7 @@ function MacroCard({
             ) : (
               <button
                 onClick={() => setShowLinkInput(true)}
-                className="w-full h-9 rounded-lg border border-dashed border-[#0F0F0F]/20 text-[#0F0F0F]/40 hover:border-[#0F0F0F]/40 hover:text-[#0F0F0F]/60 transition-colors flex items-center justify-center gap-1.5 text-sm"
+                className="w-full h-9 rounded-lg border border-dashed border-[#0F0F0F]/20 dark:border-white/20 text-[#0F0F0F]/40 dark:text-white/40 hover:border-[#0F0F0F]/40 dark:hover:border-white/40 hover:text-[#0F0F0F]/60 dark:hover:text-white/60 transition-colors flex items-center justify-center gap-1.5 text-sm"
               >
                 <Plus className="w-3.5 h-3.5" /> Add Screenshot
               </button>
@@ -406,6 +406,8 @@ export default function MacrosPage() {
     secondsToNextMacro,
     macroStatuses,
     isTradingHours,
+    isWeekend,
+    nextTradingDay,
   } = useMacroTime(showAsiaMacros, showLondonMacros);
 
   useEffect(() => {
@@ -426,8 +428,8 @@ export default function MacrosPage() {
 
   if (!isLoaded || !user || !mounted) {
     return (
-      <div className="min-h-screen bg-[#FAF7F2] flex items-center justify-center">
-        <div className="animate-pulse text-[#0F0F0F]/40">Loading...</div>
+      <div className="min-h-screen bg-[#FAF7F2] dark:bg-[#0F0F0F] flex items-center justify-center">
+        <div className="animate-pulse text-[#0F0F0F]/40 dark:text-white/40">Loading...</div>
       </div>
     );
   }
@@ -457,19 +459,19 @@ export default function MacrosPage() {
   const activeMacroStatus = macroStatuses.find(s => s.status === 'active');
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] text-[#0F0F0F]">
+    <div className="min-h-screen bg-[#FAF7F2] dark:bg-[#0F0F0F] text-[#0F0F0F] dark:text-white transition-colors duration-300">
       {/* Header */}
-      <header className="border-b border-[#0F0F0F]/10 bg-[#FAF7F2]/80 backdrop-blur-sm sticky top-0 z-50">
+      <header className="border-b border-[#0F0F0F]/10 dark:border-white/10 bg-[#FAF7F2]/80 dark:bg-[#0F0F0F]/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center">
           <div className="flex items-center gap-2 sm:gap-4">
             <button
               onClick={() => router.push('/dashboard')}
-              className="p-1.5 sm:p-2 -ml-1 sm:-ml-2 rounded-full hover:bg-[#0F0F0F]/5 transition-colors"
+              className="p-1.5 sm:p-2 -ml-1 sm:-ml-2 rounded-full hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5 transition-colors"
             >
-              <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 text-[#0F0F0F]/60" />
+              <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 text-[#0F0F0F]/60 dark:text-white/60" />
             </button>
             <div>
-              <div className="text-[10px] sm:text-xs tracking-[0.2em] uppercase text-[#0F0F0F]/40 mb-0.5">
+              <div className="text-[10px] sm:text-xs tracking-[0.2em] uppercase text-[#0F0F0F]/40 dark:text-white/40 mb-0.5">
                 Macro Tracker
               </div>
               <h1
@@ -484,10 +486,10 @@ export default function MacrosPage() {
           <div className="flex items-center gap-2 sm:gap-4">
             <Link
               href="/macros/stats"
-              className="p-1.5 sm:p-2 rounded-full hover:bg-[#0F0F0F]/5 transition-colors"
+              className="p-1.5 sm:p-2 rounded-full hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5 transition-colors"
               title="View Statistics"
             >
-              <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-[#0F0F0F]/60" />
+              <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-[#0F0F0F]/60 dark:text-white/60" />
             </Link>
 
             {/* Settings Dropdown */}
@@ -496,11 +498,11 @@ export default function MacrosPage() {
                 onClick={() => setShowSettings(!showSettings)}
                 className={cn(
                   "p-1.5 sm:p-2 rounded-full transition-colors",
-                  showSettings ? "bg-[#0F0F0F]/10" : "hover:bg-[#0F0F0F]/5"
+                  showSettings ? "bg-[#0F0F0F]/10 dark:bg-white/10" : "hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5"
                 )}
                 title="Settings"
               >
-                <Settings className="w-4 h-4 sm:w-5 sm:h-5 text-[#0F0F0F]/60" />
+                <Settings className="w-4 h-4 sm:w-5 sm:h-5 text-[#0F0F0F]/60 dark:text-white/60" />
               </button>
 
               {showSettings && (
@@ -509,15 +511,15 @@ export default function MacrosPage() {
                     className="fixed inset-0 z-40"
                     onClick={() => setShowSettings(false)}
                   />
-                  <div className="absolute right-0 top-full mt-2 w-56 sm:w-64 bg-white rounded-xl border border-[#0F0F0F]/10 shadow-lg z-50 p-3 sm:p-4">
-                    <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 mb-3">Sessions</div>
+                  <div className="absolute right-0 top-full mt-2 w-56 sm:w-64 bg-white dark:bg-[#1a1a1a] rounded-xl border border-[#0F0F0F]/10 dark:border-white/10 shadow-lg z-50 p-3 sm:p-4">
+                    <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 dark:text-white/40 mb-3">Sessions</div>
 
                     <label className="flex items-center justify-between cursor-pointer group mb-3">
                       <div className="flex items-center gap-2">
-                        <Clock className="w-4 h-4 text-[#0F0F0F]/40" />
+                        <Clock className="w-4 h-4 text-[#0F0F0F]/40 dark:text-white/40" />
                         <div>
                           <span className="text-sm font-medium">London</span>
-                          <p className="text-[10px] text-[#0F0F0F]/40">00:50 - 05:50 ET</p>
+                          <p className="text-[10px] text-[#0F0F0F]/40 dark:text-white/40">00:50 - 05:50 ET</p>
                         </div>
                       </div>
                       <button
@@ -529,7 +531,7 @@ export default function MacrosPage() {
                       >
                         <div
                           className={cn(
-                            "absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-transform",
+                            "absolute top-1 w-4 h-4 rounded-full bg-white dark:bg-[#0F0F0F] shadow transition-transform",
                             showLondonMacros ? "translate-x-5" : "translate-x-1"
                           )}
                         />
@@ -538,10 +540,10 @@ export default function MacrosPage() {
 
                     <label className="flex items-center justify-between cursor-pointer group">
                       <div className="flex items-center gap-2">
-                        <Moon className="w-4 h-4 text-[#0F0F0F]/40" />
+                        <Moon className="w-4 h-4 text-[#0F0F0F]/40 dark:text-white/40" />
                         <div>
                           <span className="text-sm font-medium">Asia</span>
-                          <p className="text-[10px] text-[#0F0F0F]/40">18:50 - 23:50 ET</p>
+                          <p className="text-[10px] text-[#0F0F0F]/40 dark:text-white/40">18:50 - 23:50 ET</p>
                         </div>
                       </div>
                       <button
@@ -553,26 +555,26 @@ export default function MacrosPage() {
                       >
                         <div
                           className={cn(
-                            "absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-transform",
+                            "absolute top-1 w-4 h-4 rounded-full bg-white dark:bg-[#0F0F0F] shadow transition-transform",
                             showAsiaMacros ? "translate-x-5" : "translate-x-1"
                           )}
                         />
                       </button>
                     </label>
-                    <p className="text-xs text-[#0F0F0F]/40 mt-3">
+                    <p className="text-xs text-[#0F0F0F]/40 dark:text-white/40 mt-3">
                       NY session (06:50-15:50) always shown
                     </p>
 
-                    <div className="border-t border-[#0F0F0F]/10 mt-4 pt-4">
-                      <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 mb-3">Data</div>
+                    <div className="border-t border-[#0F0F0F]/10 dark:border-white/10 mt-4 pt-4">
+                      <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 dark:text-white/40 mb-3">Data</div>
                       <button
                         onClick={() => {
                           exportMacroData();
                           setShowSettings(false);
                         }}
-                        className="flex items-center gap-2 w-full px-3 py-2 text-sm font-medium rounded-lg hover:bg-[#0F0F0F]/5 transition-colors"
+                        className="flex items-center gap-2 w-full px-3 py-2 text-sm font-medium rounded-lg hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5 transition-colors"
                       >
-                        <Download className="w-4 h-4 text-[#0F0F0F]/40" />
+                        <Download className="w-4 h-4 text-[#0F0F0F]/40 dark:text-white/40" />
                         Export Macro Logs
                       </button>
                     </div>
@@ -582,11 +584,11 @@ export default function MacrosPage() {
             </div>
 
             <div className="text-right">
-              <div className="text-[10px] sm:text-xs tracking-wider uppercase text-[#0F0F0F]/40 mb-0.5 sm:mb-1">
+              <div className="text-[10px] sm:text-xs tracking-wider uppercase text-[#0F0F0F]/40 dark:text-white/40 mb-0.5 sm:mb-1">
                 <span className="hidden sm:inline">{isTradingHours ? 'Market Open' : 'Market Closed'} • </span>ET
               </div>
               <div
-                className="text-lg sm:text-2xl font-mono font-bold tabular-nums text-[#0F0F0F]"
+                className="text-lg sm:text-2xl font-mono font-bold tabular-nums text-[#0F0F0F] dark:text-white"
               >
                 {formatCurrentTime()}
               </div>
@@ -596,18 +598,45 @@ export default function MacrosPage() {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        {/* Weekend Overlay Banner */}
+        {isWeekend && (
+          <div className="mb-8 relative">
+            <div className="absolute inset-0 bg-gradient-to-b from-[#8B9A7D]/20 to-[#8B9A7D]/5 rounded-3xl blur-xl" />
+            <div className="relative bg-white/80 dark:bg-white/5 backdrop-blur-sm border-2 border-[#8B9A7D]/30 rounded-3xl p-8 sm:p-10 text-center shadow-lg">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-5 rounded-full bg-[#8B9A7D]/10 flex items-center justify-center">
+                <Moon className="w-7 h-7 sm:w-8 sm:h-8 text-[#8B9A7D]" />
+              </div>
+              <h2
+                className="text-2xl sm:text-3xl font-medium text-[#0F0F0F] dark:text-white mb-3"
+                style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+              >
+                Markets are closed
+              </h2>
+              <p className="text-[#0F0F0F]/60 dark:text-white/60 text-sm sm:text-base max-w-md mx-auto mb-4">
+                Backtest, journal, review your week, and enjoy your life.
+              </p>
+              <p
+                className="text-[#0F0F0F]/40 dark:text-white/40 text-sm"
+                style={{ fontFamily: "'Libre Baskerville', Georgia, serif", fontStyle: 'italic' }}
+              >
+                See you on {nextTradingDay}.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Today's Summary */}
-        {loggedCount > 0 && (
-          <div className="mb-6 sm:mb-8 p-3 sm:p-4 rounded-2xl bg-white/50 border border-[#0F0F0F]/10">
-            <div className="text-xs tracking-[0.15em] uppercase text-[#0F0F0F]/40 mb-2">Today's Summary</div>
+        {!isWeekend && loggedCount > 0 && (
+          <div className="mb-6 sm:mb-8 p-3 sm:p-4 rounded-2xl bg-white/50 dark:bg-white/[0.03] border border-[#0F0F0F]/10 dark:border-white/10">
+            <div className="text-xs tracking-[0.15em] uppercase text-[#0F0F0F]/40 dark:text-white/40 mb-2">Today's Summary</div>
             <div className="flex flex-wrap items-center gap-4 sm:gap-6">
               <div className="flex items-center gap-2">
-                <span className="text-2xl font-bold text-[#0F0F0F]">{loggedCount}</span>
-                <span className="text-sm text-[#0F0F0F]/50">logged</span>
+                <span className="text-2xl font-bold text-[#0F0F0F] dark:text-white">{loggedCount}</span>
+                <span className="text-sm text-[#0F0F0F]/50 dark:text-white/50">logged</span>
               </div>
               {avgPoints !== null && (
-                <div className="flex items-center gap-1.5 text-[#0F0F0F]">
-                  <Activity className="w-4 h-4 text-[#0F0F0F]/40" />
+                <div className="flex items-center gap-1.5 text-[#0F0F0F] dark:text-white">
+                  <Activity className="w-4 h-4 text-[#0F0F0F]/40 dark:text-white/40" />
                   <span className="font-medium">{avgPoints} pts avg</span>
                 </div>
               )}
@@ -624,7 +653,7 @@ export default function MacrosPage() {
                 </div>
               )}
               {consolidationCount > 0 && (
-                <div className="flex items-center gap-1.5 text-[#0F0F0F]/50">
+                <div className="flex items-center gap-1.5 text-[#0F0F0F]/50 dark:text-white/50">
                   <Minus className="w-4 h-4" />
                   <span className="font-medium">{consolidationCount}</span>
                 </div>
@@ -634,7 +663,7 @@ export default function MacrosPage() {
         )}
 
         {/* Active Macro Hero */}
-        {activeMacroStatus && (
+        {!isWeekend && activeMacroStatus && (
           <div className="mb-8">
             <div className="text-xs tracking-[0.15em] uppercase text-[#C45A3B] mb-3 flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-[#C45A3B] animate-pulse" />
@@ -654,9 +683,9 @@ export default function MacrosPage() {
         )}
 
         {/* Next Up */}
-        {nextMacro && !activeMacroStatus && (
+        {!isWeekend && nextMacro && !activeMacroStatus && (
           <div className="mb-8">
-            <div className="text-xs tracking-[0.15em] uppercase text-[#0F0F0F]/40 mb-3 flex items-center gap-2">
+            <div className="text-xs tracking-[0.15em] uppercase text-[#0F0F0F]/40 dark:text-white/40 mb-3 flex items-center gap-2">
               <Timer className="w-3.5 h-3.5" />
               Next Macro
             </div>
@@ -675,9 +704,9 @@ export default function MacrosPage() {
         )}
 
         {/* Upcoming Macros */}
-        {upcomingMacros.length > (activeMacroStatus ? 0 : 1) && (
+        {!isWeekend && upcomingMacros.length > (activeMacroStatus ? 0 : 1) && (
           <div className="mb-8">
-            <div className="text-xs tracking-[0.15em] uppercase text-[#0F0F0F]/40 mb-3">
+            <div className="text-xs tracking-[0.15em] uppercase text-[#0F0F0F]/40 dark:text-white/40 mb-3">
               Upcoming ({upcomingMacros.length - (activeMacroStatus ? 0 : 1)} remaining)
             </div>
             <div className="space-y-3">
@@ -701,9 +730,9 @@ export default function MacrosPage() {
         )}
 
         {/* Passed Macros */}
-        {passedMacros.length > 0 && (
+        {!isWeekend && passedMacros.length > 0 && (
           <div>
-            <div className="text-xs tracking-[0.15em] uppercase text-[#0F0F0F]/40 mb-3">
+            <div className="text-xs tracking-[0.15em] uppercase text-[#0F0F0F]/40 dark:text-white/40 mb-3">
               Completed Today ({passedMacros.length})
             </div>
             <div className="space-y-3">
@@ -724,14 +753,48 @@ export default function MacrosPage() {
           </div>
         )}
 
-        {/* Empty State */}
-        {macroStatuses.length === 0 && (
+        {/* Weekend - Faded Read-Only View of All Macros */}
+        {isWeekend && macroStatuses.length > 0 && (
+          <div className="opacity-40 pointer-events-none select-none">
+            <div className="text-xs tracking-[0.15em] uppercase text-[#0F0F0F]/40 dark:text-white/40 mb-3">
+              Last Week's Macros (Read Only)
+            </div>
+            <div className="space-y-3">
+              {macroStatuses.map(({ macro }) => (
+                <div
+                  key={macro.id}
+                  className="rounded-2xl border p-4 sm:p-5 bg-[#0F0F0F]/5 dark:bg-white/5 border-[#0F0F0F]/5 dark:border-white/5"
+                >
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h3
+                        className="text-base sm:text-lg font-medium text-[#0F0F0F]/40 dark:text-white/40"
+                        style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                      >
+                        {macro.name}
+                      </h3>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs sm:text-sm text-[#0F0F0F]/30 dark:text-white/30 mt-2">
+                    <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                    <span>
+                      {formatMacroTime(macro.startHour, macro.startMinute)} — {formatMacroTime(macro.endHour, macro.endMinute)}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Empty State (non-weekend) */}
+        {!isWeekend && macroStatuses.length === 0 && (
           <div className="text-center py-16">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#0F0F0F]/5 flex items-center justify-center">
-              <Clock className="w-6 h-6 text-[#0F0F0F]/30" />
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#0F0F0F]/5 dark:bg-white/5 flex items-center justify-center">
+              <Clock className="w-6 h-6 text-[#0F0F0F]/30 dark:text-white/30" />
             </div>
             <p
-              className="text-[#0F0F0F]/40 text-sm"
+              className="text-[#0F0F0F]/40 dark:text-white/40 text-sm"
               style={{ fontFamily: "'Libre Baskerville', Georgia, serif", fontStyle: 'italic' }}
             >
               No macros scheduled for today

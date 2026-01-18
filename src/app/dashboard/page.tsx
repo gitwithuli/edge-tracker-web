@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { useEdgeStore } from "@/hooks/use-edge-store";
-import { LogOut, Plus, Settings, Play, Rewind, BarChart3, Download, Timer } from "lucide-react";
+import { LogOut, Plus, Settings, Play, Rewind, BarChart3, Download, Timer, Loader2 } from "lucide-react";
 import { EconomicCalendarSidebar } from "@/components/dashboard/economic-calendar";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { StatsCards } from "@/components/dashboard/stats-cards";
 import { EdgeScorecard } from "@/components/dashboard/edge-scorecard";
 import { EdgeGrid } from "@/components/dashboard/edge-grid";
@@ -56,9 +58,31 @@ export default function DashboardPage() {
   }, [edgesWithLogs, activeView, liveDateRange]);
 
   const totalLogsForType = logsByType.length;
+  const router = useRouter();
 
-  if (!isLoaded || !user) {
-    return null;
+  // Redirect to login if not authenticated (after auth has loaded)
+  useEffect(() => {
+    if (isLoaded && !user) {
+      router.push('/login');
+    }
+  }, [isLoaded, user, router]);
+
+  // Show loading spinner while auth is loading
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen bg-[#FAF7F2] dark:bg-[#0F0F0F] flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-[#0F0F0F]/40 dark:text-white/40" />
+      </div>
+    );
+  }
+
+  // Don't render dashboard content if not logged in (redirect is in progress)
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-[#FAF7F2] dark:bg-[#0F0F0F] flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-[#0F0F0F]/40 dark:text-white/40" />
+      </div>
+    );
   }
 
   const isBacktest = activeView === "BACKTEST";
@@ -95,9 +119,9 @@ export default function DashboardPage() {
 
       <GrainOverlay />
 
-      <div className="min-h-screen bg-[#FAF7F2] text-[#0F0F0F] selection:bg-[#C45A3B]/20">
+      <div className="min-h-screen bg-[#FAF7F2] dark:bg-[#0F0F0F] text-[#0F0F0F] dark:text-white selection:bg-[#C45A3B]/20 transition-colors duration-300">
         {/* Header */}
-        <header className="border-b border-[#0F0F0F]/5 bg-[#FAF7F2]/80 backdrop-blur-md sticky top-0 z-40">
+        <header className="border-b border-[#0F0F0F]/5 dark:border-white/5 bg-[#FAF7F2]/80 dark:bg-[#0F0F0F]/80 backdrop-blur-md sticky top-0 z-40">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4 flex justify-between items-center">
             <Link
               href="/dashboard"
@@ -108,7 +132,7 @@ export default function DashboardPage() {
                 className="hidden sm:inline text-xs md:text-sm tracking-[0.08em] font-medium"
                 style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
               >
-                EDGE <span className="text-[#0F0F0F]/40 text-[10px] md:text-xs">OF</span> ICT
+                EDGE <span className="text-[#0F0F0F]/40 dark:text-white/40 text-[10px] md:text-xs">OF</span> ICT
               </span>
             </Link>
 
@@ -123,7 +147,7 @@ export default function DashboardPage() {
                     }
                   }}
                   trigger={
-                    <button className="inline-flex items-center gap-2 bg-[#0F0F0F] text-[#FAF7F2] px-4 py-2 rounded-full text-sm font-medium hover:bg-[#C45A3B] transition-colors duration-300">
+                    <button className="inline-flex items-center gap-2 bg-[#0F0F0F] dark:bg-white text-[#FAF7F2] dark:text-[#0F0F0F] px-4 py-2 rounded-full text-sm font-medium hover:bg-[#C45A3B] dark:hover:bg-[#C45A3B] dark:hover:text-white transition-colors duration-300">
                       <Plus className="w-4 h-4" />
                       <span className="hidden sm:inline">Log {isBacktest ? 'Backtest' : 'Day'}</span>
                     </button>
@@ -133,7 +157,7 @@ export default function DashboardPage() {
 
               <Link
                 href="/macros"
-                className="p-2 rounded-full text-[#0F0F0F]/40 hover:text-[#0F0F0F] hover:bg-[#0F0F0F]/5 transition-all duration-300"
+                className="p-2 rounded-full text-[#0F0F0F]/40 dark:text-white/40 hover:text-[#0F0F0F] dark:hover:text-white hover:bg-[#0F0F0F]/5 dark:hover:bg-white/10 transition-all duration-300"
                 title="Macro Tracker"
                 aria-label="Macro Tracker"
               >
@@ -145,16 +169,18 @@ export default function DashboardPage() {
               <a
                 href="/api/backup"
                 download
-                className="p-2 rounded-full text-[#0F0F0F]/40 hover:text-[#0F0F0F] hover:bg-[#0F0F0F]/5 transition-all duration-300"
+                className="p-2 rounded-full text-[#0F0F0F]/40 dark:text-white/40 hover:text-[#0F0F0F] dark:hover:text-white hover:bg-[#0F0F0F]/5 dark:hover:bg-white/10 transition-all duration-300"
                 title="Download Backup"
                 aria-label="Download Backup"
               >
                 <Download className="w-4 h-4" aria-hidden="true" />
               </a>
 
+              <ThemeToggle />
+
               <Link
                 href="/settings/edges"
-                className="p-2 rounded-full text-[#0F0F0F]/40 hover:text-[#0F0F0F] hover:bg-[#0F0F0F]/5 transition-all duration-300"
+                className="p-2 rounded-full text-[#0F0F0F]/40 hover:text-[#0F0F0F] hover:bg-[#0F0F0F]/5 transition-all duration-300 dark:text-white/40 dark:hover:text-white dark:hover:bg-white/10"
                 aria-label="Edge Settings"
               >
                 <Settings className="w-4 h-4" aria-hidden="true" />
@@ -162,7 +188,7 @@ export default function DashboardPage() {
 
               <button
                 onClick={logout}
-                className="inline-flex items-center gap-2 p-2 rounded-full text-[#0F0F0F]/40 hover:text-[#0F0F0F] hover:bg-[#0F0F0F]/5 transition-all duration-300"
+                className="inline-flex items-center gap-2 p-2 rounded-full text-[#0F0F0F]/40 dark:text-white/40 hover:text-[#0F0F0F] dark:hover:text-white hover:bg-[#0F0F0F]/5 dark:hover:bg-white/10 transition-all duration-300"
                 aria-label="Sign Out"
               >
                 <LogOut className="w-4 h-4" aria-hidden="true" />
@@ -186,18 +212,18 @@ export default function DashboardPage() {
                   className="text-2xl sm:text-3xl lg:text-4xl tracking-tight"
                   style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
                 >
-                  Track your <span className="italic text-[#0F0F0F]/60">edge</span>
+                  Track your <span className="italic text-[#0F0F0F]/60 dark:text-white/60">edge</span>
                 </h1>
               </div>
 
               {/* View Toggle */}
-              <div className="flex p-0.5 sm:p-1 bg-[#0F0F0F]/5 rounded-full">
+              <div className="flex p-0.5 sm:p-1 bg-[#0F0F0F]/5 dark:bg-white/5 rounded-full">
                 <button
                   onClick={() => setActiveView("FRONTTEST")}
                   className={`flex items-center gap-1 sm:gap-2 px-2.5 sm:px-5 py-1.5 sm:py-2.5 rounded-full text-[11px] sm:text-sm font-medium transition-all duration-300 ${
                     activeView === "FRONTTEST"
-                      ? "bg-[#0F0F0F] text-[#FAF7F2] shadow-sm"
-                      : "text-[#0F0F0F]/50 hover:text-[#0F0F0F]"
+                      ? "bg-[#0F0F0F] dark:bg-white text-[#FAF7F2] dark:text-[#0F0F0F] shadow-sm"
+                      : "text-[#0F0F0F]/50 dark:text-white/50 hover:text-[#0F0F0F] dark:hover:text-white"
                   }`}
                 >
                   <Play className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -208,8 +234,8 @@ export default function DashboardPage() {
                   onClick={() => setActiveView("BACKTEST")}
                   className={`flex items-center gap-1 sm:gap-2 px-2.5 sm:px-5 py-1.5 sm:py-2.5 rounded-full text-[11px] sm:text-sm font-medium transition-all duration-300 ${
                     activeView === "BACKTEST"
-                      ? "bg-[#0F0F0F] text-[#FAF7F2] shadow-sm"
-                      : "text-[#0F0F0F]/50 hover:text-[#0F0F0F]"
+                      ? "bg-[#0F0F0F] dark:bg-white text-[#FAF7F2] dark:text-[#0F0F0F] shadow-sm"
+                      : "text-[#0F0F0F]/50 dark:text-white/50 hover:text-[#0F0F0F] dark:hover:text-white"
                   }`}
                 >
                   <Rewind className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -227,16 +253,16 @@ export default function DashboardPage() {
           >
             <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
               <div className="flex items-center gap-4">
-                <span className="text-xs tracking-[0.2em] uppercase text-[#0F0F0F]/40">
+                <span className="text-xs tracking-[0.2em] uppercase text-[#0F0F0F]/40 dark:text-white/40">
                   {isBacktest ? 'Backtest Summary' : 'Live Summary'}
                 </span>
-                <div className="hidden sm:block flex-1 h-px bg-[#0F0F0F]/10 min-w-[40px]" />
+                <div className="hidden sm:block flex-1 h-px bg-[#0F0F0F]/10 dark:bg-white/10 min-w-[40px]" />
               </div>
               {!isBacktest && (
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:ml-auto">
                   <DateRangeFilter value={liveDateRange} onChange={setLiveDateRange} />
                   {filteredLogs.length !== totalLogsForType && (
-                    <span className="text-xs text-[#0F0F0F]/40">
+                    <span className="text-xs text-[#0F0F0F]/40 dark:text-white/40">
                       {filteredLogs.length} of {totalLogsForType}
                     </span>
                   )}
@@ -253,11 +279,11 @@ export default function DashboardPage() {
               style={{ animationDelay: '0.25s' }}
             >
               <div className="flex items-center gap-4 mb-6">
-                <BarChart3 className="w-4 h-4 text-[#0F0F0F]/40" />
-                <span className="text-xs tracking-[0.2em] uppercase text-[#0F0F0F]/40">
+                <BarChart3 className="w-4 h-4 text-[#0F0F0F]/40 dark:text-white/40" />
+                <span className="text-xs tracking-[0.2em] uppercase text-[#0F0F0F]/40 dark:text-white/40">
                   Backtest Analytics
                 </span>
-                <div className="flex-1 h-px bg-[#0F0F0F]/10" />
+                <div className="flex-1 h-px bg-[#0F0F0F]/10 dark:bg-white/10" />
               </div>
               <BacktestStats logs={filteredLogs} edgesWithLogs={edgesWithFilteredLogs} />
             </section>
@@ -298,8 +324,8 @@ export default function DashboardPage() {
         </main>
 
         {/* Footer */}
-        <footer className="border-t border-[#0F0F0F]/5 py-4 sm:py-6 mt-8 sm:mt-12">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-[#0F0F0F]/30">
+        <footer className="border-t border-[#0F0F0F]/5 dark:border-white/5 py-4 sm:py-6 mt-8 sm:mt-12">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-[#0F0F0F]/30 dark:text-white/30">
             <span className="flex items-center gap-2 tracking-[0.15em] uppercase"><img src="/logo-icon-transparent.png" alt="" className="w-4 h-4 sm:w-5 sm:h-5" />Edge of ICT</span>
             <span>Built for ICT traders</span>
           </div>

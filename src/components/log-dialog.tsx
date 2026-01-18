@@ -306,7 +306,10 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, initialData
                     ? "bg-[#0F0F0F] text-[#FAF7F2] border-[#0F0F0F]"
                     : "bg-transparent border-[#0F0F0F]/10 text-[#0F0F0F]/50 hover:border-[#0F0F0F]/30"
                 }`}
-                onClick={() => setLogType("BACKTEST")}
+                onClick={() => {
+                  setLogType("BACKTEST");
+                  setResult("OCCURRED");
+                }}
               >
                 <Rewind className="w-4 h-4" />
                 <span className="text-sm font-medium">Backtest</span>
@@ -314,39 +317,41 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, initialData
             </div>
           </div>
 
-          {/* Occurrence Toggle */}
-          <div className="space-y-2">
-            <Label className="text-[#0F0F0F]/40 text-xs uppercase tracking-[0.15em]">Did the setup appear?</Label>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                className={`h-14 flex flex-col items-center justify-center gap-1 rounded-xl border transition-all duration-300 ${
-                  result === "OCCURRED"
-                    ? "bg-[#8B9A7D] text-white border-[#8B9A7D]"
-                    : "bg-transparent border-[#0F0F0F]/10 text-[#0F0F0F]/50 hover:border-[#0F0F0F]/30"
-                }`}
-                onClick={() => setResult("OCCURRED")}
-              >
-                <Check className="w-5 h-5" />
-                <span className="text-xs font-medium">Yes, it appeared</span>
-              </button>
-              <button
-                type="button"
-                className={`h-14 flex flex-col items-center justify-center gap-1 rounded-xl border transition-all duration-300 ${
-                  result === "NO_SETUP"
-                    ? "bg-[#C45A3B] text-white border-[#C45A3B]"
-                    : "bg-transparent border-[#0F0F0F]/10 text-[#0F0F0F]/50 hover:border-[#0F0F0F]/30"
-                }`}
-                onClick={() => {
-                  setResult("NO_SETUP");
-                  setOutcome(null);
-                }}
-              >
-                <X className="w-5 h-5" />
-                <span className="text-xs font-medium">No setup</span>
-              </button>
+          {/* Occurrence Toggle - only for Live logs (backtests are by definition setups that occurred) */}
+          {!isBacktest && (
+            <div className="space-y-2">
+              <Label className="text-[#0F0F0F]/40 text-xs uppercase tracking-[0.15em]">Did the setup appear?</Label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  className={`h-14 flex flex-col items-center justify-center gap-1 rounded-xl border transition-all duration-300 ${
+                    result === "OCCURRED"
+                      ? "bg-[#8B9A7D] text-white border-[#8B9A7D]"
+                      : "bg-transparent border-[#0F0F0F]/10 text-[#0F0F0F]/50 hover:border-[#0F0F0F]/30"
+                  }`}
+                  onClick={() => setResult("OCCURRED")}
+                >
+                  <Check className="w-5 h-5" />
+                  <span className="text-xs font-medium">Yes, it appeared</span>
+                </button>
+                <button
+                  type="button"
+                  className={`h-14 flex flex-col items-center justify-center gap-1 rounded-xl border transition-all duration-300 ${
+                    result === "NO_SETUP"
+                      ? "bg-[#C45A3B] text-white border-[#C45A3B]"
+                      : "bg-transparent border-[#0F0F0F]/10 text-[#0F0F0F]/50 hover:border-[#0F0F0F]/30"
+                  }`}
+                  onClick={() => {
+                    setResult("NO_SETUP");
+                    setOutcome(null);
+                  }}
+                >
+                  <X className="w-5 h-5" />
+                  <span className="text-xs font-medium">No setup</span>
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Direction/Outcome Toggle - only shown when OCCURRED */}
           {result === "OCCURRED" && (

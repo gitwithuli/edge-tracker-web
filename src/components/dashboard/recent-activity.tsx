@@ -62,19 +62,19 @@ export function RecentActivity({ logs, edgesWithLogs, limit = 5 }: RecentActivit
   };
 
   return (
-    <div className="p-6 sm:p-8 rounded-2xl bg-white border border-[#0F0F0F]/5 h-fit">
+    <div className="p-6 sm:p-8 rounded-2xl bg-white dark:bg-white/[0.03] border border-[#0F0F0F]/5 dark:border-white/10 h-fit">
       <div className="flex items-center gap-4 mb-6">
         <h3
-          className="text-lg tracking-tight"
+          className="text-lg tracking-tight dark:text-white"
           style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
         >
           Recent Activity
         </h3>
-        <div className="flex-1 h-px bg-[#0F0F0F]/10" />
+        <div className="flex-1 h-px bg-[#0F0F0F]/10 dark:bg-white/10" />
       </div>
 
       {recentLogs.length === 0 ? (
-        <p className="text-[#0F0F0F]/40 text-sm py-8 text-center">
+        <p className="text-[#0F0F0F]/40 dark:text-white/40 text-sm py-8 text-center">
           No activity yet. Log your first day to see it here.
         </p>
       ) : (
@@ -83,7 +83,7 @@ export function RecentActivity({ logs, edgesWithLogs, limit = 5 }: RecentActivit
             <Link
               key={log.id}
               href={`/edge/${log.edgeId}`}
-              className="block p-3 rounded-xl bg-[#0F0F0F]/[0.02] hover:bg-[#0F0F0F]/[0.04] transition-colors duration-300"
+              className="block p-3 rounded-xl bg-[#0F0F0F]/[0.02] dark:bg-white/[0.02] hover:bg-[#0F0F0F]/[0.04] dark:hover:bg-white/[0.05] transition-colors duration-300"
             >
               {/* Row 1: Icon + Name + P&L */}
               <div className="flex items-center gap-3">
@@ -98,15 +98,15 @@ export function RecentActivity({ logs, edgesWithLogs, limit = 5 }: RecentActivit
                     )}
                   </div>
                 ) : (
-                  <div className="w-8 h-8 rounded-full flex-shrink-0 bg-[#0F0F0F]/5 flex items-center justify-center">
-                    <X className="w-4 h-4 text-[#0F0F0F]/30" />
+                  <div className="w-8 h-8 rounded-full flex-shrink-0 bg-[#0F0F0F]/5 dark:bg-white/5 flex items-center justify-center">
+                    <X className="w-4 h-4 text-[#0F0F0F]/30 dark:text-white/30" />
                   </div>
                 )}
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
                     <span
-                      className="font-normal text-sm text-[#0F0F0F] truncate"
+                      className="font-normal text-sm text-[#0F0F0F] dark:text-white truncate"
                       style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
                     >
                       {log.edgeName}
@@ -125,7 +125,7 @@ export function RecentActivity({ logs, edgesWithLogs, limit = 5 }: RecentActivit
 
                   {/* Row 2: Meta info */}
                   <div className="flex items-center justify-between mt-1">
-                    <div className="flex items-center gap-1.5 text-[11px] text-[#0F0F0F]/40">
+                    <div className="flex items-center gap-1.5 text-[11px] text-[#0F0F0F]/40 dark:text-white/40">
                       <span>{log.dayOfWeek.slice(0, 3)}</span>
                       <span>•</span>
                       <span>{formatDate(log.date)}</span>
@@ -147,7 +147,7 @@ export function RecentActivity({ logs, edgesWithLogs, limit = 5 }: RecentActivit
                             e.preventDefault();
                             window.open(log.firstTvLink!, '_blank');
                           }}
-                          className="text-[10px] text-[#0F0F0F]/30 hover:text-[#C45A3B] bg-[#0F0F0F]/5 px-1.5 py-0.5 rounded transition-colors flex items-center gap-1"
+                          className="text-[10px] text-[#0F0F0F]/30 dark:text-white/30 hover:text-[#C45A3B] bg-[#0F0F0F]/5 dark:bg-white/5 px-1.5 py-0.5 rounded transition-colors flex items-center gap-1"
                         >
                           <ExternalLink className="w-2.5 h-2.5" />
                           {log.tvLinksCount > 1 ? log.tvLinksCount : ''}

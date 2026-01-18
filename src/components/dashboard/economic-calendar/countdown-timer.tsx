@@ -52,7 +52,7 @@ export function CountdownTimer({ targetTime }: CountdownTimerProps) {
 
   if (isPast) {
     return (
-      <span className="inline-flex items-center gap-1 text-[11px] text-[#0F0F0F]/30">
+      <span className="inline-flex items-center gap-1 text-[11px] text-[#0F0F0F]/30 dark:text-white/30">
         <CheckCircle className="w-3 h-3" />
         Passed
       </span>
@@ -66,7 +66,7 @@ export function CountdownTimer({ targetTime }: CountdownTimerProps) {
           ? "bg-[#C45A3B]/10 text-[#C45A3B]"
           : isSoon
             ? "bg-[#D4A84B]/10 text-[#D4A84B]"
-            : "bg-[#0F0F0F]/5 text-[#0F0F0F]/50"
+            : "bg-[#0F0F0F]/5 dark:bg-white/5 text-[#0F0F0F]/50 dark:text-white/50"
       }`}
     >
       <Clock className={`w-3 h-3 ${isImminent ? "animate-pulse" : ""}`} />
