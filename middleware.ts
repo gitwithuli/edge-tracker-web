@@ -65,12 +65,10 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // If user is not logged in and trying to access protected route, redirect to login
+  // If user is not logged in and trying to access protected route, redirect to landing page
   if (!user && !isPublicRoute) {
     const url = request.nextUrl.clone();
-    url.pathname = '/gate-7k9x';
-    // Optionally preserve the intended destination
-    url.searchParams.set('redirectTo', pathname);
+    url.pathname = '/';
     return NextResponse.redirect(url);
   }
 
