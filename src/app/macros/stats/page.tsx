@@ -38,6 +38,13 @@ import {
   DialogContent,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { MacroDetailSheet } from "@/components/macro-detail-sheet";
 
 const DAYS_OF_WEEK = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -583,23 +590,29 @@ function AddEntryForm({
             <span className="text-[10px] font-medium text-[#C45A3B]">Required</span>
           </div>
           {availableMacros.length > 0 ? (
-            <select
-              value={selectedMacro}
-              onChange={(e) => setSelectedMacro(e.target.value)}
-              className={cn(
-                "w-full h-10 px-3 text-sm bg-white dark:bg-white/5 border rounded-lg focus:outline-none focus:border-[#C45A3B] text-[#0F0F0F] dark:text-white transition-colors",
-                !selectedMacro
-                  ? "border-[#C45A3B]/40 dark:border-[#C45A3B]/40"
-                  : "border-[#8B9A7D] dark:border-[#8B9A7D]"
-              )}
-            >
-              <option value="">Select a macro...</option>
-              {availableMacros.map(macro => (
-                <option key={macro.id} value={macro.id}>
-                  {macro.name}
-                </option>
-              ))}
-            </select>
+            <Select value={selectedMacro} onValueChange={setSelectedMacro}>
+              <SelectTrigger
+                className={cn(
+                  "w-full h-10 bg-white dark:bg-white/5 border rounded-lg text-[#0F0F0F] dark:text-white transition-colors",
+                  !selectedMacro
+                    ? "border-[#C45A3B]/40 dark:border-[#C45A3B]/40"
+                    : "border-[#8B9A7D] dark:border-[#8B9A7D]"
+                )}
+              >
+                <SelectValue placeholder="Select a macro..." />
+              </SelectTrigger>
+              <SelectContent className="bg-white dark:bg-[#1a1a1a] border-[#0F0F0F]/10 dark:border-white/10">
+                {availableMacros.map(macro => (
+                  <SelectItem
+                    key={macro.id}
+                    value={macro.id}
+                    className="text-[#0F0F0F] dark:text-white hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5 focus:bg-[#0F0F0F]/5 dark:focus:bg-white/5 cursor-pointer"
+                  >
+                    {macro.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           ) : macroList.length === 0 ? (
             <div className="text-sm text-[#0F0F0F]/40 dark:text-white/40 italic">No macro sessions selected in filters</div>
           ) : (
@@ -1279,16 +1292,34 @@ export default function MacroStatsPage() {
 
               {/* Dialog Body - Scrollable */}
               <div className="flex-1 overflow-y-auto p-5 sm:p-6 pt-4">
-                {/* Add Entry Button */}
-                {!isAddingEntry && (
-                  <button
-                    onClick={() => setIsAddingEntry(true)}
-                    className="w-full mb-4 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-dashed border-[#0F0F0F]/10 dark:border-white/10 hover:border-[#C45A3B]/40 hover:bg-[#C45A3B]/[0.02] text-[#0F0F0F]/40 dark:text-white/40 hover:text-[#C45A3B] transition-all group"
-                  >
-                    <Plus className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                    <span className="text-sm font-medium">Add Macro Entry</span>
-                  </button>
-                )}
+                {/* Add Entry Button - Hidden for future dates */}
+                {(() => {
+                  const today = new Date().toISOString().split('T')[0];
+                  const isFutureDate = selectedDate && selectedDate > today;
+
+                  if (isFutureDate) {
+                    return (
+                      <div className="w-full mb-4 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-dashed border-[#0F0F0F]/5 dark:border-white/5 text-[#0F0F0F]/30 dark:text-white/30">
+                        <Calendar className="w-4 h-4" />
+                        <span className="text-sm">Cannot log entries for future dates</span>
+                      </div>
+                    );
+                  }
+
+                  if (!isAddingEntry) {
+                    return (
+                      <button
+                        onClick={() => setIsAddingEntry(true)}
+                        className="w-full mb-4 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-dashed border-[#0F0F0F]/10 dark:border-white/10 hover:border-[#C45A3B]/40 hover:bg-[#C45A3B]/[0.02] text-[#0F0F0F]/40 dark:text-white/40 hover:text-[#C45A3B] transition-all group"
+                      >
+                        <Plus className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                        <span className="text-sm font-medium">Add Macro Entry</span>
+                      </button>
+                    );
+                  }
+
+                  return null;
+                })()}
 
                 {/* Add Entry Form */}
                 {isAddingEntry && (
