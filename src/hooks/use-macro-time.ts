@@ -49,12 +49,12 @@ function getNextTradingDay(dayOfWeek: number): string {
   return "tomorrow";
 }
 
-export function useMacroTime(includeAsia = false, includeLondon = true): UseMacroTimeReturn {
+export function useMacroTime(includeAsia = false, includeLondon = true, includeNY = true): UseMacroTimeReturn {
   const [currentTime, setCurrentTime] = useState(new Date());
 
   const macros = useMemo(() => {
-    return getMacrosForDisplay({ includeAsia, includeLondon });
-  }, [includeAsia, includeLondon]);
+    return getMacrosForDisplay({ includeAsia, includeLondon, includeNY });
+  }, [includeAsia, includeLondon, includeNY]);
 
   // Update every second
   useEffect(() => {

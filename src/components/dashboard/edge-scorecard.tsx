@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { Target, TrendingUp, ArrowRight, DollarSign, ArrowUpRight, ArrowDownRight, ChevronDown, ChevronRight, GitBranch } from "lucide-react";
 import type { EdgeWithLogs, TradeLog } from "@/lib/types";
-import { FUTURES_SYMBOLS, type FuturesSymbol } from "@/lib/constants";
+import { getSymbolInfo } from "@/lib/constants";
 import { formatCurrencyCompact } from "@/lib/utils";
 import Link from "next/link";
 
@@ -70,10 +70,10 @@ function calculateEdgeScore(edge: EdgeWithLogs, logs?: TradeLog[]): EdgeScore {
         const entry = l.entryPrice as number;
         const exit = l.exitPrice as number;
         const tradePnl = l.direction === 'LONG' ? exit - entry : entry - exit;
-        const logSymbol = l.symbol as FuturesSymbol | null;
         const contracts = l.positionSize || 1;
-        if (logSymbol && FUTURES_SYMBOLS[logSymbol]) {
-          totalDollarPnl += tradePnl * FUTURES_SYMBOLS[logSymbol].multiplier * contracts;
+        const symbolInfo = l.symbol ? getSymbolInfo(l.symbol) : null;
+        if (symbolInfo) {
+          totalDollarPnl += tradePnl * symbolInfo.multiplier * contracts;
           hasDollarPnl = true;
         }
         return sum + tradePnl;
@@ -91,10 +91,10 @@ function calculateEdgeScore(edge: EdgeWithLogs, logs?: TradeLog[]): EdgeScore {
         let hasLongDollarPnl = false;
         const longPnl = longLogs.reduce((sum, l) => {
           const tradePnl = (l.exitPrice as number) - (l.entryPrice as number);
-          const logSymbol = l.symbol as FuturesSymbol | null;
           const contracts = l.positionSize || 1;
-          if (logSymbol && FUTURES_SYMBOLS[logSymbol]) {
-            longDollarPnl += tradePnl * FUTURES_SYMBOLS[logSymbol].multiplier * contracts;
+          const symbolInfo = l.symbol ? getSymbolInfo(l.symbol) : null;
+          if (symbolInfo) {
+            longDollarPnl += tradePnl * symbolInfo.multiplier * contracts;
             hasLongDollarPnl = true;
           }
           return sum + tradePnl;
@@ -116,10 +116,10 @@ function calculateEdgeScore(edge: EdgeWithLogs, logs?: TradeLog[]): EdgeScore {
         let hasShortDollarPnl = false;
         const shortPnl = shortLogs.reduce((sum, l) => {
           const tradePnl = (l.entryPrice as number) - (l.exitPrice as number);
-          const logSymbol = l.symbol as FuturesSymbol | null;
           const contracts = l.positionSize || 1;
-          if (logSymbol && FUTURES_SYMBOLS[logSymbol]) {
-            shortDollarPnl += tradePnl * FUTURES_SYMBOLS[logSymbol].multiplier * contracts;
+          const symbolInfo = l.symbol ? getSymbolInfo(l.symbol) : null;
+          if (symbolInfo) {
+            shortDollarPnl += tradePnl * symbolInfo.multiplier * contracts;
             hasShortDollarPnl = true;
           }
           return sum + tradePnl;

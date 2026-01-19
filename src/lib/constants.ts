@@ -55,3 +55,37 @@ export const FUTURES_SYMBOLS = {
 
 export type FuturesSymbol = keyof typeof FUTURES_SYMBOLS;
 export const FUTURES_SYMBOL_LIST = Object.keys(FUTURES_SYMBOLS) as FuturesSymbol[];
+
+// FX pairs - multiplier is $ per pip per standard lot (100k units)
+export const FX_SYMBOLS = {
+  EURUSD: { name: "EUR/USD", multiplier: 10, pipDecimals: 4 },
+  GBPUSD: { name: "GBP/USD", multiplier: 10, pipDecimals: 4 },
+  AUDUSD: { name: "AUD/USD", multiplier: 10, pipDecimals: 4 },
+  NZDUSD: { name: "NZD/USD", multiplier: 10, pipDecimals: 4 },
+  USDCAD: { name: "USD/CAD", multiplier: 10, pipDecimals: 4 },
+} as const;
+
+export type FxSymbol = keyof typeof FX_SYMBOLS;
+export const FX_SYMBOL_LIST = Object.keys(FX_SYMBOLS) as FxSymbol[];
+
+// Crypto - multiplier is $ per $ move per coin
+export const CRYPTO_SYMBOLS = {
+  BTCUSD: { name: "BTC/USD", multiplier: 1 },
+  ETHUSD: { name: "ETH/USD", multiplier: 1 },
+  SOLUSD: { name: "SOL/USD", multiplier: 1 },
+} as const;
+
+export type CryptoSymbol = keyof typeof CRYPTO_SYMBOLS;
+export const CRYPTO_SYMBOL_LIST = Object.keys(CRYPTO_SYMBOLS) as CryptoSymbol[];
+
+// Combined type for all tradeable symbols
+export type TradingSymbol = FuturesSymbol | FxSymbol | CryptoSymbol;
+export type AssetClass = 'futures' | 'fx' | 'crypto';
+
+// Helper to get symbol info from any asset class
+export function getSymbolInfo(symbol: string): { name: string; multiplier: number } | null {
+  if (symbol in FUTURES_SYMBOLS) return FUTURES_SYMBOLS[symbol as FuturesSymbol];
+  if (symbol in FX_SYMBOLS) return FX_SYMBOLS[symbol as FxSymbol];
+  if (symbol in CRYPTO_SYMBOLS) return CRYPTO_SYMBOLS[symbol as CryptoSymbol];
+  return null;
+}

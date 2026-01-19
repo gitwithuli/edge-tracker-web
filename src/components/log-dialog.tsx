@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useState, useEffect } from "react";
+import { memo, useState, useEffect, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,7 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Plus, Link as LinkIcon, Loader2, Check, X, Calendar as CalendarIcon, Clock, Rewind, Play, TrendingUp, TrendingDown, Trash2, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { format } from "date-fns";
 import type { TradeLog, TradeLogInput, ResultType, TradingDay, LogType, OutcomeType, DirectionType } from "@/lib/types";
-import { RESULT_TYPES, TRADING_DAYS, LOG_TYPES, DEFAULT_LOG_VALUES, OUTCOME_TYPES, DIRECTION_TYPES, FUTURES_SYMBOLS, type FuturesSymbol } from "@/lib/constants";
+import { RESULT_TYPES, TRADING_DAYS, LOG_TYPES, DEFAULT_LOG_VALUES, OUTCOME_TYPES, DIRECTION_TYPES, FUTURES_SYMBOLS, FX_SYMBOLS, CRYPTO_SYMBOLS, getSymbolInfo, type FuturesSymbol, type FxSymbol, type CryptoSymbol, type AssetClass } from "@/lib/constants";
 import { useEdgeStore } from "@/hooks/use-edge-store";
 import type { OptionalFieldGroup } from "@/lib/schemas";
 
@@ -27,7 +27,13 @@ interface LogDialogProps {
 export const LogDialog = memo(function LogDialog({ edgeName, edgeId, initialData, trigger, defaultLogType, onSave }: LogDialogProps) {
   const [open, setOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const { loadingStates, edges } = useEdgeStore();
+  const { loadingStates, edges, getSubEdges } = useEdgeStore();
+
+  // Filter to only show standalone edges (those without sub-edges)
+  const loggableEdges = useMemo(
+    () => edges.filter(edge => getSubEdges(edge.id).length === 0),
+    [edges, getSubEdges]
+  );
   const isLoading = loadingStates.addingLog || loadingStates.updatingLogId !== null;
   const isEditing = !!initialData;
 
@@ -45,6 +51,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, initialData
   // Optional field states
   const [entryPrice, setEntryPrice] = useState<string>(initialData?.entryPrice?.toString() || '');
   const [exitPrice, setExitPrice] = useState<string>(initialData?.exitPrice?.toString() || '');
+  const [stopLoss, setStopLoss] = useState<string>(initialData?.stopLoss?.toString() || '');
   const [entryTime, setEntryTime] = useState<string>(initialData?.entryTime || '');
   const [exitTime, setExitTime] = useState<string>(initialData?.exitTime || '');
   const [dailyOpen, setDailyOpen] = useState<string>(initialData?.dailyOpen?.toString() || '');
@@ -54,7 +61,8 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, initialData
   const [nyOpen, setNyOpen] = useState<string>(initialData?.nyOpen?.toString() || '');
   const [positionSize, setPositionSize] = useState<string>(initialData?.positionSize?.toString() || '');
   const [direction, setDirection] = useState<DirectionType | null>(initialData?.direction as DirectionType || null);
-  const [symbol, setSymbol] = useState<FuturesSymbol | null>((initialData?.symbol as FuturesSymbol) || null);
+  const [symbol, setSymbol] = useState<string | null>(initialData?.symbol || null);
+  const [assetClass, setAssetClass] = useState<AssetClass>('futures');
 
   // Get enabled fields for current edge
   const currentEdge = edges.find(e => e.id === (selectedEdgeId || edgeId));
@@ -62,6 +70,22 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, initialData
   const hasPriceTracking = enabledFields.includes('entryExitPrices');
 
   const selectedDate = date ? new Date(date + 'T12:00:00') : undefined;
+
+  // Validate stop loss based on direction
+  const stopLossError = useMemo(() => {
+    if (!hasPriceTracking || !direction || !entryPrice || !stopLoss) return null;
+    const entry = parseFloat(entryPrice.replace(',', '.'));
+    const stop = parseFloat(stopLoss.replace(',', '.'));
+    if (isNaN(entry) || isNaN(stop)) return null;
+
+    if (direction === 'LONG' && stop >= entry) {
+      return 'Stop loss must be below entry for long trades';
+    }
+    if (direction === 'SHORT' && stop <= entry) {
+      return 'Stop loss must be above entry for short trades';
+    }
+    return null;
+  }, [hasPriceTracking, direction, entryPrice, stopLoss]);
 
   // Auto-detect day of week when date changes
   useEffect(() => {
@@ -91,6 +115,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, initialData
         // Optional fields
         setEntryPrice(initialData.entryPrice?.toString() || '');
         setExitPrice(initialData.exitPrice?.toString() || '');
+        setStopLoss(initialData.stopLoss?.toString() || '');
         setEntryTime(initialData.entryTime || '');
         setExitTime(initialData.exitTime || '');
         setDailyOpen(initialData.dailyOpen?.toString() || '');
@@ -100,7 +125,13 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, initialData
         setNyOpen(initialData.nyOpen?.toString() || '');
         setPositionSize(initialData.positionSize?.toString() || '');
         setDirection(initialData.direction as DirectionType || null);
-        setSymbol((initialData.symbol as FuturesSymbol) || null);
+        setSymbol(initialData.symbol || null);
+        // Detect asset class from symbol
+        if (initialData.symbol) {
+          if (initialData.symbol in FUTURES_SYMBOLS) setAssetClass('futures');
+          else if (initialData.symbol in FX_SYMBOLS) setAssetClass('fx');
+          else if (initialData.symbol in CRYPTO_SYMBOLS) setAssetClass('crypto');
+        }
       } else {
         setResult(DEFAULT_LOG_VALUES.result);
         setOutcome(null);
@@ -109,10 +140,11 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, initialData
         setNote(DEFAULT_LOG_VALUES.note);
         setTvLinks([]);
         setDate(new Date().toISOString().split('T')[0]);
-        setSelectedEdgeId(edgeId || edges[0]?.id || '');
+        setSelectedEdgeId(edgeId || loggableEdges[0]?.id || '');
         // Reset optional fields
         setEntryPrice('');
         setExitPrice('');
+        setStopLoss('');
         setEntryTime('');
         setExitTime('');
         setDailyOpen('');
@@ -123,6 +155,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, initialData
         setPositionSize('');
         setDirection(null);
         setSymbol(null);
+        setAssetClass('futures');
         // Auto-detect today's day
         const days: TradingDay[] = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] as TradingDay[];
         const today = days[new Date().getDay()];
@@ -131,7 +164,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, initialData
         }
       }
     }
-  }, [open, initialData, defaultLogType, edgeId]);
+  }, [open, initialData, defaultLogType, edgeId, edges]);
 
   // Auto-calculate exit time from entry time + duration
   useEffect(() => {
@@ -213,6 +246,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, initialData
       // Optional fields (only included if enabled on edge)
       entryPrice: hasPriceTracking ? parseNum(entryPrice) : null,
       exitPrice: hasPriceTracking ? parseNum(exitPrice) : null,
+      stopLoss: hasPriceTracking ? parseNum(stopLoss) : null,
       entryTime: enabledFields.includes('entryExitTimes') ? (entryTime || null) : null,
       exitTime: enabledFields.includes('entryExitTimes') ? (exitTime || null) : null,
       dailyOpen: enabledFields.includes('dailyOHLC') ? parseNum(dailyOpen) : null,
@@ -264,8 +298,21 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, initialData
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="p-6 pt-4 space-y-5 overflow-y-auto flex-1">
-          {/* Edge Selector - when editing OR when no specific edge provided */}
-          {((isEditing || !edgeId) && edges.length > 1) && (
+          {/* Edge Display - show which edge when only one available */}
+          {!edgeId && loggableEdges.length === 1 && (
+            <div className="flex items-center gap-3 pb-2">
+              <span className="text-[#0F0F0F]/40 text-xs uppercase tracking-[0.15em]">Logging to</span>
+              <span
+                className="text-sm font-medium text-[#0F0F0F] px-3 py-1 bg-[#0F0F0F]/5 rounded-full"
+                style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+              >
+                {loggableEdges[0].name}
+              </span>
+            </div>
+          )}
+
+          {/* Edge Selector - when editing OR when multiple edges available */}
+          {((isEditing || !edgeId) && loggableEdges.length > 1) && (
             <div className="space-y-2">
               <Label className="text-[#0F0F0F]/40 text-xs uppercase tracking-[0.15em]">Edge</Label>
               <Select value={selectedEdgeId} onValueChange={setSelectedEdgeId}>
@@ -273,7 +320,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, initialData
                   <SelectValue placeholder="Select edge" />
                 </SelectTrigger>
                 <SelectContent className="bg-white border-[#0F0F0F]/10 text-[#0F0F0F] rounded-xl">
-                  {edges.map((edge) => (
+                  {loggableEdges.map((edge) => (
                     <SelectItem key={edge.id} value={edge.id} className="rounded-lg">
                       {edge.name}
                     </SelectItem>
@@ -476,11 +523,11 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, initialData
                     button_previous: "size-7 bg-transparent hover:bg-[#0F0F0F]/5 rounded-full p-0 text-[#0F0F0F]/60 hover:text-[#0F0F0F]",
                     button_next: "size-7 bg-transparent hover:bg-[#0F0F0F]/5 rounded-full p-0 text-[#0F0F0F]/60 hover:text-[#0F0F0F]",
                     weekday: "text-[#0F0F0F]/40 text-xs font-medium w-8",
-                    day: "w-8 h-8",
+                    day: "w-8 h-8 text-[#0F0F0F] hover:bg-[#0F0F0F]/5 rounded-full",
                     today: "bg-[#C45A3B]/10 text-[#C45A3B] rounded-full",
                     selected: "bg-[#0F0F0F] text-[#FAF7F2] rounded-full hover:bg-[#0F0F0F]",
-                    outside: "text-[#0F0F0F]/20",
-                    disabled: "text-[#0F0F0F]/20",
+                    outside: "text-[#0F0F0F]/30",
+                    disabled: "text-[#0F0F0F]/30 hover:bg-transparent cursor-not-allowed",
                   }}
                 />
               </PopoverContent>
@@ -556,8 +603,8 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, initialData
               {enabledFields.includes('entryExitPrices') && (
                 <div className="space-y-3">
                   <div className="space-y-2">
-                    <Label className="text-[#0F0F0F]/40 text-xs uppercase tracking-[0.15em]">Entry / Exit Prices</Label>
-                    <div className="grid grid-cols-2 gap-3">
+                    <Label className="text-[#0F0F0F]/40 text-xs uppercase tracking-[0.15em]">Entry / Stop Loss / Take Profit</Label>
+                    <div className="grid grid-cols-3 gap-3">
                       <Input
                         type="number"
                         step="any"
@@ -569,7 +616,15 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, initialData
                       <Input
                         type="number"
                         step="any"
-                        placeholder="Exit"
+                        placeholder="Stop Loss"
+                        value={stopLoss}
+                        onChange={(e) => setStopLoss(e.target.value)}
+                        className="bg-white border-[#0F0F0F]/10 text-[#C45A3B] rounded-xl h-11 focus:border-[#C45A3B] focus:ring-[#C45A3B]/20 placeholder:text-[#0F0F0F]/30"
+                      />
+                      <Input
+                        type="number"
+                        step="any"
+                        placeholder="Take Profit"
                         value={exitPrice}
                         onChange={(e) => setExitPrice(e.target.value)}
                         className="bg-white border-[#0F0F0F]/10 text-[#0F0F0F] rounded-xl h-11 focus:border-[#C45A3B] focus:ring-[#C45A3B]/20 placeholder:text-[#0F0F0F]/30"
@@ -577,51 +632,97 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, initialData
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[#0F0F0F]/40 text-xs uppercase tracking-[0.15em]">Contract Symbol</Label>
+                    <Label className="text-[#0F0F0F]/40 text-xs uppercase tracking-[0.15em]">Symbol</Label>
+                    {/* Asset Class Tabs */}
+                    <div className="flex gap-1 p-1 bg-[#0F0F0F]/5 rounded-xl">
+                      {(['futures', 'fx', 'crypto'] as const).map((ac) => (
+                        <button
+                          key={ac}
+                          type="button"
+                          onClick={() => { setAssetClass(ac); setSymbol(null); }}
+                          className={`flex-1 py-1.5 text-xs font-medium rounded-lg transition-all ${
+                            assetClass === ac
+                              ? 'bg-white text-[#0F0F0F] shadow-sm'
+                              : 'text-[#0F0F0F]/40 hover:text-[#0F0F0F]/60'
+                          }`}
+                        >
+                          {ac === 'futures' ? 'Futures' : ac === 'fx' ? 'FX' : 'Crypto'}
+                        </button>
+                      ))}
+                    </div>
+                    {/* Symbol Dropdown based on asset class */}
                     <Select
                       value={symbol || ""}
-                      onValueChange={(value) => setSymbol(value as FuturesSymbol || null)}
+                      onValueChange={(value) => setSymbol(value || null)}
                     >
                       <SelectTrigger className="bg-white border-[#0F0F0F]/10 text-[#0F0F0F] rounded-xl h-11 focus:border-[#C45A3B] focus:ring-[#C45A3B]/20">
                         <SelectValue placeholder="Select symbol for $ P&L" />
                       </SelectTrigger>
                       <SelectContent className="bg-white border-[#0F0F0F]/10 text-[#0F0F0F] rounded-xl max-h-[280px]">
-                        <div className="px-2 py-1.5 text-[10px] text-[#0F0F0F]/40 uppercase tracking-wider">
-                          Mini
-                        </div>
-                        {Object.entries(FUTURES_SYMBOLS)
-                          .filter(([, info]) => info.category === 'mini')
-                          .map(([key, info]) => {
-                            const formatted = info.multiplier >= 1000
-                              ? `$${info.multiplier / 1000}k`
-                              : `$${info.multiplier}`;
-                            return (
+                        {assetClass === 'futures' && (
+                          <>
+                            <div className="px-2 py-1.5 text-[10px] text-[#0F0F0F]/40 uppercase tracking-wider">
+                              Mini
+                            </div>
+                            {Object.entries(FUTURES_SYMBOLS)
+                              .filter(([, info]) => info.category === 'mini')
+                              .map(([key, info]) => {
+                                const formatted = info.multiplier >= 1000
+                                  ? `$${info.multiplier / 1000}k`
+                                  : `$${info.multiplier}`;
+                                return (
+                                  <SelectItem key={key} value={key} className="rounded-lg">
+                                    <span className="flex items-center justify-between gap-2 w-full">
+                                      <span className="truncate text-sm">{info.name}</span>
+                                      <span className="text-[#0F0F0F]/40 text-xs shrink-0">{formatted}/pt</span>
+                                    </span>
+                                  </SelectItem>
+                                );
+                              })}
+                            <div className="px-2 py-1.5 text-[10px] text-[#0F0F0F]/40 uppercase tracking-wider mt-1 border-t border-[#0F0F0F]/5">
+                              Micro
+                            </div>
+                            {Object.entries(FUTURES_SYMBOLS)
+                              .filter(([, info]) => info.category === 'micro')
+                              .map(([key, info]) => {
+                                const formatted = info.multiplier >= 1000
+                                  ? `$${info.multiplier / 1000}k`
+                                  : `$${info.multiplier}`;
+                                return (
+                                  <SelectItem key={key} value={key} className="rounded-lg">
+                                    <span className="flex items-center justify-between gap-2 w-full">
+                                      <span className="truncate text-sm">{info.name}</span>
+                                      <span className="text-[#0F0F0F]/40 text-xs shrink-0">{formatted}/pt</span>
+                                    </span>
+                                  </SelectItem>
+                                );
+                              })}
+                          </>
+                        )}
+                        {assetClass === 'fx' && (
+                          <>
+                            {Object.entries(FX_SYMBOLS).map(([key, info]) => (
                               <SelectItem key={key} value={key} className="rounded-lg">
                                 <span className="flex items-center justify-between gap-2 w-full">
                                   <span className="truncate text-sm">{info.name}</span>
-                                  <span className="text-[#0F0F0F]/40 text-xs shrink-0">{formatted}/pt</span>
+                                  <span className="text-[#0F0F0F]/40 text-xs shrink-0">${info.multiplier}/pip</span>
                                 </span>
                               </SelectItem>
-                            );
-                          })}
-                        <div className="px-2 py-1.5 text-[10px] text-[#0F0F0F]/40 uppercase tracking-wider mt-1 border-t border-[#0F0F0F]/5">
-                          Micro
-                        </div>
-                        {Object.entries(FUTURES_SYMBOLS)
-                          .filter(([, info]) => info.category === 'micro')
-                          .map(([key, info]) => {
-                            const formatted = info.multiplier >= 1000
-                              ? `$${info.multiplier / 1000}k`
-                              : `$${info.multiplier}`;
-                            return (
+                            ))}
+                          </>
+                        )}
+                        {assetClass === 'crypto' && (
+                          <>
+                            {Object.entries(CRYPTO_SYMBOLS).map(([key, info]) => (
                               <SelectItem key={key} value={key} className="rounded-lg">
                                 <span className="flex items-center justify-between gap-2 w-full">
                                   <span className="truncate text-sm">{info.name}</span>
-                                  <span className="text-[#0F0F0F]/40 text-xs shrink-0">{formatted}/pt</span>
+                                  <span className="text-[#0F0F0F]/40 text-xs shrink-0">$1/pt</span>
                                 </span>
                               </SelectItem>
-                            );
-                          })}
+                            ))}
+                          </>
+                        )}
                       </SelectContent>
                     </Select>
                   </div>
@@ -735,9 +836,14 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, initialData
             />
           </div>
 
+          {/* Stop Loss Validation Warning */}
+          {stopLossError && (
+            <p className="text-xs text-[#C45A3B] text-center -mt-2 mb-2">{stopLossError}</p>
+          )}
+
           <button
             type="submit"
-            disabled={isLoading || (result === "OCCURRED" && parseInt(duration) < 1) || (result === "OCCURRED" && (hasPriceTracking ? !direction : !outcome)) || (!edgeId && edges.length > 0 && !selectedEdgeId)}
+            disabled={isLoading || !!stopLossError || (result === "OCCURRED" && parseInt(duration) < 1) || (result === "OCCURRED" && (hasPriceTracking ? !direction : !outcome)) || (!edgeId && loggableEdges.length > 0 && !selectedEdgeId)}
             className="w-full bg-[#0F0F0F] text-[#FAF7F2] py-3 rounded-full text-sm font-medium hover:bg-[#C45A3B] transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {isLoading ? (

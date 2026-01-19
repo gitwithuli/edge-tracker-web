@@ -36,6 +36,7 @@ interface MacroStore {
   isLoaded: boolean;
   showAsiaMacros: boolean;
   showLondonMacros: boolean;
+  showNYMacros: boolean;
 
   // Actions
   fetchLogs: () => Promise<void>;
@@ -47,6 +48,7 @@ interface MacroStore {
   removeTvLink: (macroId: string, linkIndex: number) => Promise<void>;
   setShowAsiaMacros: (show: boolean) => void;
   setShowLondonMacros: (show: boolean) => void;
+  setShowNYMacros: (show: boolean) => void;
   migrateFromLocalStorage: () => Promise<void>;
 
   // Queries
@@ -80,6 +82,7 @@ function mapDbToMacroLog(row: Record<string, unknown>): MacroLog {
 interface MacroPreferences {
   showAsiaMacros: boolean;
   showLondonMacros: boolean;
+  showNYMacros: boolean;
 }
 
 const usePreferencesStore = create<MacroPreferences>()(
@@ -87,6 +90,7 @@ const usePreferencesStore = create<MacroPreferences>()(
     (): MacroPreferences => ({
       showAsiaMacros: false,
       showLondonMacros: true,
+      showNYMacros: true,
     }),
     { name: 'macro-preferences' }
   )
@@ -97,6 +101,7 @@ export const useMacroStore = create<MacroStore>()((set, get) => ({
   isLoaded: false,
   showAsiaMacros: usePreferencesStore.getState().showAsiaMacros,
   showLondonMacros: usePreferencesStore.getState().showLondonMacros,
+  showNYMacros: usePreferencesStore.getState().showNYMacros,
 
   setShowAsiaMacros: (show) => {
     set({ showAsiaMacros: show });
@@ -106,6 +111,11 @@ export const useMacroStore = create<MacroStore>()((set, get) => ({
   setShowLondonMacros: (show) => {
     set({ showLondonMacros: show });
     usePreferencesStore.setState({ showLondonMacros: show });
+  },
+
+  setShowNYMacros: (show) => {
+    set({ showNYMacros: show });
+    usePreferencesStore.setState({ showNYMacros: show });
   },
 
   fetchLogs: async () => {
@@ -216,60 +226,58 @@ export const useMacroStore = create<MacroStore>()((set, get) => ({
   },
 
   logMacroForDate: async (macroId, date, data) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      toast.error('Please sign in to log macros');
-      return;
-    }
-
+    // Check for existing log locally first (before any async)
     const existing = get().logs.find(
       log => log.macroId === macroId && log.date === date
     );
 
     if (existing) {
-      // Update existing log
+      // Update existing log - optimistic update FIRST
       const updates = {
-        points_moved: data.pointsMoved ?? existing.pointsMoved,
+        pointsMoved: data.pointsMoved ?? existing.pointsMoved,
         direction: data.direction ?? existing.direction,
-        displacement_quality: data.displacementQuality ?? existing.displacementQuality,
-        liquidity_sweep: data.liquiditySweep ?? existing.liquiditySweep,
+        displacementQuality: data.displacementQuality ?? existing.displacementQuality,
+        liquiditySweep: data.liquiditySweep ?? existing.liquiditySweep,
         note: data.note ?? existing.note,
-        tv_links: data.tvLinks ?? existing.tvLinks,
+        tvLinks: data.tvLinks ?? existing.tvLinks,
       };
 
-      // Optimistic update
       set({
         logs: get().logs.map(log =>
-          log.id === existing.id
-            ? {
-                ...log,
-                pointsMoved: updates.points_moved ?? log.pointsMoved,
-                direction: updates.direction ?? log.direction,
-                displacementQuality: updates.displacement_quality ?? log.displacementQuality,
-                liquiditySweep: updates.liquidity_sweep ?? log.liquiditySweep,
-                note: updates.note ?? log.note,
-                tvLinks: updates.tv_links ?? log.tvLinks,
-              }
-            : log
+          log.id === existing.id ? { ...log, ...updates } : log
         ),
       });
 
+      // Now do async auth check and server update
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('Please sign in to log macros');
+        await get().fetchLogs();
+        return;
+      }
+
       const { error } = await supabase
         .from('macro_logs')
-        .update(updates)
+        .update({
+          points_moved: updates.pointsMoved,
+          direction: updates.direction,
+          displacement_quality: updates.displacementQuality,
+          liquidity_sweep: updates.liquiditySweep,
+          note: updates.note,
+          tv_links: updates.tvLinks,
+        })
         .eq('id', existing.id);
 
       if (error) {
         console.error('Failed to update macro log:', error.message);
         toast.error('Failed to update macro log');
-        // Revert on error
         await get().fetchLogs();
         return;
       }
 
       toast.success('Macro log updated');
     } else {
-      // Create new log
+      // Create new log - optimistic update FIRST (before any async)
       const tempId = `temp-${Date.now()}`;
       const newLog: MacroLog = {
         id: tempId,
@@ -284,8 +292,15 @@ export const useMacroStore = create<MacroStore>()((set, get) => ({
         createdAt: new Date().toISOString(),
       };
 
-      // Optimistic update
       set({ logs: [...get().logs, newLog] });
+
+      // Now do async auth check and server insert
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error('Please sign in to log macros');
+        set({ logs: get().logs.filter(l => l.id !== tempId) });
+        return;
+      }
 
       const { data: insertedData, error } = await supabase
         .from('macro_logs')
@@ -306,7 +321,6 @@ export const useMacroStore = create<MacroStore>()((set, get) => ({
       if (error) {
         console.error('Failed to create macro log:', error.message);
         toast.error('Failed to log macro');
-        // Remove optimistic log
         set({ logs: get().logs.filter(l => l.id !== tempId) });
         return;
       }

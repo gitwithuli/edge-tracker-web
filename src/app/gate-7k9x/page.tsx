@@ -282,7 +282,7 @@ export default function LoginPage() {
                     },
                   },
                 }}
-                providers={["google"]}
+                providers={["google", "facebook"]}
                 redirectTo={typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : undefined}
               />
             </div>

@@ -140,12 +140,15 @@ export const ALL_MACROS: MacroWindow[] = [
 export function getMacrosForDisplay(options: {
   includeAsia?: boolean;
   includeLondon?: boolean;
+  includeNY?: boolean;
 } = {}): MacroWindow[] {
-  const { includeAsia = false, includeLondon = true } = options;
+  const { includeAsia = false, includeLondon = true, includeNY = true } = options;
 
   return ALL_MACROS.filter(macro => {
     if (macro.isAsia && !includeAsia) return false;
     if (macro.isLondon && !includeLondon) return false;
+    // NY macros are those without isAsia or isLondon flags
+    if (!macro.isAsia && !macro.isLondon && !includeNY) return false;
     return true;
   });
 }

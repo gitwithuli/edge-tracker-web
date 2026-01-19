@@ -6,7 +6,7 @@ import { useMacroTime } from "@/hooks/use-macro-time";
 import { useMacroStore, MacroLog, MacroLogInput, MacroDirection, DisplacementQuality, LiquiditySweep } from "@/hooks/use-macro-store";
 import { useEdgeStore } from "@/hooks/use-edge-store";
 import { formatMacroTime, MacroWindow, MACRO_DIRECTIONS, DISPLACEMENT_QUALITIES, LIQUIDITY_SWEEPS } from "@/lib/macro-constants";
-import { Clock, Timer, TrendingUp, TrendingDown, Minus, ChevronLeft, Check, Link as LinkIcon, Plus, Trash2, ExternalLink, ArrowUp, ArrowDown, Activity, BarChart3, Settings, Moon, Download, Upload } from "lucide-react";
+import { Clock, Timer, TrendingDown, Minus, ChevronLeft, Check, Link as LinkIcon, Plus, Trash2, ExternalLink, ArrowUp, ArrowDown, Activity, BarChart3, Settings, Moon, Download, Upload } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { getTVImageUrl } from "@/lib/utils";
@@ -379,7 +379,7 @@ function MacroCard({
 export default function MacrosPage() {
   const router = useRouter();
   const { user, isLoaded } = useEdgeStore();
-  const { logs, isLoaded: macrosLoaded, fetchLogs, logMacro, getLogForMacroToday, getTodaysLogs, addTvLink, removeTvLink, showAsiaMacros, setShowAsiaMacros, showLondonMacros, setShowLondonMacros } = useMacroStore();
+  const { logs, isLoaded: macrosLoaded, fetchLogs, logMacro, getLogForMacroToday, getTodaysLogs, addTvLink, removeTvLink, showAsiaMacros, setShowAsiaMacros, showLondonMacros, setShowLondonMacros, showNYMacros, setShowNYMacros } = useMacroStore();
   const [showSettings, setShowSettings] = useState(false);
 
   const exportMacroData = () => {
@@ -408,7 +408,7 @@ export default function MacrosPage() {
     isTradingHours,
     isWeekend,
     nextTradingDay,
-  } = useMacroTime(showAsiaMacros, showLondonMacros);
+  } = useMacroTime(showAsiaMacros, showLondonMacros, showNYMacros);
 
   useEffect(() => {
     setMounted(true);
@@ -511,73 +511,17 @@ export default function MacrosPage() {
                     className="fixed inset-0 z-40"
                     onClick={() => setShowSettings(false)}
                   />
-                  <div className="absolute right-0 top-full mt-2 w-56 sm:w-64 bg-white dark:bg-[#1a1a1a] rounded-xl border border-[#0F0F0F]/10 dark:border-white/10 shadow-lg z-50 p-3 sm:p-4">
-                    <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 dark:text-white/40 mb-3">Sessions</div>
-
-                    <label className="flex items-center justify-between cursor-pointer group mb-3">
-                      <div className="flex items-center gap-2">
-                        <Clock className="w-4 h-4 text-[#0F0F0F]/40 dark:text-white/40" />
-                        <div>
-                          <span className="text-sm font-medium">London</span>
-                          <p className="text-[10px] text-[#0F0F0F]/40 dark:text-white/40">00:50 - 05:50 ET</p>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => setShowLondonMacros(!showLondonMacros)}
-                        className={cn(
-                          "relative w-10 h-6 rounded-full transition-colors",
-                          showLondonMacros ? "bg-[#C45A3B]" : "bg-[#0F0F0F]/20"
-                        )}
-                      >
-                        <div
-                          className={cn(
-                            "absolute top-1 w-4 h-4 rounded-full bg-white dark:bg-[#0F0F0F] shadow transition-transform",
-                            showLondonMacros ? "translate-x-5" : "translate-x-1"
-                          )}
-                        />
-                      </button>
-                    </label>
-
-                    <label className="flex items-center justify-between cursor-pointer group">
-                      <div className="flex items-center gap-2">
-                        <Moon className="w-4 h-4 text-[#0F0F0F]/40 dark:text-white/40" />
-                        <div>
-                          <span className="text-sm font-medium">Asia</span>
-                          <p className="text-[10px] text-[#0F0F0F]/40 dark:text-white/40">18:50 - 23:50 ET</p>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => setShowAsiaMacros(!showAsiaMacros)}
-                        className={cn(
-                          "relative w-10 h-6 rounded-full transition-colors",
-                          showAsiaMacros ? "bg-[#C45A3B]" : "bg-[#0F0F0F]/20"
-                        )}
-                      >
-                        <div
-                          className={cn(
-                            "absolute top-1 w-4 h-4 rounded-full bg-white dark:bg-[#0F0F0F] shadow transition-transform",
-                            showAsiaMacros ? "translate-x-5" : "translate-x-1"
-                          )}
-                        />
-                      </button>
-                    </label>
-                    <p className="text-xs text-[#0F0F0F]/40 dark:text-white/40 mt-3">
-                      NY session (06:50-15:50) always shown
-                    </p>
-
-                    <div className="border-t border-[#0F0F0F]/10 dark:border-white/10 mt-4 pt-4">
-                      <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 dark:text-white/40 mb-3">Data</div>
-                      <button
-                        onClick={() => {
-                          exportMacroData();
-                          setShowSettings(false);
-                        }}
-                        className="flex items-center gap-2 w-full px-3 py-2 text-sm font-medium rounded-lg hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5 transition-colors"
-                      >
-                        <Download className="w-4 h-4 text-[#0F0F0F]/40 dark:text-white/40" />
-                        Export Macro Logs
-                      </button>
-                    </div>
+                  <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-[#1a1a1a] rounded-xl border border-[#0F0F0F]/10 dark:border-white/10 shadow-lg z-50 p-2">
+                    <button
+                      onClick={() => {
+                        exportMacroData();
+                        setShowSettings(false);
+                      }}
+                      className="flex items-center gap-2 w-full px-3 py-2 text-sm font-medium rounded-lg hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5 transition-colors"
+                    >
+                      <Download className="w-4 h-4 text-[#0F0F0F]/40 dark:text-white/40" />
+                      Export Logs
+                    </button>
                   </div>
                 </>
               )}
@@ -598,6 +542,43 @@ export default function MacrosPage() {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        {/* Session Filters */}
+        <div className="flex flex-wrap items-center gap-2 mb-6">
+          <button
+            onClick={() => setShowAsiaMacros(!showAsiaMacros)}
+            className={cn(
+              "px-3 py-1.5 rounded-full text-xs font-medium transition-colors border",
+              showAsiaMacros
+                ? "bg-[#0F0F0F] dark:bg-white text-white dark:text-[#0F0F0F] border-[#0F0F0F] dark:border-white"
+                : "bg-transparent text-[#0F0F0F]/60 dark:text-white/60 border-[#0F0F0F]/20 dark:border-white/20 hover:border-[#0F0F0F]/40 dark:hover:border-white/40"
+            )}
+          >
+            Asia
+          </button>
+          <button
+            onClick={() => setShowLondonMacros(!showLondonMacros)}
+            className={cn(
+              "px-3 py-1.5 rounded-full text-xs font-medium transition-colors border",
+              showLondonMacros
+                ? "bg-[#0F0F0F] dark:bg-white text-white dark:text-[#0F0F0F] border-[#0F0F0F] dark:border-white"
+                : "bg-transparent text-[#0F0F0F]/60 dark:text-white/60 border-[#0F0F0F]/20 dark:border-white/20 hover:border-[#0F0F0F]/40 dark:hover:border-white/40"
+            )}
+          >
+            London
+          </button>
+          <button
+            onClick={() => setShowNYMacros(!showNYMacros)}
+            className={cn(
+              "px-3 py-1.5 rounded-full text-xs font-medium transition-colors border",
+              showNYMacros
+                ? "bg-[#0F0F0F] dark:bg-white text-white dark:text-[#0F0F0F] border-[#0F0F0F] dark:border-white"
+                : "bg-transparent text-[#0F0F0F]/60 dark:text-white/60 border-[#0F0F0F]/20 dark:border-white/20 hover:border-[#0F0F0F]/40 dark:hover:border-white/40"
+            )}
+          >
+            New York
+          </button>
+        </div>
+
         {/* Weekend Overlay Banner */}
         {isWeekend && (
           <div className="mb-8 relative">
@@ -682,8 +663,8 @@ export default function MacrosPage() {
           </div>
         )}
 
-        {/* Next Up */}
-        {!isWeekend && nextMacro && !activeMacroStatus && (
+        {/* Next Up - Only show countdown when within 60 minutes */}
+        {!isWeekend && nextMacro && minutesToNextMacro <= 60 && (
           <div className="mb-8">
             <div className="text-xs tracking-[0.15em] uppercase text-[#0F0F0F]/40 dark:text-white/40 mb-3 flex items-center gap-2">
               <Timer className="w-3.5 h-3.5" />
@@ -703,31 +684,35 @@ export default function MacrosPage() {
           </div>
         )}
 
-        {/* Upcoming Macros */}
-        {!isWeekend && upcomingMacros.length > (activeMacroStatus ? 0 : 1) && (
-          <div className="mb-8">
-            <div className="text-xs tracking-[0.15em] uppercase text-[#0F0F0F]/40 dark:text-white/40 mb-3">
-              Upcoming ({upcomingMacros.length - (activeMacroStatus ? 0 : 1)} remaining)
-            </div>
-            <div className="space-y-3">
-              {upcomingMacros
-                .filter(s => s.macro.id !== nextMacro?.id || activeMacroStatus)
-                .map(({ macro, minutesUntil }) => (
-                  <MacroCard
+        {/* Upcoming Macros - Simple list without countdown */}
+        {(() => {
+          const showNextMacroCountdown = nextMacro && minutesToNextMacro <= 60;
+          const laterMacros = upcomingMacros.filter(s =>
+            showNextMacroCountdown ? s.macro.id !== nextMacro?.id : true
+          );
+          return laterMacros.length > 0 && !isWeekend && (
+            <div className="mb-8">
+              <div className="text-xs tracking-[0.15em] uppercase text-[#0F0F0F]/40 dark:text-white/40 mb-3">
+                Later Today ({laterMacros.length})
+              </div>
+              <div className="space-y-2">
+                {laterMacros.map(({ macro }) => (
+                  <div
                     key={macro.id}
-                    macro={macro}
-                    status="upcoming"
-                    minutesUntil={minutesUntil}
-                    minutesRemaining={0}
-                    todayLog={getLogForMacroToday(macro.id)}
-                    onLog={(data) => handleLog(macro.id, data)}
-                    onAddTvLink={(link) => addTvLink(macro.id, link)}
-                    onRemoveTvLink={(idx) => removeTvLink(macro.id, idx)}
-                  />
+                    className="flex items-center justify-between p-3 rounded-xl bg-white/50 dark:bg-white/[0.03] border border-[#0F0F0F]/10 dark:border-white/10"
+                  >
+                    <span className="text-sm font-medium text-[#0F0F0F]/70 dark:text-white/70">
+                      {macro.name}
+                    </span>
+                    <span className="text-xs text-[#0F0F0F]/40 dark:text-white/40">
+                      {formatMacroTime(macro.startHour, macro.startMinute)}
+                    </span>
+                  </div>
                 ))}
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Passed Macros */}
         {!isWeekend && passedMacros.length > 0 && (
@@ -787,17 +772,20 @@ export default function MacrosPage() {
           </div>
         )}
 
-        {/* Empty State (non-weekend) */}
+        {/* Empty State - No sessions selected */}
         {!isWeekend && macroStatuses.length === 0 && (
           <div className="text-center py-16">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#0F0F0F]/5 dark:bg-white/5 flex items-center justify-center">
               <Clock className="w-6 h-6 text-[#0F0F0F]/30 dark:text-white/30" />
             </div>
-            <p
-              className="text-[#0F0F0F]/40 dark:text-white/40 text-sm"
-              style={{ fontFamily: "'Libre Baskerville', Georgia, serif", fontStyle: 'italic' }}
+            <h3
+              className="text-lg font-medium text-[#0F0F0F]/60 dark:text-white/60 mb-2"
+              style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
             >
-              No macros scheduled for today
+              No sessions selected
+            </h3>
+            <p className="text-[#0F0F0F]/40 dark:text-white/40 text-sm">
+              Select a session to log your macros
             </p>
           </div>
         )}

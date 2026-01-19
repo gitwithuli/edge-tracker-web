@@ -26,7 +26,6 @@ export function EdgeFormDialog({ edge, trigger, onSuccess, defaultParentEdgeId }
   const [name, setName] = useState(edge?.name || "");
   const [description, setDescription] = useState(edge?.description || "");
   const [enabledFields, setEnabledFields] = useState<OptionalFieldGroup[]>(edge?.enabledFields || []);
-  const [parentEdgeId, setParentEdgeId] = useState<string | null>(edge?.parentEdgeId || defaultParentEdgeId || null);
   const [error, setError] = useState<string | null>(null);
 
   // Get available parent edges (only top-level edges that aren't the current edge)
@@ -34,7 +33,7 @@ export function EdgeFormDialog({ edge, trigger, onSuccess, defaultParentEdgeId }
   const availableParentEdges = edges.filter(e => {
     // Cannot be own parent
     if (edge && e.id === edge.id) return false;
-    // Cannot select an edge that is already a sub-edge
+    // Cannot select an edge that is already a sub-edge (no nested sub-edges)
     if (e.parentEdgeId) return false;
     // Cannot select an edge that has this edge as a sub-edge (prevents cycles)
     if (edge) {
@@ -44,16 +43,23 @@ export function EdgeFormDialog({ edge, trigger, onSuccess, defaultParentEdgeId }
     return true;
   });
 
+  // Validate defaultParentEdgeId - only use if it's a valid top-level edge
+  const validDefaultParentId = defaultParentEdgeId && availableParentEdges.some(e => e.id === defaultParentEdgeId)
+    ? defaultParentEdgeId
+    : null;
+
+  const [parentEdgeId, setParentEdgeId] = useState<string | null>(edge?.parentEdgeId || validDefaultParentId);
+
   useEffect(() => {
     if (open) {
       setName(edge?.name || "");
       setDescription(edge?.description || "");
       setEnabledFields(edge?.enabledFields || []);
-      setParentEdgeId(edge?.parentEdgeId || defaultParentEdgeId || null);
+      setParentEdgeId(edge?.parentEdgeId || validDefaultParentId);
       setError(null);
       setIsSubmitting(false);
     }
-  }, [open, edge, defaultParentEdgeId]);
+  }, [open, edge, validDefaultParentId]);
 
   const toggleField = (field: OptionalFieldGroup) => {
     setEnabledFields(prev =>
@@ -168,10 +174,10 @@ export function EdgeFormDialog({ edge, trigger, onSuccess, defaultParentEdgeId }
                 <SelectTrigger className="bg-white border-[#0F0F0F]/10 text-[#0F0F0F] rounded-xl h-11 focus:border-[#C45A3B] focus:ring-[#C45A3B]/20">
                   <SelectValue placeholder="Select parent edge" />
                 </SelectTrigger>
-                <SelectContent className="bg-white border-[#0F0F0F]/10">
-                  <SelectItem value="none">None (Standalone edge)</SelectItem>
+                <SelectContent className="bg-white border-[#0F0F0F]/10 text-[#0F0F0F] rounded-xl">
+                  <SelectItem value="none" className="rounded-lg">None (Standalone edge)</SelectItem>
                   {availableParentEdges.map((parentEdge) => (
-                    <SelectItem key={parentEdge.id} value={parentEdge.id}>
+                    <SelectItem key={parentEdge.id} value={parentEdge.id} className="rounded-lg">
                       {parentEdge.name}
                     </SelectItem>
                   ))}

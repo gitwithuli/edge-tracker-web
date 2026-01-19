@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { Clock, TrendingUp, TrendingDown, X, ExternalLink } from "lucide-react";
 import type { TradeLog, EdgeWithLogs } from "@/lib/types";
 import { formatCurrencyCompact } from "@/lib/utils";
-import { FUTURES_SYMBOLS, type FuturesSymbol } from "@/lib/constants";
+import { getSymbolInfo } from "@/lib/constants";
 import Link from "next/link";
 
 interface RecentActivityProps {
@@ -31,10 +31,10 @@ export function RecentActivity({ logs, edgesWithLogs, limit = 5 }: RecentActivit
         tradePnl = log.direction === 'LONG'
           ? log.exitPrice - log.entryPrice
           : log.entryPrice - log.exitPrice;
-        const logSymbol = log.symbol as FuturesSymbol | null;
         const contracts = log.positionSize || 1;
-        if (logSymbol && FUTURES_SYMBOLS[logSymbol]) {
-          dollarPnl = tradePnl * FUTURES_SYMBOLS[logSymbol].multiplier * contracts;
+        const symbolInfo = log.symbol ? getSymbolInfo(log.symbol) : null;
+        if (symbolInfo) {
+          dollarPnl = tradePnl * symbolInfo.multiplier * contracts;
         }
       }
 

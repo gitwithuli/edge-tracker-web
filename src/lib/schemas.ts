@@ -56,6 +56,7 @@ export const tradeLogInputSchema = z.object({
   // Optional fields (enabled per edge)
   entryPrice: z.number().nullable().optional(),
   exitPrice: z.number().nullable().optional(),
+  stopLoss: z.number().nullable().optional(),
   entryTime: z.string().nullable().optional(), // HH:MM format
   exitTime: z.string().nullable().optional(),  // HH:MM format
   dailyOpen: z.number().nullable().optional(),
@@ -81,6 +82,7 @@ export const tradeLogSchema = tradeLogInputSchema.extend({
   // Optional fields with explicit nullable types
   entryPrice: z.number().nullable(),
   exitPrice: z.number().nullable(),
+  stopLoss: z.number().nullable(),
   entryTime: z.string().nullable(),
   exitTime: z.string().nullable(),
   dailyOpen: z.number().nullable(),
