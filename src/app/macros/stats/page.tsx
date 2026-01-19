@@ -600,6 +600,8 @@ function AddEntryForm({
                 </option>
               ))}
             </select>
+          ) : macroList.length === 0 ? (
+            <div className="text-sm text-[#0F0F0F]/40 dark:text-white/40 italic">No macro sessions selected in filters</div>
           ) : (
             <div className="text-sm text-[#0F0F0F]/40 dark:text-white/40 italic">All macros already logged for this day</div>
           )}
