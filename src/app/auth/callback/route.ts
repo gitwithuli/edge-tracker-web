@@ -7,6 +7,8 @@ export async function GET(request: Request) {
   const code = requestUrl.searchParams.get('code');
   const origin = requestUrl.origin;
 
+  const response = NextResponse.redirect(`${origin}/dashboard`);
+
   if (code) {
     const cookieStore = await cookies();
     const supabase = createServerClient(
@@ -19,7 +21,9 @@ export async function GET(request: Request) {
           },
           setAll(cookiesToSet) {
             cookiesToSet.forEach(({ name, value, options }) => {
+              // Set on both cookieStore and response
               cookieStore.set(name, value, options);
+              response.cookies.set(name, value, options);
             });
           },
         },
@@ -30,8 +34,9 @@ export async function GET(request: Request) {
 
     if (error) {
       console.error('Session exchange error:', error.message);
+      return NextResponse.redirect(`${origin}/gate-7k9x?error=auth_failed`);
     }
   }
 
-  return NextResponse.redirect(`${origin}/dashboard`);
+  return response;
 }
