@@ -60,14 +60,24 @@ export async function middleware(request: NextRequest) {
   if (user && isAuthRoute) {
     const url = request.nextUrl.clone();
     url.pathname = '/dashboard';
-    return NextResponse.redirect(url);
+    const redirectResponse = NextResponse.redirect(url);
+    // Copy any cookies that were set during session refresh
+    supabaseResponse.cookies.getAll().forEach((cookie) => {
+      redirectResponse.cookies.set(cookie.name, cookie.value);
+    });
+    return redirectResponse;
   }
 
   // If user is not logged in and trying to access protected route, redirect to landing page
   if (!user && !isPublicRoute) {
     const url = request.nextUrl.clone();
     url.pathname = '/';
-    return NextResponse.redirect(url);
+    const redirectResponse = NextResponse.redirect(url);
+    // Copy any cookies that were set during session refresh
+    supabaseResponse.cookies.getAll().forEach((cookie) => {
+      redirectResponse.cookies.set(cookie.name, cookie.value);
+    });
+    return redirectResponse;
   }
 
   return supabaseResponse;
