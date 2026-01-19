@@ -4,14 +4,12 @@ import { NextResponse, type NextRequest } from 'next/server';
 // Routes that don't require authentication
 const publicRoutes = [
   '/',
-  '/login',
   '/gate-7k9x',
   '/auth/callback',
 ];
 
 // Routes that should redirect to dashboard if already logged in
 const authRoutes = [
-  '/login',
   '/gate-7k9x',
 ];
 
