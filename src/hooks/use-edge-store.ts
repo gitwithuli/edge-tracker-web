@@ -189,7 +189,13 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
 
   initializeAuth: async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      // Add timeout to prevent infinite loading if Supabase hangs
+      const sessionPromise = supabase.auth.getSession();
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Session fetch timeout')), 10000)
+      );
+
+      const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]);
 
       if (session?.user) {
         set({ user: session.user, isLoaded: true });
