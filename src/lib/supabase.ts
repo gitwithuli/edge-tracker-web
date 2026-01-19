@@ -1,7 +1,8 @@
-import { createClient } from '@supabase/supabase-js';
+import { createBrowserClient } from '@supabase/ssr';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-// This creates the connection and exports it as "supabase"
-export const supabase = createClient(supabaseUrl, supabaseKey);
+// Browser client that uses cookies for session storage
+// This allows middleware to read the session server-side
+export const supabase = createBrowserClient(supabaseUrl, supabaseKey);
