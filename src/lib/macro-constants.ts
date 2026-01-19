@@ -26,10 +26,11 @@ function createHourlyMacro(
   const nextHour = (hour + 1) % 24;
   const period = hour >= 12 ? 'PM' : 'AM';
   const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
+  const paddedHour = hour.toString().padStart(2, '0');
   return {
-    id: `hourly-${hour.toString().padStart(2, '0')}50`,
-    name: `${displayHour}:50 ${period} Macro`,
-    shortName: `${displayHour}:50${period.charAt(0)}`,
+    id: `hourly-${paddedHour}50`,
+    name: `${paddedHour}.50 Macro`,
+    shortName: `${paddedHour}.50`,
     startHour: hour,
     startMinute: 50,
     endHour: nextHour,
