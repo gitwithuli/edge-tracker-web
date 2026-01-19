@@ -13,7 +13,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Plus, Pencil, Trash2, Target, Loader2 } from "lucide-react";
+import { ArrowLeft, Plus, Pencil, Trash2, Target, Loader2, ChevronRight } from "lucide-react";
 import { EdgeFormDialog } from "@/components/edge-form-dialog";
 import { GrainOverlay } from "@/components/grain-overlay";
 import Link from "next/link";
@@ -51,6 +51,88 @@ export default function EdgeSettingsPage() {
 
   const getLogCount = (edgeId: string) => {
     return logs.filter(l => l.edgeId === edgeId).length;
+  };
+
+  // Get parent edges (no parentEdgeId) and standalone edges
+  const parentEdges = edges.filter(e => !e.parentEdgeId);
+  const getSubEdges = (parentId: string) => edges.filter(e => e.parentEdgeId === parentId);
+
+  // Helper to render an edge card
+  const EdgeCard = ({ edge, isSubEdge = false, index }: { edge: typeof edges[0]; isSubEdge?: boolean; index: number }) => {
+    const logCount = getLogCount(edge.id);
+    const isDeleting = loadingStates.deletingEdgeId === edge.id;
+    const subEdges = getSubEdges(edge.id);
+    const hasSubEdges = subEdges.length > 0;
+
+    return (
+      <div key={edge.id}>
+        <div
+          className={`p-4 sm:p-5 lg:p-6 rounded-xl sm:rounded-2xl bg-white dark:bg-white/[0.03] border border-[#0F0F0F]/5 dark:border-white/10 hover:border-[#0F0F0F]/10 dark:hover:border-white/20 transition-all duration-300 opacity-0 ${mounted ? 'animate-slide-up' : ''} ${isSubEdge ? 'ml-4 sm:ml-6 border-l-2 border-l-[#8B9A7D]/30 dark:border-l-[#8B9A7D]/20' : ''}`}
+          style={{ animationDelay: `${0.15 + index * 0.05}s` }}
+        >
+          <div className="flex items-start justify-between">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                {isSubEdge && (
+                  <ChevronRight className="w-3 h-3 text-[#8B9A7D]" />
+                )}
+                <h3
+                  className={`font-normal tracking-tight text-[#0F0F0F] dark:text-white ${isSubEdge ? 'text-sm sm:text-base' : 'text-base sm:text-lg'}`}
+                  style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                >
+                  {edge.name}
+                </h3>
+                {hasSubEdges && (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#8B9A7D]/10 text-[#8B9A7D] font-medium">
+                    {subEdges.length} sub
+                  </span>
+                )}
+              </div>
+              {edge.description && (
+                <p className={`text-[#0F0F0F]/40 dark:text-white/40 mt-1 line-clamp-2 ${isSubEdge ? 'text-xs' : 'text-xs sm:text-sm'}`}>
+                  {edge.description}
+                </p>
+              )}
+              <p className="text-[10px] sm:text-xs text-[#0F0F0F]/30 dark:text-white/30 mt-2 sm:mt-3 uppercase tracking-wider">
+                {logCount} day{logCount !== 1 ? "s" : ""} logged
+              </p>
+            </div>
+
+            <div className="flex items-center gap-0.5 sm:gap-1 ml-2 sm:ml-4">
+              <EdgeFormDialog
+                edge={edge}
+                trigger={
+                  <button className="p-2 sm:p-2.5 rounded-full text-[#0F0F0F]/30 dark:text-white/30 hover:text-[#0F0F0F] dark:hover:text-white hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5 transition-all duration-300">
+                    <Pencil className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  </button>
+                }
+              />
+
+              <button
+                className="p-2 sm:p-2.5 rounded-full text-[#0F0F0F]/30 dark:text-white/30 hover:text-[#C45A3B] hover:bg-[#C45A3B]/5 transition-all duration-300 disabled:opacity-50"
+                onClick={() => setDeleteTarget({ id: edge.id, name: edge.name })}
+                disabled={isDeleting}
+              >
+                {isDeleting ? (
+                  <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" />
+                ) : (
+                  <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Render sub-edges */}
+        {hasSubEdges && (
+          <div className="mt-2 space-y-2">
+            {subEdges.map((subEdge, subIndex) => (
+              <EdgeCard key={subEdge.id} edge={subEdge} isSubEdge index={index + subIndex + 1} />
+            ))}
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -169,61 +251,10 @@ export default function EdgeSettingsPage() {
               />
             </div>
           ) : (
-            <div className="space-y-2 sm:space-y-3">
-              {edges.map((edge, i) => {
-                const logCount = getLogCount(edge.id);
-                const isDeleting = loadingStates.deletingEdgeId === edge.id;
-
-                return (
-                  <div
-                    key={edge.id}
-                    className={`p-4 sm:p-5 lg:p-6 rounded-xl sm:rounded-2xl bg-white dark:bg-white/[0.03] border border-[#0F0F0F]/5 dark:border-white/10 hover:border-[#0F0F0F]/10 dark:hover:border-white/20 transition-all duration-300 opacity-0 ${mounted ? 'animate-slide-up' : ''}`}
-                    style={{ animationDelay: `${0.15 + i * 0.05}s` }}
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1 min-w-0">
-                        <h3
-                          className="text-base sm:text-lg font-normal tracking-tight text-[#0F0F0F] dark:text-white"
-                          style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
-                        >
-                          {edge.name}
-                        </h3>
-                        {edge.description && (
-                          <p className="text-xs sm:text-sm text-[#0F0F0F]/40 dark:text-white/40 mt-1 line-clamp-2">
-                            {edge.description}
-                          </p>
-                        )}
-                        <p className="text-[10px] sm:text-xs text-[#0F0F0F]/30 dark:text-white/30 mt-2 sm:mt-3 uppercase tracking-wider">
-                          {logCount} day{logCount !== 1 ? "s" : ""} logged
-                        </p>
-                      </div>
-
-                      <div className="flex items-center gap-0.5 sm:gap-1 ml-2 sm:ml-4">
-                        <EdgeFormDialog
-                          edge={edge}
-                          trigger={
-                            <button className="p-2 sm:p-2.5 rounded-full text-[#0F0F0F]/30 dark:text-white/30 hover:text-[#0F0F0F] dark:hover:text-white hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5 transition-all duration-300">
-                              <Pencil className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                            </button>
-                          }
-                        />
-
-                        <button
-                          className="p-2 sm:p-2.5 rounded-full text-[#0F0F0F]/30 dark:text-white/30 hover:text-[#C45A3B] hover:bg-[#C45A3B]/5 transition-all duration-300 disabled:opacity-50"
-                          onClick={() => setDeleteTarget({ id: edge.id, name: edge.name })}
-                          disabled={isDeleting}
-                        >
-                          {isDeleting ? (
-                            <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" />
-                          ) : (
-                            <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+            <div className="space-y-3 sm:space-y-4">
+              {parentEdges.map((edge, i) => (
+                <EdgeCard key={edge.id} edge={edge} index={i} />
+              ))}
             </div>
           )}
         </main>
