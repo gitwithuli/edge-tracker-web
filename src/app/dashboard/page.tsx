@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, useMemo, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEdgeStore } from "@/hooks/use-edge-store";
-import { LogOut, Plus, Settings, Play, Rewind, BarChart3, Download, Timer, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { LogOut, Plus, Settings, Play, Rewind, BarChart3, Download, Timer, Loader2, Sparkles } from "lucide-react";
 import { EconomicCalendarSidebar } from "@/components/dashboard/economic-calendar";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { StatsCards } from "@/components/dashboard/stats-cards";
@@ -22,11 +23,30 @@ import { LogDialog } from "@/components/log-dialog";
 import Link from "next/link";
 import type { LogType } from "@/lib/types";
 
+// Separate component that uses useSearchParams (requires Suspense boundary)
+function UpgradeHandler() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const { user, fetchSubscription } = useEdgeStore();
+
+  useEffect(() => {
+    if (searchParams.get("upgraded") === "true" && user) {
+      fetchSubscription().then(() => {
+        toast.success("Subscription upgraded successfully!");
+        router.replace("/dashboard", { scroll: false });
+      });
+    }
+  }, [searchParams, user, fetchSubscription, router]);
+
+  return null;
+}
+
 export default function DashboardPage() {
   const { logs, isLoaded, logout, user, addLog, deleteLog, updateLog, getEdgesWithLogs } = useEdgeStore();
   const [mounted, setMounted] = useState(false);
   const [activeView, setActiveView] = useState<LogType>("FRONTTEST");
   const [liveDateRange, setLiveDateRange] = useState<DateRange>(getDefaultDateRange);
+  const router = useRouter();
 
   useEffect(() => {
     setMounted(true);
@@ -58,7 +78,6 @@ export default function DashboardPage() {
   }, [edgesWithLogs, activeView, liveDateRange]);
 
   const totalLogsForType = logsByType.length;
-  const router = useRouter();
 
   // Redirect to login if not authenticated (after auth has loaded)
   useEffect(() => {
@@ -89,6 +108,9 @@ export default function DashboardPage() {
 
   return (
     <>
+      <Suspense fallback={null}>
+        <UpgradeHandler />
+      </Suspense>
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap');
 
@@ -154,6 +176,17 @@ export default function DashboardPage() {
                   }
                 />
               )}
+
+              <Link
+                href="/ai-journal"
+                className="relative group p-2 rounded-full transition-all duration-300"
+                title="AI Chart Parser"
+                aria-label="AI Chart Parser"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-violet-500/20 via-purple-500/20 to-fuchsia-500/20 rounded-full blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="absolute inset-0 bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-500 rounded-full opacity-0 group-hover:opacity-10 transition-opacity duration-300" />
+                <Sparkles className="relative w-4 h-4 text-purple-500 dark:text-purple-400 group-hover:text-purple-600 dark:group-hover:text-purple-300 transition-colors duration-300" aria-hidden="true" />
+              </Link>
 
               <Link
                 href="/macros"

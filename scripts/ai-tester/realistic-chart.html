@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <script src="https://unpkg.com/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #131722; }
+    #chart { width: 1200px; height: 700px; position: relative; }
+
+    /* Symbol header like real TradingView */
+    .chart-header {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      z-index: 200;
+      font-family: -apple-system, BlinkMacSystemFont, 'Trebuchet MS', Roboto, Ubuntu, sans-serif;
+    }
+
+    .symbol-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: #d1d4dc;
+      letter-spacing: 0.5px;
+    }
+
+    .symbol-info {
+      font-size: 12px;
+      color: #787b86;
+      margin-left: 8px;
+    }
+
+    /* Position tool overlay */
+    .position-overlay {
+      position: absolute;
+      pointer-events: none;
+      z-index: 100;
+    }
+
+    .zone {
+      position: absolute;
+      left: 0;
+      width: 100%;
+    }
+
+    .stop-zone { background: rgba(239, 83, 80, 0.12); }
+    .target-zone { background: rgba(38, 166, 154, 0.12); }
+
+    .level-line {
+      position: absolute;
+      left: 0;
+      height: 1px;
+    }
+
+    .stop-line {
+      background: #ef5350;
+      box-shadow: 0 0 4px rgba(239, 83, 80, 0.5);
+    }
+    .entry-line {
+      background: #2196f3;
+      box-shadow: 0 0 4px rgba(33, 150, 243, 0.5);
+    }
+    .target-line {
+      background: #26a69a;
+      box-shadow: 0 0 4px rgba(38, 166, 154, 0.5);
+    }
+
+    /* Points/stats labels inside position box */
+    .stat-label {
+      position: absolute;
+      font-family: -apple-system, BlinkMacSystemFont, 'Trebuchet MS', sans-serif;
+      font-size: 11px;
+      padding: 3px 6px;
+      border-radius: 3px;
+      z-index: 101;
+    }
+
+    .risk-stat {
+      background: rgba(239, 83, 80, 0.2);
+      color: #ef5350;
+      border: 1px solid rgba(239, 83, 80, 0.3);
+    }
+
+    .target-stat {
+      background: rgba(38, 166, 154, 0.2);
+      color: #26a69a;
+      border: 1px solid rgba(38, 166, 154, 0.3);
+    }
+
+    .rr-label {
+      position: absolute;
+      font-family: -apple-system, BlinkMacSystemFont, 'Trebuchet MS', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      color: #2196f3;
+      background: rgba(33, 150, 243, 0.15);
+      padding: 4px 10px;
+      border-radius: 3px;
+      border: 1px solid rgba(33, 150, 243, 0.3);
+    }
+  </style>
+</head>
+<body>
+  <div id="chart">
+    <div class="chart-header">
+      <span class="symbol-name" id="symbol-display">NQH2026</span>
+      <span class="symbol-info">• 5 • CME_MINI</span>
+    </div>
+  </div>
+
+  <script>
+    const CONFIG = window.CHART_CONFIG || {
+      symbol: "NQH2026",
+      direction: "SHORT",
+      entryPrice: 21400.00,
+      stopLoss: 21430.00,
+      takeProfit: 21200.00,
+      riskReward: 6.67
+    };
+
+    // Update header
+    document.getElementById('symbol-display').textContent = CONFIG.symbol;
+
+    // Create chart
+    const chartContainer = document.getElementById('chart');
+    const chart = LightweightCharts.createChart(chartContainer, {
+      width: 1200,
+      height: 700,
+      layout: {
+        background: { type: 'solid', color: '#131722' },
+        textColor: '#787b86',
+        fontSize: 11,
+      },
+      grid: {
+        vertLines: { color: '#1e222d' },
+        horzLines: { color: '#1e222d' },
+      },
+      crosshair: {
+        mode: LightweightCharts.CrosshairMode.Normal,
+        vertLine: { visible: false },
+        horzLine: { visible: false },
+      },
+      rightPriceScale: {
+        borderColor: '#2a2e39',
+        scaleMargins: { top: 0.05, bottom: 0.05 },
+        entireTextOnly: true,
+      },
+      timeScale: {
+        borderColor: '#2a2e39',
+        timeVisible: true,
+        secondsVisible: false,
+      },
+      handleScroll: false,
+      handleScale: false,
+    });
+
+    const candlestickSeries = chart.addCandlestickSeries({
+      upColor: '#26a69a',
+      downColor: '#ef5350',
+      borderVisible: false,
+      wickUpColor: '#26a69a',
+      wickDownColor: '#ef5350',
+    });
+
+    // Calculate price range to ensure position tool fits nicely
+    const allPrices = [CONFIG.entryPrice, CONFIG.stopLoss, CONFIG.takeProfit];
+    const positionMin = Math.min(...allPrices);
+    const positionMax = Math.max(...allPrices);
+    const positionRange = positionMax - positionMin;
+    const chartPadding = positionRange * 0.3;
+    const chartMin = positionMin - chartPadding;
+    const chartMax = positionMax + chartPadding;
+
+    // Generate realistic OHLC data that stays within visible range
+    function generateCandleData() {
+      const data = [];
+      const numCandles = 70 + Math.floor(Math.random() * 30);
+      let time = Math.floor(Date.now() / 1000) - numCandles * 300;
+
+      // Start price
+      let price = CONFIG.entryPrice + (Math.random() - 0.5) * positionRange * 0.3;
+      const isShort = CONFIG.direction === 'SHORT';
+
+      for (let i = 0; i < numCandles; i++) {
+        const progress = i / numCandles;
+
+        // Create realistic price action
+        let bias = 0;
+        if (progress < 0.25) {
+          bias = isShort ? 0.4 : -0.4;
+        } else if (progress < 0.5) {
+          bias = isShort ? 0.2 : -0.2;
+        } else if (progress < 0.75) {
+          bias = 0;
+        } else {
+          bias = isShort ? -0.3 : 0.3;
+        }
+
+        const volatility = positionRange * 0.025;
+        const change = (Math.random() - 0.5 + bias * 0.4) * volatility;
+
+        const open = price;
+        const close = price + change;
+
+        // Keep within chart bounds
+        const clampedClose = Math.max(chartMin + chartPadding * 0.5, Math.min(chartMax - chartPadding * 0.5, close));
+
+        const high = Math.max(open, clampedClose) + Math.random() * volatility * 0.4;
+        const low = Math.min(open, clampedClose) - Math.random() * volatility * 0.4;
+
+        data.push({
+          time: time,
+          open: Math.round(open * 100) / 100,
+          high: Math.round(high * 100) / 100,
+          low: Math.round(low * 100) / 100,
+          close: Math.round(clampedClose * 100) / 100,
+        });
+
+        price = clampedClose;
+        time += 300;
+      }
+
+      return data;
+    }
+
+    const candleData = generateCandleData();
+    candlestickSeries.setData(candleData);
+
+    // Force price scale to show position tool range
+    candlestickSeries.applyOptions({
+      autoscaleInfoProvider: () => ({
+        priceRange: {
+          minValue: chartMin,
+          maxValue: chartMax,
+        },
+      }),
+    });
+
+    chart.timeScale().fitContent();
+
+    // Price axis labels only (no horizontal lines - AI must read from axis)
+    // Stop loss = orange (different from default red current price label)
+    candlestickSeries.createPriceLine({
+      price: CONFIG.stopLoss,
+      color: '#ff9800',
+      lineWidth: 0,
+      lineVisible: false,
+      axisLabelVisible: true,
+      title: '',
+    });
+
+    candlestickSeries.createPriceLine({
+      price: CONFIG.entryPrice,
+      color: '#2196f3',
+      lineWidth: 0,
+      lineVisible: false,
+      axisLabelVisible: true,
+      title: '',
+    });
+
+    candlestickSeries.createPriceLine({
+      price: CONFIG.takeProfit,
+      color: '#26a69a',
+      lineWidth: 0,
+      lineVisible: false,
+      axisLabelVisible: true,
+      title: '',
+    });
+
+    // Wait for chart to render, then add position tool overlay
+    setTimeout(() => {
+      addPositionTool();
+    }, 800);
+
+    function addPositionTool() {
+      const chartElement = chartContainer.querySelector('canvas').parentElement;
+
+      // Convert prices to pixel coordinates
+      const entryY = candlestickSeries.priceToCoordinate(CONFIG.entryPrice);
+      const stopY = candlestickSeries.priceToCoordinate(CONFIG.stopLoss);
+      const targetY = candlestickSeries.priceToCoordinate(CONFIG.takeProfit);
+
+      if (entryY === null || stopY === null || targetY === null) {
+        console.error('Could not convert prices to coordinates');
+        return;
+      }
+
+      // Position tool placement - overlay on candles (right side where price action is)
+      const chartWidth = 1200 - 60; // subtract price axis width
+      const toolWidth = 200 + Math.random() * 150;
+      const toolLeft = chartWidth - toolWidth - 50 - Math.random() * 200; // position on right side over candles
+      const topY = Math.min(stopY, targetY);
+      const bottomY = Math.max(stopY, targetY);
+      const height = bottomY - topY;
+
+      // Create overlay container
+      const overlay = document.createElement('div');
+      overlay.className = 'position-overlay';
+      overlay.style.left = toolLeft + 'px';
+      overlay.style.top = topY + 'px';
+      overlay.style.width = toolWidth + 'px';
+      overlay.style.height = height + 'px';
+
+      const isShort = CONFIG.direction === 'SHORT';
+      const entryOffset = entryY - topY;
+
+      // Stop zone
+      const stopZone = document.createElement('div');
+      stopZone.className = 'zone stop-zone';
+      if (isShort) {
+        stopZone.style.top = '0';
+        stopZone.style.height = entryOffset + 'px';
+      } else {
+        stopZone.style.top = entryOffset + 'px';
+        stopZone.style.height = (height - entryOffset) + 'px';
+      }
+      overlay.appendChild(stopZone);
+
+      // Target zone
+      const targetZone = document.createElement('div');
+      targetZone.className = 'zone target-zone';
+      if (isShort) {
+        targetZone.style.top = entryOffset + 'px';
+        targetZone.style.height = (height - entryOffset) + 'px';
+      } else {
+        targetZone.style.top = '0';
+        targetZone.style.height = entryOffset + 'px';
+      }
+      overlay.appendChild(targetZone);
+
+      chartElement.appendChild(overlay);
+
+      // Horizontal lines removed - AI must read from price axis only
+
+      // Stats inside position box - matching TradingView format
+      const pointsRisked = Math.abs(CONFIG.entryPrice - CONFIG.stopLoss);
+      const pointsTarget = Math.abs(CONFIG.entryPrice - CONFIG.takeProfit);
+      const pctRisk = ((pointsRisked / CONFIG.entryPrice) * 100).toFixed(3);
+      const pctTarget = ((pointsTarget / CONFIG.entryPrice) * 100).toFixed(3);
+      const dollarRisk = Math.round(pointsRisked * 20);
+      const dollarTarget = Math.round(pointsTarget * 20);
+
+      // Risk stat (in stop zone) - format: "points (pct%) contracts dollars"
+      const riskStat = document.createElement('div');
+      riskStat.className = 'stat-label risk-stat';
+      riskStat.textContent = `${pointsRisked.toFixed(2)} (${pctRisk}%) 1 ${dollarRisk}`;
+      riskStat.style.left = (toolLeft + 10) + 'px';
+      const riskStatY = isShort ? (topY + 15) : (bottomY - 25);
+      riskStat.style.top = riskStatY + 'px';
+      chartElement.appendChild(riskStat);
+
+      // Entry stat with R:R - format: "points ~ pct \n RR"
+      const entryStat = document.createElement('div');
+      entryStat.className = 'stat-label';
+      entryStat.style.background = 'rgba(50, 50, 60, 0.9)';
+      entryStat.style.color = '#9ca3af';
+      entryStat.style.border = '1px solid #3a3f4b';
+      entryStat.style.textAlign = 'center';
+      entryStat.style.lineHeight = '1.4';
+      entryStat.innerHTML = `${isShort ? '-' : ''}${pointsRisked.toFixed(2)} ~ ${pctRisk}<br><span style="font-weight:600;color:#d1d4dc">${CONFIG.riskReward.toFixed(2)}</span>`;
+      entryStat.style.left = (toolLeft + toolWidth/2 - 50) + 'px';
+      entryStat.style.top = (entryY - 18) + 'px';
+      chartElement.appendChild(entryStat);
+
+      // Target stat (in target zone)
+      const targetStat = document.createElement('div');
+      targetStat.className = 'stat-label target-stat';
+      targetStat.textContent = `${pointsTarget.toFixed(2)} (${pctTarget}%) 1 ${dollarTarget}`;
+      targetStat.style.left = (toolLeft + 10) + 'px';
+      const targetStatY = isShort ? (bottomY - 25) : (topY + 15);
+      targetStat.style.top = targetStatY + 'px';
+      chartElement.appendChild(targetStat);
+    }
+  </script>
+</body>
+</html>

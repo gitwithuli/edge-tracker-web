@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import type { User } from '@supabase/supabase-js';
-import type { Edge, EdgeInput, TradeLog, TradeLogInput, EdgeWithLogs } from '@/lib/types';
+import type { Edge, EdgeInput, TradeLog, TradeLogInput, EdgeWithLogs, SubscriptionTier, UserSubscription } from '@/lib/types';
 import type { OptionalFieldGroup } from '@/lib/schemas';
 import { enqueue, dequeue, getQueue, type QueuedOperation } from '@/lib/request-queue';
 
@@ -35,6 +35,7 @@ interface EdgeStore {
   error: string | null;
   loadingStates: LoadingStates;
   mfaEnabled: boolean;
+  subscription: UserSubscription | null;
 
   // Computed
   getEdgesWithLogs: () => EdgeWithLogs[];
@@ -69,6 +70,11 @@ interface EdgeStore {
   enrollMfa: () => Promise<MfaEnrollResult | null>;
   verifyMfa: (factorId: string, code: string) => Promise<boolean>;
   challengeMfa: (code: string) => Promise<boolean>;
+
+  // Subscription
+  fetchSubscription: () => Promise<void>;
+  canAccess: (feature: 'macros' | 'backtest' | 'unlimited_edges' | 'ai_parser' | 'voice_journal' | 'ai_summaries') => boolean;
+  getEdgeLimit: () => number;
 
   // Queue
   processPendingOperations: () => Promise<void>;
@@ -151,6 +157,7 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
   error: null,
   loadingStates: initialLoadingStates,
   mfaEnabled: false,
+  subscription: null,
 
   // Computed: Get edges with their logs attached
   getEdgesWithLogs: () => {
@@ -204,6 +211,7 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
           get().fetchEdges(),
           get().fetchLogs(),
           get().checkMfaStatus(),
+          get().fetchSubscription(),
         ]);
       } else {
         set({ isLoaded: true });
@@ -217,9 +225,10 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
             get().fetchEdges(),
             get().fetchLogs(),
             get().checkMfaStatus(),
+            get().fetchSubscription(),
           ]);
         } else if (event === 'SIGNED_OUT') {
-          set({ user: null, logs: [], edges: [], mfaEnabled: false });
+          set({ user: null, logs: [], edges: [], mfaEnabled: false, subscription: null });
         }
       });
 
@@ -844,6 +853,73 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
       set({ loadingStates: { ...get().loadingStates, challengingMfa: false } });
       return false;
     }
+  },
+
+  // === SUBSCRIPTION ===
+
+  fetchSubscription: async () => {
+    const { user } = get();
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('user_subscriptions')
+        .select('subscription_tier, subscription_ends_at, stripe_customer_id, stripe_subscription_id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error) {
+        // No subscription found - default to retail
+        if (error.code === 'PGRST116') {
+          set({
+            subscription: {
+              tier: 'retail',
+              endsAt: null,
+              stripeCustomerId: null,
+              stripeSubscriptionId: null,
+            }
+          });
+          return;
+        }
+        console.error('Failed to fetch subscription:', error.message);
+        return;
+      }
+
+      set({
+        subscription: {
+          tier: (data.subscription_tier as SubscriptionTier) || 'retail',
+          endsAt: data.subscription_ends_at || null,
+          stripeCustomerId: data.stripe_customer_id || null,
+          stripeSubscriptionId: data.stripe_subscription_id || null,
+        }
+      });
+    } catch (err) {
+      console.error('Subscription fetch failed:', err);
+    }
+  },
+
+  canAccess: (feature) => {
+    const { subscription } = get();
+    const tier = subscription?.tier || 'retail';
+
+    const featureAccess: Record<string, SubscriptionTier[]> = {
+      macros: ['trader', 'inner_circle'],
+      backtest: ['trader', 'inner_circle'],
+      unlimited_edges: ['trader', 'inner_circle'],
+      ai_parser: ['inner_circle'],
+      voice_journal: ['inner_circle'],
+      ai_summaries: ['inner_circle'],
+    };
+
+    return featureAccess[feature]?.includes(tier) || false;
+  },
+
+  getEdgeLimit: () => {
+    const { subscription } = get();
+    const tier = subscription?.tier || 'retail';
+
+    if (tier === 'retail') return 1;
+    return Infinity;
   },
 
   // === QUEUE PROCESSING ===

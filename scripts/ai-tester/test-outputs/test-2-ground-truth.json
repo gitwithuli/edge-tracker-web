@@ -1,0 +1,13 @@
+{
+  "symbol": "MES1!",
+  "timeframe": "60",
+  "exchange": "CME_MINI",
+  "direction": "SHORT",
+  "entryPrice": 6000.5,
+  "stopLoss": 6021.75,
+  "takeProfit": 5807.25,
+  "riskReward": 9.14,
+  "date": "2026-01-18",
+  "time": "13:00",
+  "outcome": "OPEN"
+}

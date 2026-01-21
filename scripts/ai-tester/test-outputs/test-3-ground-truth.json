@@ -1,0 +1,13 @@
+{
+  "symbol": "ESH2026",
+  "timeframe": "D",
+  "exchange": "CME_MINI",
+  "direction": "LONG",
+  "entryPrice": 5945.25,
+  "stopLoss": 5926.5,
+  "takeProfit": 6122,
+  "riskReward": 9.38,
+  "date": "2026-01-01",
+  "time": "15:15",
+  "outcome": "OPEN"
+}

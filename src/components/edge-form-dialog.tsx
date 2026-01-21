@@ -10,6 +10,7 @@ import { Loader2, Check } from "lucide-react";
 import type { Edge, EdgeInput } from "@/lib/types";
 import { useEdgeStore } from "@/hooks/use-edge-store";
 import { OPTIONAL_FIELD_GROUPS, FIELD_GROUP_INFO, type OptionalFieldGroup } from "@/lib/schemas";
+import { UpgradePrompt } from "@/components/upgrade-prompt";
 
 interface EdgeFormDialogProps {
   edge?: Edge;
@@ -20,7 +21,12 @@ interface EdgeFormDialogProps {
 
 export function EdgeFormDialog({ edge, trigger, onSuccess, defaultParentEdgeId }: EdgeFormDialogProps) {
   const [open, setOpen] = useState(false);
-  const { addEdge, updateEdge, edges, getSubEdges } = useEdgeStore();
+  const { addEdge, updateEdge, edges, getSubEdges, getEdgeLimit, subscription } = useEdgeStore();
+
+  // Check if user has reached their edge limit (only for creating new edges)
+  const edgeLimit = getEdgeLimit();
+  const currentEdgeCount = edges.filter(e => !e.parentEdgeId).length; // Count only parent edges
+  const isAtLimit = !edge && currentEdgeCount >= edgeLimit && edgeLimit !== Infinity;
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [name, setName] = useState(edge?.name || "");
@@ -130,6 +136,16 @@ export function EdgeFormDialog({ edge, trigger, onSuccess, defaultParentEdgeId }
           </DialogTitle>
         </DialogHeader>
 
+        {isAtLimit ? (
+          <div className="p-6">
+            <UpgradePrompt
+              feature="Unlimited Edges"
+              requiredTier="trader"
+              currentTier={subscription?.tier}
+              variant="card"
+            />
+          </div>
+        ) : (
         <form onSubmit={handleSubmit} className="p-6 pt-4 space-y-5">
           <div className="space-y-2">
             <Label className="text-[#0F0F0F]/40 text-xs uppercase tracking-[0.15em]">
@@ -257,6 +273,7 @@ export function EdgeFormDialog({ edge, trigger, onSuccess, defaultParentEdgeId }
             )}
           </button>
         </form>
+        )}
       </DialogContent>
     </Dialog>
   );

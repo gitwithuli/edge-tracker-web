@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #131722;
+      font-family: -apple-system, BlinkMacSystemFont, 'Trebuchet MS', Roboto, Ubuntu, sans-serif;
+      color: #d1d4dc;
+    }
+
+    .chart-container {
+      width: 1200px;
+      height: 700px;
+      position: relative;
+      background: #131722;
+      overflow: hidden;
+    }
+
+    /* Header with symbol info */
+    .chart-header {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      font-size: 12px;
+      color: #787b86;
+      z-index: 100;
+    }
+
+    .symbol-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: #d1d4dc;
+    }
+
+    /* Price axis on right */
+    .price-axis {
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: 75px;
+      height: 100%;
+      background: #1e222d;
+      border-left: 1px solid #2a2e39;
+      z-index: 50;
+    }
+
+    .price-label {
+      position: absolute;
+      right: 5px;
+      font-size: 10px;
+      color: #787b86;
+      transform: translateY(-50%);
+    }
+
+    .price-marker {
+      position: absolute;
+      right: 0;
+      padding: 2px 5px;
+      font-size: 10px;
+      font-weight: 500;
+      color: white;
+      transform: translateY(-50%);
+      z-index: 60;
+    }
+
+    /* Time axis on bottom */
+    .time-axis {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 75px;
+      height: 22px;
+      background: #1e222d;
+      border-top: 1px solid #2a2e39;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 50;
+    }
+
+    .time-label {
+      font-size: 10px;
+      color: #787b86;
+    }
+
+    /* Grid lines */
+    .grid-h {
+      position: absolute;
+      left: 0;
+      right: 75px;
+      height: 1px;
+      background: rgba(42, 46, 57, 0.5);
+    }
+
+    .grid-v {
+      position: absolute;
+      top: 0;
+      bottom: 22px;
+      width: 1px;
+      background: rgba(42, 46, 57, 0.3);
+    }
+
+    /* Candlesticks */
+    .candle {
+      position: absolute;
+      z-index: 20;
+    }
+
+    .candle-body {
+      position: absolute;
+      width: 100%;
+      border-radius: 1px;
+    }
+
+    .candle-wick {
+      position: absolute;
+      width: 1px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .candle.bullish .candle-body {
+      background: #26a69a;
+      border: 1px solid #26a69a;
+    }
+
+    .candle.bullish .candle-wick {
+      background: #26a69a;
+    }
+
+    .candle.bearish .candle-body {
+      background: #ef5350;
+      border: 1px solid #ef5350;
+    }
+
+    .candle.bearish .candle-wick {
+      background: #ef5350;
+    }
+
+    /* Position tool - matches TradingView style */
+    .position-tool {
+      position: absolute;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .zone {
+      position: absolute;
+      left: 0;
+      right: 0;
+    }
+
+    .stop-zone {
+      background: rgba(178, 128, 128, 0.25);
+    }
+
+    .target-zone {
+      background: rgba(100, 149, 237, 0.2);
+    }
+
+    /* Entry line */
+    .entry-line {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: #5c85d6;
+      z-index: 15;
+    }
+
+    .entry-line::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: -3px;
+      width: 0;
+      height: 0;
+      border-top: 4px solid transparent;
+      border-bottom: 4px solid transparent;
+      border-left: 6px solid #5c85d6;
+    }
+
+    /* Level labels - TradingView style */
+    .level-label {
+      position: absolute;
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 2px;
+      z-index: 25;
+      white-space: nowrap;
+    }
+
+    .stop-label {
+      background: #5865F2;
+      color: white;
+    }
+
+    .entry-label {
+      background: rgba(40, 40, 50, 0.9);
+      color: #9ca3af;
+      border: 1px solid #3a3f4b;
+    }
+
+    .target-label {
+      background: #5865F2;
+      color: white;
+    }
+
+    /* R:R display */
+    .rr-display {
+      position: absolute;
+      font-size: 11px;
+      color: #5c85d6;
+      background: rgba(30, 34, 45, 0.95);
+      padding: 3px 8px;
+      border-radius: 3px;
+      z-index: 25;
+    }
+
+    /* TradingView watermark */
+    .tv-logo {
+      position: absolute;
+      bottom: 28px;
+      left: 8px;
+      font-size: 11px;
+      color: #2962ff;
+      font-weight: 600;
+      z-index: 100;
+    }
+
+    /* Extra visual noise - moving averages, support/resistance */
+    .ma-line {
+      position: absolute;
+      height: 2px;
+      z-index: 5;
+      opacity: 0.6;
+    }
+
+    .horizontal-line {
+      position: absolute;
+      left: 0;
+      right: 75px;
+      height: 1px;
+      z-index: 5;
+    }
+
+    .volume-bar {
+      position: absolute;
+      bottom: 22px;
+      opacity: 0.3;
+      z-index: 3;
+    }
+
+    /* Random annotations that appear on charts */
+    .annotation {
+      position: absolute;
+      font-size: 9px;
+      color: #787b86;
+      opacity: 0.7;
+      z-index: 30;
+    }
+  </style>
+</head>
+<body>
+  <div class="chart-container" id="chart">
+    <div class="chart-header">
+      <span class="symbol-name" id="symbol">NQH2026</span>
+      <span style="color: #787b86; margin-left: 6px;" id="timeframe">5</span>
+      <span style="color: #787b86; margin-left: 4px;">•</span>
+      <span style="color: #787b86; margin-left: 4px;" id="exchange">CME_MINI</span>
+    </div>
+    <div class="price-axis" id="price-axis"></div>
+    <div class="time-axis" id="time-axis"></div>
+    <div id="grid"></div>
+    <div id="candles"></div>
+    <div id="position-tool-container"></div>
+    <div class="tv-logo">TradingView</div>
+  </div>
+
+  <script>
+    const CONFIG = window.CHART_CONFIG || {
+      symbol: "NQH2026",
+      timeframe: "5",
+      exchange: "CME_MINI",
+      direction: "SHORT",
+      entryPrice: 21400.00,
+      stopLoss: 21429.75,
+      takeProfit: 21168.75,
+      riskReward: 7.87,
+      date: "2026-01-20",
+      time: "10:30",
+      outcome: "OPEN"
+    };
+
+    function generateChart() {
+      const container = document.getElementById('chart');
+      const candlesContainer = document.getElementById('candles');
+      const priceAxis = document.getElementById('price-axis');
+      const timeAxis = document.getElementById('time-axis');
+      const gridContainer = document.getElementById('grid');
+      const positionContainer = document.getElementById('position-tool-container');
+
+      // Update header
+      document.getElementById('symbol').textContent = CONFIG.symbol;
+      document.getElementById('timeframe').textContent = CONFIG.timeframe;
+      document.getElementById('exchange').textContent = CONFIG.exchange;
+
+      // Calculate price range with padding
+      const prices = [CONFIG.entryPrice, CONFIG.stopLoss, CONFIG.takeProfit];
+      const priceSpan = Math.max(...prices) - Math.min(...prices);
+      const padding = priceSpan * 0.5;
+      const minPrice = Math.min(...prices) - padding;
+      const maxPrice = Math.max(...prices) + padding;
+      const priceRange = maxPrice - minPrice;
+
+      const chartTop = 30;
+      const chartBottom = 678;
+      const chartHeight = chartBottom - chartTop;
+      const chartRight = 1125;
+
+      function priceToY(price) {
+        return chartTop + ((maxPrice - price) / priceRange) * chartHeight;
+      }
+
+      // Generate grid
+      const gridStep = priceRange / 12;
+      for (let i = 0; i <= 12; i++) {
+        const price = maxPrice - gridStep * i;
+        const y = priceToY(price);
+
+        const line = document.createElement('div');
+        line.className = 'grid-h';
+        line.style.top = y + 'px';
+        gridContainer.appendChild(line);
+
+        const label = document.createElement('div');
+        label.className = 'price-label';
+        label.style.top = y + 'px';
+        label.textContent = price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        priceAxis.appendChild(label);
+      }
+
+      // Vertical grid
+      for (let i = 1; i < 10; i++) {
+        const line = document.createElement('div');
+        line.className = 'grid-v';
+        line.style.left = (i * 110 + 50) + 'px';
+        gridContainer.appendChild(line);
+      }
+
+      // Time axis
+      const times = ['08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '12:00', '12:30'];
+      times.forEach((t, i) => {
+        const label = document.createElement('div');
+        label.className = 'time-label';
+        label.textContent = t;
+        timeAxis.appendChild(label);
+      });
+
+      // Generate realistic candlestick data - with randomization
+      const numCandles = 60 + Math.floor(Math.random() * 40); // 60-100 candles
+      const candleWidth = 6 + Math.floor(Math.random() * 6);  // 6-12px width
+      const candleSpacing = candleWidth + 2 + Math.floor(Math.random() * 3);
+
+      // Start price for candle generation
+      let basePrice = CONFIG.entryPrice;
+      const isShort = CONFIG.direction === 'SHORT';
+
+      // Create price action that makes sense
+      const candleData = [];
+      for (let i = 0; i < numCandles; i++) {
+        const volatility = priceSpan * 0.03;
+        const trend = (i < numCandles * 0.4) ? (isShort ? 1 : -1) * 0.3 : (isShort ? -1 : 1) * 0.2;
+
+        const change = (Math.random() - 0.5 + trend) * volatility;
+        const open = basePrice;
+        const close = basePrice + change;
+        const high = Math.max(open, close) + Math.random() * volatility * 0.5;
+        const low = Math.min(open, close) - Math.random() * volatility * 0.5;
+
+        candleData.push({ open, high, low, close });
+        basePrice = close;
+      }
+
+      // Render candles
+      candleData.forEach((candle, i) => {
+        const x = 30 + i * candleSpacing;
+        const isBullish = candle.close > candle.open;
+
+        const candleEl = document.createElement('div');
+        candleEl.className = 'candle ' + (isBullish ? 'bullish' : 'bearish');
+        candleEl.style.left = x + 'px';
+        candleEl.style.width = candleWidth + 'px';
+
+        const bodyTop = priceToY(Math.max(candle.open, candle.close));
+        const bodyBottom = priceToY(Math.min(candle.open, candle.close));
+        const bodyHeight = Math.max(1, bodyBottom - bodyTop);
+
+        const body = document.createElement('div');
+        body.className = 'candle-body';
+        body.style.top = bodyTop + 'px';
+        body.style.height = bodyHeight + 'px';
+        candleEl.appendChild(body);
+
+        const wickTop = priceToY(candle.high);
+        const wickBottom = priceToY(candle.low);
+
+        const wick = document.createElement('div');
+        wick.className = 'candle-wick';
+        wick.style.top = wickTop + 'px';
+        wick.style.height = (wickBottom - wickTop) + 'px';
+        candleEl.appendChild(wick);
+
+        candlesContainer.appendChild(candleEl);
+      });
+
+      // Position tool
+      const entryY = priceToY(CONFIG.entryPrice);
+      const stopY = priceToY(CONFIG.stopLoss);
+      const targetY = priceToY(CONFIG.takeProfit);
+
+      const toolLeft = 400;
+      const toolWidth = 350;
+      const toolTop = Math.min(stopY, targetY);
+      const toolHeight = Math.abs(targetY - stopY);
+
+      const positionTool = document.createElement('div');
+      positionTool.className = 'position-tool';
+      positionTool.style.left = toolLeft + 'px';
+      positionTool.style.width = toolWidth + 'px';
+      positionTool.style.top = toolTop + 'px';
+      positionTool.style.height = toolHeight + 'px';
+
+      // Stop zone (always red-ish)
+      const stopZone = document.createElement('div');
+      stopZone.className = 'zone stop-zone';
+      if (isShort) {
+        stopZone.style.top = '0';
+        stopZone.style.height = (entryY - toolTop) + 'px';
+      } else {
+        stopZone.style.top = (entryY - toolTop) + 'px';
+        stopZone.style.height = (toolTop + toolHeight - entryY) + 'px';
+      }
+      positionTool.appendChild(stopZone);
+
+      // Target zone (blue-ish)
+      const targetZone = document.createElement('div');
+      targetZone.className = 'zone target-zone';
+      if (isShort) {
+        targetZone.style.top = (entryY - toolTop) + 'px';
+        targetZone.style.height = (toolTop + toolHeight - entryY) + 'px';
+      } else {
+        targetZone.style.top = '0';
+        targetZone.style.height = (entryY - toolTop) + 'px';
+      }
+      positionTool.appendChild(targetZone);
+
+      positionContainer.appendChild(positionTool);
+
+      // Entry line
+      const entryLine = document.createElement('div');
+      entryLine.className = 'entry-line';
+      entryLine.style.top = entryY + 'px';
+      entryLine.style.left = toolLeft + 'px';
+      entryLine.style.width = toolWidth + 'px';
+      positionContainer.appendChild(entryLine);
+
+      // Calculate stats
+      const pointsRisked = Math.abs(CONFIG.entryPrice - CONFIG.stopLoss);
+      const pointsTarget = Math.abs(CONFIG.entryPrice - CONFIG.takeProfit);
+      const pctRisk = (pointsRisked / CONFIG.entryPrice * 100).toFixed(3);
+      const pctTarget = (pointsTarget / CONFIG.entryPrice * 100).toFixed(3);
+      const dollarRisk = (pointsRisked * 20).toFixed(0);
+      const dollarTarget = (pointsTarget * 20).toFixed(0);
+
+      // Stop label (top for short, bottom for long)
+      const stopLabel = document.createElement('div');
+      stopLabel.className = 'level-label stop-label';
+      stopLabel.textContent = `${pointsRisked.toFixed(2)} (${pctRisk}%) ${dollarRisk}`;
+      stopLabel.style.left = (toolLeft + 10) + 'px';
+      stopLabel.style.top = (stopY - 12) + 'px';
+      positionContainer.appendChild(stopLabel);
+
+      // Entry label with R:R
+      const entryLabel = document.createElement('div');
+      entryLabel.className = 'level-label entry-label';
+      entryLabel.innerHTML = `${CONFIG.entryPrice.toFixed(2)} ~ ${pctRisk}<br>${CONFIG.riskReward.toFixed(2)}`;
+      entryLabel.style.left = (toolLeft + toolWidth / 2 - 40) + 'px';
+      entryLabel.style.top = (entryY - 20) + 'px';
+      positionContainer.appendChild(entryLabel);
+
+      // Target label
+      const targetLabel = document.createElement('div');
+      targetLabel.className = 'level-label target-label';
+      targetLabel.textContent = `${pointsTarget.toFixed(2)} (${pctTarget}%) ${dollarTarget}`;
+      targetLabel.style.left = (toolLeft + 10) + 'px';
+      targetLabel.style.top = (targetY + 2) + 'px';
+      positionContainer.appendChild(targetLabel);
+
+      // Price markers on axis
+      const markers = [
+        { price: CONFIG.stopLoss, color: '#ef5350' },
+        { price: CONFIG.entryPrice, color: '#5c85d6' },
+        { price: CONFIG.takeProfit, color: '#26a69a' }
+      ];
+
+      markers.forEach(m => {
+        const marker = document.createElement('div');
+        marker.className = 'price-marker';
+        marker.style.background = m.color;
+        marker.style.top = priceToY(m.price) + 'px';
+        marker.textContent = m.price.toLocaleString('en-US', { minimumFractionDigits: 2 });
+        priceAxis.appendChild(marker);
+      });
+
+      // Add visual noise - moving average line
+      if (Math.random() > 0.3) {
+        const maPoints = [];
+        let maPrice = CONFIG.entryPrice;
+        for (let i = 0; i < numCandles; i++) {
+          maPrice += (Math.random() - 0.5) * priceSpan * 0.01;
+          maPoints.push({ x: 30 + i * candleSpacing, y: priceToY(maPrice) });
+        }
+
+        // Draw MA as SVG
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.style.position = 'absolute';
+        svg.style.left = '0';
+        svg.style.top = '0';
+        svg.style.width = '100%';
+        svg.style.height = '100%';
+        svg.style.pointerEvents = 'none';
+        svg.style.zIndex = '5';
+
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        const d = maPoints.map((p, i) => (i === 0 ? 'M' : 'L') + p.x + ',' + p.y).join(' ');
+        path.setAttribute('d', d);
+        path.setAttribute('fill', 'none');
+        path.setAttribute('stroke', Math.random() > 0.5 ? '#f0b90b' : '#e91e63');
+        path.setAttribute('stroke-width', '1.5');
+        path.setAttribute('opacity', '0.5');
+        svg.appendChild(path);
+        container.appendChild(svg);
+      }
+
+      // Add random horizontal support/resistance lines
+      const numHLines = Math.floor(Math.random() * 3);
+      for (let i = 0; i < numHLines; i++) {
+        const linePrice = minPrice + Math.random() * priceRange;
+        const hLine = document.createElement('div');
+        hLine.className = 'horizontal-line';
+        hLine.style.top = priceToY(linePrice) + 'px';
+        hLine.style.background = Math.random() > 0.5 ? 'rgba(38, 166, 154, 0.3)' : 'rgba(239, 83, 80, 0.3)';
+        hLine.style.borderTop = '1px dashed ' + (Math.random() > 0.5 ? '#26a69a' : '#ef5350');
+        container.appendChild(hLine);
+      }
+
+      // Add volume bars
+      if (Math.random() > 0.4) {
+        candleData.forEach((candle, i) => {
+          const x = 30 + i * candleSpacing;
+          const vol = 20 + Math.random() * 60;
+          const volBar = document.createElement('div');
+          volBar.className = 'volume-bar';
+          volBar.style.left = x + 'px';
+          volBar.style.width = candleWidth + 'px';
+          volBar.style.height = vol + 'px';
+          volBar.style.background = candle.close > candle.open ? '#26a69a' : '#ef5350';
+          container.appendChild(volBar);
+        });
+      }
+
+      // Random text annotations
+      if (Math.random() > 0.5) {
+        const annotations = ['High', 'Low', 'Sweep', 'FVG', 'OB', 'BOS', 'CHoCH'];
+        const numAnnotations = 1 + Math.floor(Math.random() * 3);
+        for (let i = 0; i < numAnnotations; i++) {
+          const ann = document.createElement('div');
+          ann.className = 'annotation';
+          ann.textContent = annotations[Math.floor(Math.random() * annotations.length)];
+          ann.style.left = (100 + Math.random() * 800) + 'px';
+          ann.style.top = (50 + Math.random() * 500) + 'px';
+          container.appendChild(ann);
+        }
+      }
+    }
+
+    if (window.CHART_CONFIG) {
+      generateChart();
+    }
+  </script>
+</body>
+</html>
