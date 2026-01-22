@@ -4,7 +4,8 @@ import { useEffect, useState, useMemo, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEdgeStore } from "@/hooks/use-edge-store";
 import { toast } from "sonner";
-import { LogOut, Plus, Settings, Play, Rewind, BarChart3, Download, Timer, Loader2, Sparkles } from "lucide-react";
+import { LogOut, Plus, Settings, Play, Rewind, BarChart3, Download, Timer, Loader2, Sparkles, Lock } from "lucide-react";
+import { UpgradePrompt } from "@/components/upgrade-prompt";
 import { EconomicCalendarSidebar } from "@/components/dashboard/economic-calendar";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { StatsCards } from "@/components/dashboard/stats-cards";
@@ -42,20 +43,35 @@ function UpgradeHandler() {
 }
 
 export default function DashboardPage() {
-  const { logs, isLoaded, logout, user, addLog, deleteLog, updateLog, getEdgesWithLogs } = useEdgeStore();
+  const { logs, isLoaded, logout, user, addLog, deleteLog, updateLog, getEdgesWithLogs, canAccess, subscription } = useEdgeStore();
   const [mounted, setMounted] = useState(false);
   const [activeView, setActiveView] = useState<LogType>("FRONTTEST");
   const [liveDateRange, setLiveDateRange] = useState<DateRange>(getDefaultDateRange);
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
   const router = useRouter();
+
+  const hasBacktestAccess = canAccess("backtest");
+  const isRetailTier = !subscription || subscription.tier === "retail";
+
+  // Filter logs to last 30 days for retail tier
+  const filterLogsForRetailTier = useMemo(() => {
+    if (!isRetailTier) return logs;
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    return logs.filter(log => {
+      const logDate = new Date(log.date);
+      return logDate >= thirtyDaysAgo;
+    });
+  }, [logs, isRetailTier]);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Filter by log type first
+  // Filter by log type first (using retail-filtered logs)
   const logsByType = useMemo(() => {
-    return logs.filter(log => (log.logType || 'FRONTTEST') === activeView);
-  }, [logs, activeView]);
+    return filterLogsForRetailTier.filter(log => (log.logType || 'FRONTTEST') === activeView);
+  }, [filterLogsForRetailTier, activeView]);
 
   // Then filter by date range for live view
   const filteredLogs = useMemo(() => {
@@ -67,15 +83,29 @@ export default function DashboardPage() {
 
   const edgesWithLogs = getEdgesWithLogs();
 
+  // Filter edge logs for retail tier (30-day limit)
+  const edgesWithRetailFilteredLogs = useMemo(() => {
+    if (!isRetailTier) return edgesWithLogs;
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    return edgesWithLogs.map(edge => ({
+      ...edge,
+      logs: edge.logs.filter(log => {
+        const logDate = new Date(log.date);
+        return logDate >= thirtyDaysAgo;
+      }),
+    }));
+  }, [edgesWithLogs, isRetailTier]);
+
   const edgesWithFilteredLogs = useMemo(() => {
-    return edgesWithLogs.map(edge => {
+    return edgesWithRetailFilteredLogs.map(edge => {
       const logsByTypeForEdge = edge.logs.filter(log => (log.logType || 'FRONTTEST') === activeView);
       if (activeView === 'BACKTEST') {
         return { ...edge, logs: logsByTypeForEdge };
       }
       return { ...edge, logs: filterLogsByDateRange(logsByTypeForEdge, liveDateRange) };
     });
-  }, [edgesWithLogs, activeView, liveDateRange]);
+  }, [edgesWithRetailFilteredLogs, activeView, liveDateRange]);
 
   const totalLogsForType = logsByType.length;
 
@@ -264,7 +294,13 @@ export default function DashboardPage() {
                   <span className="sm:hidden">Live</span>
                 </button>
                 <button
-                  onClick={() => setActiveView("BACKTEST")}
+                  onClick={() => {
+                    if (!hasBacktestAccess) {
+                      setShowUpgradePrompt(true);
+                      return;
+                    }
+                    setActiveView("BACKTEST");
+                  }}
                   className={`flex items-center gap-1 sm:gap-2 px-2.5 sm:px-5 py-1.5 sm:py-2.5 rounded-full text-[11px] sm:text-sm font-medium transition-all duration-300 ${
                     activeView === "BACKTEST"
                       ? "bg-[#0F0F0F] dark:bg-white text-[#FAF7F2] dark:text-[#0F0F0F] shadow-sm"
@@ -274,6 +310,7 @@ export default function DashboardPage() {
                   <Rewind className="w-3 h-3 sm:w-4 sm:h-4" />
                   <span className="hidden sm:inline">Backtest</span>
                   <span className="sm:hidden">Back</span>
+                  {!hasBacktestAccess && <Lock className="w-3 h-3 ml-1 text-[#C45A3B]" />}
                 </button>
               </div>
             </div>
@@ -363,6 +400,30 @@ export default function DashboardPage() {
             <span>Built for ICT traders</span>
           </div>
         </footer>
+
+        {/* Upgrade Prompt Modal */}
+        {showUpgradePrompt && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-[#FAF7F2] dark:bg-[#1a1a1a] rounded-2xl shadow-xl max-w-md w-full overflow-hidden">
+              <div className="p-6">
+                <UpgradePrompt
+                  feature="Backtest Mode"
+                  requiredTier="trader"
+                  currentTier={subscription?.tier || "retail"}
+                  variant="modal"
+                />
+              </div>
+              <div className="border-t border-[#0F0F0F]/10 dark:border-white/10 p-4">
+                <button
+                  onClick={() => setShowUpgradePrompt(false)}
+                  className="w-full text-sm text-[#0F0F0F]/50 dark:text-white/50 hover:text-[#0F0F0F] dark:hover:text-white transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );

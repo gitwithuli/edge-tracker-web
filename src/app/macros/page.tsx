@@ -6,10 +6,11 @@ import { useMacroTime } from "@/hooks/use-macro-time";
 import { useMacroStore, MacroLog, MacroLogInput, MacroDirection, DisplacementQuality, LiquiditySweep } from "@/hooks/use-macro-store";
 import { useEdgeStore } from "@/hooks/use-edge-store";
 import { formatMacroTime, MacroWindow, MACRO_DIRECTIONS, DISPLACEMENT_QUALITIES, LIQUIDITY_SWEEPS } from "@/lib/macro-constants";
-import { Clock, Timer, TrendingDown, Minus, ChevronLeft, Check, Link as LinkIcon, Plus, Trash2, ExternalLink, ArrowUp, ArrowDown, Activity, BarChart3, Settings, Moon, Download, Upload } from "lucide-react";
+import { Clock, Timer, TrendingDown, Minus, ChevronLeft, Check, Link as LinkIcon, Plus, Trash2, ExternalLink, ArrowUp, ArrowDown, Activity, BarChart3, Settings, Moon, Download, Upload, Lock } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { getTVImageUrl } from "@/lib/utils";
+import { UpgradePrompt } from "@/components/upgrade-prompt";
 
 function MacroCard({
   macro,
@@ -378,9 +379,11 @@ function MacroCard({
 
 export default function MacrosPage() {
   const router = useRouter();
-  const { user, isLoaded } = useEdgeStore();
+  const { user, isLoaded, canAccess, subscription } = useEdgeStore();
   const { logs, isLoaded: macrosLoaded, fetchLogs, logMacro, getLogForMacroToday, getTodaysLogs, addTvLink, removeTvLink, showAsiaMacros, setShowAsiaMacros, showLondonMacros, setShowLondonMacros, showNYMacros, setShowNYMacros } = useMacroStore();
   const [showSettings, setShowSettings] = useState(false);
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+  const hasMacroAccess = canAccess("macros");
 
   const exportMacroData = () => {
     const data = {
@@ -441,7 +444,27 @@ export default function MacrosPage() {
   };
 
   const handleLog = (macroId: string, data: MacroLogInput) => {
+    if (!hasMacroAccess) {
+      setShowUpgradePrompt(true);
+      return;
+    }
     logMacro(macroId, data);
+  };
+
+  const handleAddTvLink = (macroId: string, link: string) => {
+    if (!hasMacroAccess) {
+      setShowUpgradePrompt(true);
+      return;
+    }
+    addTvLink(macroId, link);
+  };
+
+  const handleRemoveTvLink = (macroId: string, idx: number) => {
+    if (!hasMacroAccess) {
+      setShowUpgradePrompt(true);
+      return;
+    }
+    removeTvLink(macroId, idx);
   };
 
   const todaysLogs = getTodaysLogs();
@@ -542,6 +565,18 @@ export default function MacrosPage() {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        {/* Upgrade Banner for Free Users */}
+        {!hasMacroAccess && (
+          <div className="mb-6">
+            <UpgradePrompt
+              feature="Macro Journal"
+              requiredTier="trader"
+              currentTier={subscription?.tier || "retail"}
+              variant="inline"
+            />
+          </div>
+        )}
+
         {/* Session Filters */}
         <div className="flex flex-wrap items-center gap-2 mb-6">
           <button
@@ -657,8 +692,8 @@ export default function MacrosPage() {
               minutesRemaining={activeMacroStatus.minutesRemaining}
               todayLog={getLogForMacroToday(activeMacroStatus.macro.id)}
               onLog={(data) => handleLog(activeMacroStatus.macro.id, data)}
-              onAddTvLink={(link) => addTvLink(activeMacroStatus.macro.id, link)}
-              onRemoveTvLink={(idx) => removeTvLink(activeMacroStatus.macro.id, idx)}
+              onAddTvLink={(link) => handleAddTvLink(activeMacroStatus.macro.id, link)}
+              onRemoveTvLink={(idx) => handleRemoveTvLink(activeMacroStatus.macro.id, idx)}
             />
           </div>
         )}
@@ -678,8 +713,8 @@ export default function MacrosPage() {
               secondsRemaining={secondsToNextMacro}
               todayLog={getLogForMacroToday(nextMacro.id)}
               onLog={(data) => handleLog(nextMacro.id, data)}
-              onAddTvLink={(link) => addTvLink(nextMacro.id, link)}
-              onRemoveTvLink={(idx) => removeTvLink(nextMacro.id, idx)}
+              onAddTvLink={(link) => handleAddTvLink(nextMacro.id, link)}
+              onRemoveTvLink={(idx) => handleRemoveTvLink(nextMacro.id, idx)}
             />
           </div>
         )}
@@ -730,8 +765,8 @@ export default function MacrosPage() {
                   minutesRemaining={0}
                   todayLog={getLogForMacroToday(macro.id)}
                   onLog={(data) => handleLog(macro.id, data)}
-                  onAddTvLink={(link) => addTvLink(macro.id, link)}
-                  onRemoveTvLink={(idx) => removeTvLink(macro.id, idx)}
+                  onAddTvLink={(link) => handleAddTvLink(macro.id, link)}
+                  onRemoveTvLink={(idx) => handleRemoveTvLink(macro.id, idx)}
                 />
               ))}
             </div>
@@ -787,6 +822,30 @@ export default function MacrosPage() {
             <p className="text-[#0F0F0F]/40 dark:text-white/40 text-sm">
               Select a session to log your macros
             </p>
+          </div>
+        )}
+
+        {/* Upgrade Prompt Modal */}
+        {showUpgradePrompt && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-[#FAF7F2] dark:bg-[#1a1a1a] rounded-2xl shadow-xl max-w-md w-full overflow-hidden">
+              <div className="p-6">
+                <UpgradePrompt
+                  feature="Macro Journal"
+                  requiredTier="trader"
+                  currentTier={subscription?.tier || "retail"}
+                  variant="modal"
+                />
+              </div>
+              <div className="border-t border-[#0F0F0F]/10 dark:border-white/10 p-4">
+                <button
+                  onClick={() => setShowUpgradePrompt(false)}
+                  className="w-full text-sm text-[#0F0F0F]/50 dark:text-white/50 hover:text-[#0F0F0F] dark:hover:text-white transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </main>

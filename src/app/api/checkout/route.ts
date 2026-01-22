@@ -109,12 +109,15 @@ export async function POST(request: Request) {
       console.log("[MOCK] Stripe not configured, returning mock checkout URL");
 
       // Mock: Simulate successful checkout by updating subscription directly
+      // Include 7-day trial period
+      const trialEndDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
       const { error: upsertError } = await supabase
         .from("user_subscriptions")
         .upsert({
           user_id: user.id,
           subscription_tier: tier,
           subscription_ends_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          trial_ends_at: trialEndDate.toISOString(),
           stripe_customer_id: `mock_cus_${user.id.slice(0, 8)}`,
           stripe_subscription_id: `mock_sub_${Date.now()}`,
           updated_at: new Date().toISOString(),
@@ -133,7 +136,7 @@ export async function POST(request: Request) {
       return NextResponse.json({
         success: true,
         mock: true,
-        message: `Mock checkout complete. You are now on the ${tier} tier.`,
+        message: `Mock checkout complete. You are now on the ${tier} tier with a 7-day free trial.`,
         redirectUrl: "/dashboard?upgraded=true",
       });
     }
@@ -183,6 +186,9 @@ export async function POST(request: Request) {
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/dashboard?upgraded=true`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/pricing`,
+      subscription_data: {
+        trial_period_days: 7, // 1 week free trial
+      },
       metadata: {
         userId: user.id,
         tier,
