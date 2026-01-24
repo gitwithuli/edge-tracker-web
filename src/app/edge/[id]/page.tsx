@@ -317,10 +317,11 @@ export default function EdgeDetailPage() {
             </Link>
 
             <LogDialog
-              edgeName={edge.name}
-              edgeId={edge.id}
+              edgeName={hasSubEdges ? undefined : edge.name}
+              edgeId={hasSubEdges ? undefined : edge.id}
+              parentEdgeId={hasSubEdges ? edge.id : undefined}
               defaultLogType={activeView}
-              onSave={(data) => addLog(edge.id, data)}
+              onSave={(data, newEdgeId) => addLog(newEdgeId || edge.id, data)}
               trigger={
                 <button className="inline-flex items-center gap-2 bg-[#0F0F0F] dark:bg-white text-[#FAF7F2] dark:text-[#0F0F0F] px-4 py-2 rounded-full text-sm font-medium hover:bg-[#C45A3B] dark:hover:bg-[#C45A3B] dark:hover:text-white transition-colors duration-300">
                   <Plus className="w-4 h-4" />

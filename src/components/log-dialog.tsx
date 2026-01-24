@@ -4,7 +4,7 @@ import { memo, useState, useEffect, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -18,22 +18,58 @@ import type { OptionalFieldGroup } from "@/lib/schemas";
 interface LogDialogProps {
   edgeName?: string;
   edgeId?: string;
+  parentEdgeId?: string; // When provided, only show sub-edges of this parent
   initialData?: TradeLog;
   trigger?: React.ReactNode;
   defaultLogType?: LogType;
   onSave: (data: TradeLogInput, newEdgeId?: string) => void;
 }
 
-export const LogDialog = memo(function LogDialog({ edgeName, edgeId, initialData, trigger, defaultLogType, onSave }: LogDialogProps) {
+export const LogDialog = memo(function LogDialog({ edgeName, edgeId, parentEdgeId, initialData, trigger, defaultLogType, onSave }: LogDialogProps) {
   const [open, setOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const { loadingStates, edges, getSubEdges } = useEdgeStore();
 
-  // Filter to only show standalone edges (those without sub-edges)
-  const loggableEdges = useMemo(
-    () => edges.filter(edge => getSubEdges(edge.id).length === 0),
-    [edges, getSubEdges]
-  );
+  // Filter to only show loggable edges:
+  // 1. Must not have sub-edges (only leaf edges can receive logs)
+  // 2. If parentEdgeId is provided, only show sub-edges of that parent
+  const loggableEdges = useMemo(() => {
+    const leafEdges = edges.filter(edge => getSubEdges(edge.id).length === 0);
+    if (parentEdgeId) {
+      return leafEdges.filter(edge => edge.parentEdgeId === parentEdgeId);
+    }
+    return leafEdges;
+  }, [edges, getSubEdges, parentEdgeId]);
+
+  // Group edges by parent for better organization in dropdown
+  const groupedEdges = useMemo(() => {
+    // Get parent edges that have loggable sub-edges
+    const parentEdges = edges.filter(edge => {
+      const subs = getSubEdges(edge.id);
+      return subs.length > 0 && subs.some(sub => loggableEdges.some(le => le.id === sub.id));
+    });
+
+    // Standalone edges (no parent, and are loggable)
+    const standaloneEdges = loggableEdges.filter(edge => !edge.parentEdgeId);
+
+    // Build groups
+    const groups: { parent: typeof edges[0] | null; children: typeof loggableEdges }[] = [];
+
+    // Add parent groups with their sub-edges
+    parentEdges.forEach(parent => {
+      const children = loggableEdges.filter(edge => edge.parentEdgeId === parent.id);
+      if (children.length > 0) {
+        groups.push({ parent, children });
+      }
+    });
+
+    // Add standalone edges as a group (no parent label)
+    if (standaloneEdges.length > 0) {
+      groups.push({ parent: null, children: standaloneEdges });
+    }
+
+    return groups;
+  }, [edges, loggableEdges, getSubEdges]);
   const isLoading = loadingStates.addingLog || loadingStates.updatingLogId !== null;
   const isEditing = !!initialData;
 
@@ -70,22 +106,6 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, initialData
   const hasPriceTracking = enabledFields.includes('entryExitPrices');
 
   const selectedDate = date ? new Date(date + 'T12:00:00') : undefined;
-
-  // Validate stop loss based on direction
-  const stopLossError = useMemo(() => {
-    if (!hasPriceTracking || !direction || !entryPrice || !stopLoss) return null;
-    const entry = parseFloat(entryPrice.replace(',', '.'));
-    const stop = parseFloat(stopLoss.replace(',', '.'));
-    if (isNaN(entry) || isNaN(stop)) return null;
-
-    if (direction === 'LONG' && stop >= entry) {
-      return 'Stop loss must be below entry for long trades';
-    }
-    if (direction === 'SHORT' && stop <= entry) {
-      return 'Stop loss must be above entry for short trades';
-    }
-    return null;
-  }, [hasPriceTracking, direction, entryPrice, stopLoss]);
 
   // Auto-detect day of week when date changes
   useEffect(() => {
@@ -184,21 +204,10 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, initialData
     const durationNum = result === "NO_SETUP" ? 0 : (parseInt(duration) || 0);
     if (result === "OCCURRED" && durationNum < 1) return;
 
-    // Validation depends on whether price tracking is enabled
-    if (result === "OCCURRED") {
-      if (hasPriceTracking) {
-        // Need direction when price tracking enabled
-        if (!direction) {
-          setShowOutcomeError(true);
-          return;
-        }
-      } else {
-        // Need outcome when price tracking not enabled
-        if (!outcome) {
-          setShowOutcomeError(true);
-          return;
-        }
-      }
+    // Validation: always need outcome when trade occurred
+    if (result === "OCCURRED" && !outcome) {
+      setShowOutcomeError(true);
+      return;
     }
 
     // Filter out empty links
@@ -213,30 +222,33 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, initialData
       return isNaN(num) ? null : num;
     };
 
-    // Calculate outcome from direction and prices when price tracking is enabled
-    let finalOutcome: OutcomeType | null = null;
-    if (result === "OCCURRED") {
-      if (hasPriceTracking && direction) {
-        const entry = parseNum(entryPrice);
-        const exit = parseNum(exitPrice);
-        if (entry !== null && exit !== null) {
-          // LONG wins if exit > entry, SHORT wins if exit < entry
-          const isProfit = direction === 'LONG' ? exit > entry : exit < entry;
-          finalOutcome = isProfit ? 'WIN' : 'LOSS';
-        } else {
-          // If prices not filled, can't determine outcome
-          finalOutcome = null;
-        }
-      } else {
-        finalOutcome = outcome;
+    // Calculate direction and exit price when price tracking is enabled
+    let finalDirection: DirectionType | null = null;
+    let finalExitPrice: number | null = null;
+
+    if (result === "OCCURRED" && hasPriceTracking) {
+      const entry = parseNum(entryPrice);
+      const sl = parseNum(stopLoss);
+      const tp = parseNum(exitPrice); // exitPrice field is used for Take Profit
+
+      // Auto-detect direction from entry vs stop loss position
+      if (entry !== null && sl !== null) {
+        finalDirection = sl < entry ? 'LONG' : 'SHORT';
+      }
+
+      // Set exit price based on outcome (Hit TP or Hit SL)
+      if (outcome === 'WIN' && tp !== null) {
+        finalExitPrice = tp; // Hit TP
+      } else if (outcome === 'LOSS' && sl !== null) {
+        finalExitPrice = sl; // Hit SL
       }
     }
 
     const newEdgeId = (isEditing && selectedEdgeId !== initialData?.edgeId) || (!edgeId && selectedEdgeId) ? selectedEdgeId : undefined;
     onSave({
       result,
-      outcome: finalOutcome,
-      direction: hasPriceTracking ? direction : null,
+      outcome: result === "OCCURRED" ? outcome : null,
+      direction: hasPriceTracking ? finalDirection : null,
       logType,
       note,
       dayOfWeek: day,
@@ -245,7 +257,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, initialData
       date,
       // Optional fields (only included if enabled on edge)
       entryPrice: hasPriceTracking ? parseNum(entryPrice) : null,
-      exitPrice: hasPriceTracking ? parseNum(exitPrice) : null,
+      exitPrice: hasPriceTracking ? finalExitPrice : null, // Calculated from outcome (TP or SL)
       stopLoss: hasPriceTracking ? parseNum(stopLoss) : null,
       entryTime: enabledFields.includes('entryExitTimes') ? (entryTime || null) : null,
       exitTime: enabledFields.includes('entryExitTimes') ? (exitTime || null) : null,
@@ -319,11 +331,32 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, initialData
                 <SelectTrigger className="bg-white border-[#0F0F0F]/10 text-[#0F0F0F] rounded-xl h-11 focus:border-[#C45A3B] focus:ring-[#C45A3B]/20">
                   <SelectValue placeholder="Select edge" />
                 </SelectTrigger>
-                <SelectContent className="bg-white border-[#0F0F0F]/10 text-[#0F0F0F] rounded-xl">
-                  {loggableEdges.map((edge) => (
-                    <SelectItem key={edge.id} value={edge.id} className="rounded-lg">
-                      {edge.name}
-                    </SelectItem>
+                <SelectContent className="bg-white border-[#0F0F0F]/10 text-[#0F0F0F] rounded-xl max-h-[300px]">
+                  {groupedEdges.map((group, groupIndex) => (
+                    <SelectGroup key={group.parent?.id || 'standalone'}>
+                      {group.parent && (
+                        <SelectLabel className="text-[10px] text-[#0F0F0F]/40 uppercase tracking-wider px-2 pt-2 pb-1">
+                          {group.parent.name}
+                        </SelectLabel>
+                      )}
+                      {!group.parent && groupIndex > 0 && (
+                        <>
+                          <SelectSeparator className="my-2" />
+                          <SelectLabel className="text-[10px] text-[#0F0F0F]/40 uppercase tracking-wider px-2 pt-1 pb-1">
+                            Standalone
+                          </SelectLabel>
+                        </>
+                      )}
+                      {group.children.map((edge) => (
+                        <SelectItem
+                          key={edge.id}
+                          value={edge.id}
+                          className={`rounded-lg ${group.parent ? 'pl-4' : ''}`}
+                        >
+                          {edge.name}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
                   ))}
                 </SelectContent>
               </Select>
@@ -400,83 +433,43 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, initialData
             </div>
           )}
 
-          {/* Direction/Outcome Toggle - only shown when OCCURRED */}
+          {/* Outcome Toggle - only shown when OCCURRED */}
           {result === "OCCURRED" && (
-            hasPriceTracking ? (
-              /* LONG/SHORT toggle when price tracking enabled */
-              <div className="space-y-2">
-                <Label className={`text-xs uppercase tracking-[0.15em] ${showOutcomeError && !direction ? "text-[#C45A3B]" : "text-[#0F0F0F]/40"}`}>
-                  Trade direction {showOutcomeError && !direction && <span className="normal-case tracking-normal">— required</span>}
-                </Label>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    className={`h-14 flex flex-col items-center justify-center gap-1 rounded-xl border transition-all duration-300 ${
-                      direction === "LONG"
-                        ? "bg-[#8B9A7D] text-white border-[#8B9A7D]"
-                        : showOutcomeError && !direction
-                          ? "bg-transparent border-[#C45A3B]/50 text-[#0F0F0F]/50 hover:border-[#C45A3B]"
-                          : "bg-transparent border-[#0F0F0F]/10 text-[#0F0F0F]/50 hover:border-[#0F0F0F]/30"
-                    }`}
-                    onClick={() => { setDirection("LONG"); setShowOutcomeError(false); }}
-                  >
-                    <ArrowUpRight className="w-5 h-5" />
-                    <span className="text-xs font-medium">Long</span>
-                  </button>
-                  <button
-                    type="button"
-                    className={`h-14 flex flex-col items-center justify-center gap-1 rounded-xl border transition-all duration-300 ${
-                      direction === "SHORT"
-                        ? "bg-[#C45A3B] text-white border-[#C45A3B]"
-                        : showOutcomeError && !direction
-                          ? "bg-transparent border-[#C45A3B]/50 text-[#0F0F0F]/50 hover:border-[#C45A3B]"
-                          : "bg-transparent border-[#0F0F0F]/10 text-[#0F0F0F]/50 hover:border-[#0F0F0F]/30"
-                    }`}
-                    onClick={() => { setDirection("SHORT"); setShowOutcomeError(false); }}
-                  >
-                    <ArrowDownRight className="w-5 h-5" />
-                    <span className="text-xs font-medium">Short</span>
-                  </button>
-                </div>
+            <div className="space-y-2">
+              <Label className={`text-xs uppercase tracking-[0.15em] ${showOutcomeError && !outcome ? "text-[#C45A3B]" : "text-[#0F0F0F]/40"}`}>
+                {hasPriceTracking ? "Did it hit TP or SL?" : "Trade outcome"} {showOutcomeError && !outcome && <span className="normal-case tracking-normal">— required</span>}
+              </Label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  className={`h-14 flex flex-col items-center justify-center gap-1 rounded-xl border transition-all duration-300 ${
+                    outcome === "WIN"
+                      ? "bg-[#8B9A7D] text-white border-[#8B9A7D]"
+                      : showOutcomeError && !outcome
+                        ? "bg-transparent border-[#C45A3B]/50 text-[#0F0F0F]/50 hover:border-[#C45A3B]"
+                        : "bg-transparent border-[#0F0F0F]/10 text-[#0F0F0F]/50 hover:border-[#0F0F0F]/30"
+                  }`}
+                  onClick={() => { setOutcome("WIN"); setShowOutcomeError(false); }}
+                >
+                  <TrendingUp className="w-5 h-5" />
+                  <span className="text-xs font-medium">{hasPriceTracking ? "Hit TP" : "Win"}</span>
+                </button>
+                <button
+                  type="button"
+                  className={`h-14 flex flex-col items-center justify-center gap-1 rounded-xl border transition-all duration-300 ${
+                    outcome === "LOSS"
+                      ? "bg-[#C45A3B] text-white border-[#C45A3B]"
+                      : showOutcomeError && !outcome
+                        ? "bg-transparent border-[#C45A3B]/50 text-[#0F0F0F]/50 hover:border-[#C45A3B]"
+                        : "bg-transparent border-[#0F0F0F]/10 text-[#0F0F0F]/50 hover:border-[#0F0F0F]/30"
+                  }`}
+                  onClick={() => { setOutcome("LOSS"); setShowOutcomeError(false); }}
+                >
+                  <TrendingDown className="w-5 h-5" />
+                  <span className="text-xs font-medium">{hasPriceTracking ? "Hit SL" : "Loss"}</span>
+                </button>
               </div>
-            ) : (
-              /* WIN/LOSS toggle when no price tracking */
-              <div className="space-y-2">
-                <Label className={`text-xs uppercase tracking-[0.15em] ${showOutcomeError && !outcome ? "text-[#C45A3B]" : "text-[#0F0F0F]/40"}`}>
-                  Trade outcome {showOutcomeError && !outcome && <span className="normal-case tracking-normal">— required</span>}
-                </Label>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    className={`h-14 flex flex-col items-center justify-center gap-1 rounded-xl border transition-all duration-300 ${
-                      outcome === "WIN"
-                        ? "bg-[#8B9A7D] text-white border-[#8B9A7D]"
-                        : showOutcomeError && !outcome
-                          ? "bg-transparent border-[#C45A3B]/50 text-[#0F0F0F]/50 hover:border-[#C45A3B]"
-                          : "bg-transparent border-[#0F0F0F]/10 text-[#0F0F0F]/50 hover:border-[#0F0F0F]/30"
-                    }`}
-                    onClick={() => { setOutcome("WIN"); setShowOutcomeError(false); }}
-                  >
-                    <TrendingUp className="w-5 h-5" />
-                    <span className="text-xs font-medium">Win</span>
-                  </button>
-                  <button
-                    type="button"
-                    className={`h-14 flex flex-col items-center justify-center gap-1 rounded-xl border transition-all duration-300 ${
-                      outcome === "LOSS"
-                        ? "bg-[#C45A3B] text-white border-[#C45A3B]"
-                        : showOutcomeError && !outcome
-                          ? "bg-transparent border-[#C45A3B]/50 text-[#0F0F0F]/50 hover:border-[#C45A3B]"
-                          : "bg-transparent border-[#0F0F0F]/10 text-[#0F0F0F]/50 hover:border-[#0F0F0F]/30"
-                    }`}
-                    onClick={() => { setOutcome("LOSS"); setShowOutcomeError(false); }}
-                  >
-                    <TrendingDown className="w-5 h-5" />
-                    <span className="text-xs font-medium">Loss</span>
-                  </button>
-                </div>
-              </div>
-            )
+            </div>
           )}
 
           {/* Date Picker */}
@@ -836,14 +829,9 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, initialData
             />
           </div>
 
-          {/* Stop Loss Validation Warning */}
-          {stopLossError && (
-            <p className="text-xs text-[#C45A3B] text-center -mt-2 mb-2">{stopLossError}</p>
-          )}
-
           <button
             type="submit"
-            disabled={isLoading || !!stopLossError || (result === "OCCURRED" && parseInt(duration) < 1) || (result === "OCCURRED" && (hasPriceTracking ? !direction : !outcome)) || (!edgeId && loggableEdges.length > 0 && !selectedEdgeId)}
+            disabled={isLoading || (result === "OCCURRED" && parseInt(duration) < 1) || (result === "OCCURRED" && !outcome) || (!edgeId && loggableEdges.length > 0 && !selectedEdgeId)}
             className="w-full bg-[#0F0F0F] text-[#FAF7F2] py-3 rounded-full text-sm font-medium hover:bg-[#C45A3B] transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {isLoading ? (
