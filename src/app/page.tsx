@@ -140,7 +140,7 @@ export default function LandingPage() {
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-[#8B9A7D] animate-pulse-slow" />
             <span className="text-[10px] sm:text-xs tracking-[0.15em] uppercase text-[#0F0F0F]/50 dark:text-white/50">
-              Building
+              Live
             </span>
           </div>
         </nav>
@@ -153,9 +153,9 @@ export default function LandingPage() {
               className={`inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#0F0F0F]/5 dark:bg-white/5 mb-8 sm:mb-12 opacity-0 ${mounted ? "animate-slide-up" : ""}`}
               style={{ animationDelay: "0.2s" }}
             >
-              <span className="w-1.5 h-1.5 rounded-full bg-[#C45A3B]" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#8B9A7D]" />
               <span className="text-[10px] sm:text-xs tracking-[0.2em] uppercase text-[#0F0F0F]/60 dark:text-white/60">
-                Coming Soon
+                Now Available
               </span>
             </div>
 
@@ -205,7 +205,7 @@ export default function LandingPage() {
             style={{ animationDelay: "0.8s" }}
           >
             <p className="text-center text-[10px] sm:text-xs tracking-[0.3em] uppercase text-[#0F0F0F]/40 dark:text-white/40 mb-10 sm:mb-14">
-              What&apos;s Coming
+              Features
             </p>
 
             <div className="grid sm:grid-cols-3 gap-6 sm:gap-8">
