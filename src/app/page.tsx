@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { GrainOverlay } from "@/components/grain-overlay";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { ArrowRight, Target, BarChart3, Calendar } from "lucide-react";
 
 function FloatingCandles() {
@@ -137,12 +138,7 @@ export default function LandingPage() {
             </span>
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[#8B9A7D] animate-pulse-slow" />
-            <span className="text-[10px] sm:text-xs tracking-[0.15em] uppercase text-[#0F0F0F]/50 dark:text-white/50">
-              Live
-            </span>
-          </div>
+          <ThemeToggle />
         </nav>
 
         {/* Hero */}
