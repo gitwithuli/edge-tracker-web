@@ -3,9 +3,12 @@ import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-12-15.clover',
-});
+// Stripe initialization is conditional - will be replaced with LemonSqueezy
+const stripe = process.env.STRIPE_SECRET_KEY
+  ? new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: '2025-12-15.clover',
+    })
+  : null;
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -13,8 +16,8 @@ const supabaseAdmin = createClient(
 );
 
 // Early adopter promo price
-const PROMO_PRICE_ID = process.env.STRIPE_PROMO_PRICE_ID!;
-const REGULAR_PRICE_ID = process.env.STRIPE_PRICE_ID!;
+const PROMO_PRICE_ID = process.env.STRIPE_PROMO_PRICE_ID;
+const REGULAR_PRICE_ID = process.env.STRIPE_PRICE_ID;
 const MAX_PROMO_CUSTOMERS = 20;
 
 async function getPromoCustomerCount(): Promise<number> {
@@ -28,6 +31,14 @@ async function getPromoCustomerCount(): Promise<number> {
 
 export async function POST() {
   try {
+    // Payment processing not yet configured (switching to LemonSqueezy)
+    if (!stripe || !PROMO_PRICE_ID || !REGULAR_PRICE_ID) {
+      return NextResponse.json(
+        { error: 'Payment processing coming soon' },
+        { status: 503 }
+      );
+    }
+
     // Get user from cookies
     const cookieStore = await cookies();
     const supabaseAccessToken = cookieStore.get('sb-access-token')?.value;
