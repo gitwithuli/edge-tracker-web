@@ -1,6 +1,12 @@
 import { createServerClient } from '@supabase/ssr';
+import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
+
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
@@ -45,8 +51,30 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Successfully exchanged code for session
-    return NextResponse.redirect(new URL('/dashboard', requestUrl.origin));
+    // Get user to check subscription
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (user) {
+      // Check subscription using admin client (bypasses RLS)
+      const { data: subscription } = await supabaseAdmin
+        .from('user_subscriptions')
+        .select('subscription_tier')
+        .eq('user_id', user.id)
+        .single();
+
+      console.log('[Auth Callback] User:', user.id, 'Subscription:', subscription);
+
+      // If user is paid, go to dashboard
+      if (subscription?.subscription_tier === 'paid') {
+        return NextResponse.redirect(new URL('/dashboard', requestUrl.origin));
+      }
+
+      // Otherwise go to pricing
+      return NextResponse.redirect(new URL('/pricing', requestUrl.origin));
+    }
+
+    // Fallback to pricing if no user
+    return NextResponse.redirect(new URL('/pricing', requestUrl.origin));
   }
 
   // No code provided - redirect to login

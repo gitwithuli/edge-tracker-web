@@ -426,12 +426,15 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
 
     set({ loadingStates: { ...get().loadingStates, deletingEdgeId: edgeId }, error: null });
 
-    const deletedEdge = edges.find(e => e.id === edgeId);
-    const deletedLogs = logs.filter(l => l.edgeId === edgeId);
+    // Also get sub-edges that will be cascade deleted
+    const subEdgeIds = edges.filter(e => e.parentEdgeId === edgeId).map(e => e.id);
+    const allDeletedEdgeIds = [edgeId, ...subEdgeIds];
+    const deletedEdges = edges.filter(e => allDeletedEdgeIds.includes(e.id));
+    const deletedLogs = logs.filter(l => allDeletedEdgeIds.includes(l.edgeId));
 
     set({
-      edges: edges.filter(e => e.id !== edgeId),
-      logs: logs.filter(l => l.edgeId !== edgeId),
+      edges: edges.filter(e => !allDeletedEdgeIds.includes(e.id)),
+      logs: logs.filter(l => !allDeletedEdgeIds.includes(l.edgeId)),
     });
 
     try {
@@ -439,7 +442,7 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
 
       if (error) {
         set({
-          edges: deletedEdge ? [...get().edges, deletedEdge] : get().edges,
+          edges: [...get().edges, ...deletedEdges],
           logs: [...get().logs, ...deletedLogs],
           error: `Failed to delete edge: ${error.message}`,
         });
@@ -451,7 +454,7 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
     } catch (err) {
       console.error('deleteEdge error:', err);
       set({
-        edges: deletedEdge ? [...get().edges, deletedEdge] : get().edges,
+        edges: [...get().edges, ...deletedEdges],
         logs: [...get().logs, ...deletedLogs],
       });
       toast.error('Failed to delete edge');

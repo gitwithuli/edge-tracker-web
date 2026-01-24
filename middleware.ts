@@ -1,5 +1,12 @@
 import { createServerClient } from '@supabase/ssr';
+import { createClient } from '@supabase/supabase-js';
 import { NextResponse, type NextRequest } from 'next/server';
+
+// Admin client for subscription checks (bypasses RLS)
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 // Routes that don't require authentication at all
 const publicRoutes = [
@@ -96,14 +103,20 @@ export async function middleware(request: NextRequest) {
 
   // If user is logged in but route requires subscription, check subscription
   if (user && !isPublicRoute(pathname) && !isFreeAuthenticatedRoute(pathname)) {
-    const { data: subscription } = await supabase
+    console.log('[Middleware] Checking subscription for user:', user.id, 'pathname:', pathname);
+
+    // Use admin client to bypass RLS
+    const { data: subscription, error: subError } = await supabaseAdmin
       .from('user_subscriptions')
       .select('subscription_tier')
       .eq('user_id', user.id)
       .single();
 
+    console.log('[Middleware] Subscription result:', subscription, 'error:', subError);
+
     // If no subscription or unpaid, redirect to pricing
     if (!subscription || subscription.subscription_tier !== 'paid') {
+      console.log('[Middleware] Redirecting to /pricing - subscription:', subscription?.subscription_tier);
       const url = request.nextUrl.clone();
       url.pathname = '/pricing';
       const redirectResponse = NextResponse.redirect(url);
@@ -112,6 +125,7 @@ export async function middleware(request: NextRequest) {
       });
       return redirectResponse;
     }
+    console.log('[Middleware] User is paid, allowing access');
   }
 
   return supabaseResponse;

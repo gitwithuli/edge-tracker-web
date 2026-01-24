@@ -24,6 +24,7 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  allowedDevOrigins: ['http://192.168.8.140:3000'],
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 's3.tradingview.com', pathname: '/snapshots/**' },

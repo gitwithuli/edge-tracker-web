@@ -265,6 +265,21 @@ export default function LoginPage() {
                         labelFontFamily: 'system-ui, -apple-system, sans-serif',
                       },
                     },
+                    dark: {
+                      colors: {
+                        brand: '#FFFFFF',
+                        brandAccent: '#C45A3B',
+                        inputBackground: '#262626',
+                        inputBorder: '#FFFFFF20',
+                        inputBorderFocus: '#C45A3B',
+                        inputBorderHover: '#FFFFFF40',
+                        inputText: '#FFFFFF',
+                        inputLabelText: '#FFFFFF80',
+                        inputPlaceholder: '#FFFFFF40',
+                        anchorTextColor: '#FFFFFF60',
+                        anchorTextHoverColor: '#C45A3B',
+                      },
+                    },
                   },
                   style: {
                     button: {
