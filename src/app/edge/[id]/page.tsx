@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEdgeStore } from "@/hooks/use-edge-store";
 import { ArrowLeft, Play, Rewind, Plus, TrendingUp, TrendingDown, Target, Clock, Calendar, DollarSign, ArrowUpRight, ArrowDownRight, Layers, ChevronRight, Loader2, Share2 } from "lucide-react";
 import { getSymbolInfo } from "@/lib/constants";
@@ -24,12 +24,17 @@ import { ShareCardDialog } from "@/components/share-card-dialog";
 export default function EdgeDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const edgeId = params.id as string;
 
   const { edges, logs, isLoaded, user, addLog, deleteLog, updateLog, getSubEdges, getParentEdge } = useEdgeStore();
   const [mounted, setMounted] = useState(false);
   const [activeView, setActiveView] = useState<LogType>("FRONTTEST");
   const [dateRange, setDateRange] = useState<DateRange>(getDefaultDateRange);
+
+  // Get log ID from URL query param for auto-opening history
+  const highlightLogId = searchParams.get('log');
+  const [historyOpen, setHistoryOpen] = useState(!!highlightLogId);
 
   useEffect(() => {
     setMounted(true);
@@ -766,6 +771,15 @@ export default function EdgeDetailPage() {
                 edge={{ ...edge, logs: filteredLogs }}
                 onDeleteLog={deleteLog}
                 onUpdateLog={updateLog}
+                defaultOpen={historyOpen}
+                highlightLogId={highlightLogId}
+                onOpenChange={(open) => {
+                  setHistoryOpen(open);
+                  // Clear the URL param when dialog closes
+                  if (!open && highlightLogId) {
+                    router.replace(`/edge/${edgeId}`, { scroll: false });
+                  }
+                }}
               />
             </div>
 

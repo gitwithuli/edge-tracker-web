@@ -82,7 +82,7 @@ export function RecentActivity({ logs, edgesWithLogs, limit = 5 }: RecentActivit
           {recentLogs.map((log) => (
             <Link
               key={log.id}
-              href={`/edge/${log.edgeId}`}
+              href={`/edge/${log.edgeId}?log=${log.id}`}
               className="block p-3 rounded-xl bg-[#0F0F0F]/[0.02] dark:bg-white/[0.02] hover:bg-[#0F0F0F]/[0.04] dark:hover:bg-white/[0.05] transition-colors duration-300"
             >
               {/* Row 1: Icon + Name + P&L */}

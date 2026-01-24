@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useState, useMemo } from "react";
+import { memo, useState, useMemo, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogTrigger, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -15,6 +15,9 @@ interface HistorySheetProps {
   edge: EdgeWithLogs;
   onDeleteLog: (id: string) => void;
   onUpdateLog: (id: string, data: TradeLogInput, newEdgeId?: string) => void;
+  defaultOpen?: boolean;
+  highlightLogId?: string | null;
+  onOpenChange?: (open: boolean) => void;
 }
 
 function formatDate(dateStr: string): string {
@@ -58,11 +61,33 @@ function groupLogsByDate(logs: EdgeWithLogs['logs']) {
   return groups;
 }
 
-export const HistorySheet = memo(function HistorySheet({ edge, onDeleteLog, onUpdateLog }: HistorySheetProps) {
-  const [open, setOpen] = useState(false);
+export const HistorySheet = memo(function HistorySheet({ edge, onDeleteLog, onUpdateLog, defaultOpen = false, highlightLogId, onOpenChange }: HistorySheetProps) {
+  const [open, setOpen] = useState(defaultOpen);
   const [deleteLogId, setDeleteLogId] = useState<string | null>(null);
+  const highlightRef = useRef<HTMLDivElement>(null);
 
   const groupedLogs = useMemo(() => groupLogsByDate(edge.logs), [edge.logs]);
+
+  // Open dialog when defaultOpen changes to true
+  useEffect(() => {
+    if (defaultOpen) {
+      setOpen(true);
+    }
+  }, [defaultOpen]);
+
+  // Scroll to highlighted log when dialog opens
+  useEffect(() => {
+    if (open && highlightLogId && highlightRef.current) {
+      setTimeout(() => {
+        highlightRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
+    }
+  }, [open, highlightLogId]);
+
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    onOpenChange?.(newOpen);
+  };
 
   const handleDeleteConfirm = () => {
     if (deleteLogId !== null) {
@@ -73,7 +98,7 @@ export const HistorySheet = memo(function HistorySheet({ edge, onDeleteLog, onUp
 
   return (
     <>
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogTrigger asChild>
           <button className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full text-sm font-medium border border-[#0F0F0F]/10 dark:border-white/20 text-[#0F0F0F]/60 dark:text-white/60 hover:border-[#0F0F0F]/30 dark:hover:border-white/40 hover:text-[#0F0F0F] dark:hover:text-white transition-colors duration-300">
             <History className="w-4 h-4" /> History
@@ -140,10 +165,17 @@ export const HistorySheet = memo(function HistorySheet({ edge, onDeleteLog, onUp
                         const isOccurred = log.result === "OCCURRED";
                         const isBacktest = log.logType === "BACKTEST";
 
+                        const isHighlighted = highlightLogId === log.id;
                         return (
                           <div
                             key={log.id}
-                            className="rounded-2xl border border-[#0F0F0F]/10 dark:border-white/10 overflow-hidden bg-white/50 dark:bg-white/[0.02]"
+                            ref={isHighlighted ? highlightRef : undefined}
+                            className={cn(
+                              "rounded-2xl border overflow-hidden transition-all duration-500",
+                              isHighlighted
+                                ? "border-[#C45A3B] bg-[#C45A3B]/5 dark:bg-[#C45A3B]/10 ring-2 ring-[#C45A3B]/20"
+                                : "border-[#0F0F0F]/10 dark:border-white/10 bg-white/50 dark:bg-white/[0.02]"
+                            )}
                           >
                             {imageUrls.length > 0 && (
                               <div className={cn(
