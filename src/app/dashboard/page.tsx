@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { useEdgeStore } from "@/hooks/use-edge-store";
@@ -23,19 +23,11 @@ import { LogDialog } from "@/components/log-dialog";
 import Link from "next/link";
 import type { LogType } from "@/lib/types";
 
-export default function DashboardPage() {
-  const { logs, isLoaded, logout, user, addLog, deleteLog, updateLog, getEdgesWithLogs, fetchSubscription } = useEdgeStore();
-  const [mounted, setMounted] = useState(false);
-  const [activeView, setActiveView] = useState<LogType>("FRONTTEST");
-  const [liveDateRange, setLiveDateRange] = useState<DateRange>(getDefaultDateRange);
+function UpgradeHandler() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { user, fetchSubscription } = useEdgeStore();
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // Handle upgrade success - refresh subscription state
   useEffect(() => {
     const upgraded = searchParams.get("upgraded") === "true";
     if (upgraded && user) {
@@ -45,6 +37,20 @@ export default function DashboardPage() {
       });
     }
   }, [searchParams, user, fetchSubscription, router]);
+
+  return null;
+}
+
+export default function DashboardPage() {
+  const { logs, isLoaded, logout, user, addLog, deleteLog, updateLog, getEdgesWithLogs } = useEdgeStore();
+  const [mounted, setMounted] = useState(false);
+  const [activeView, setActiveView] = useState<LogType>("FRONTTEST");
+  const [liveDateRange, setLiveDateRange] = useState<DateRange>(getDefaultDateRange);
+  const router = useRouter();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Filter by log type first
   const logsByType = useMemo(() => {
@@ -102,6 +108,9 @@ export default function DashboardPage() {
 
   return (
     <>
+      <Suspense fallback={null}>
+        <UpgradeHandler />
+      </Suspense>
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap');
 
