@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useEdgeStore } from "@/hooks/use-edge-store";
-import { ArrowLeft, Play, Rewind, Plus, TrendingUp, TrendingDown, Target, Clock, Calendar, DollarSign, ArrowUpRight, ArrowDownRight, Layers, ChevronRight, Loader2 } from "lucide-react";
+import { ArrowLeft, Play, Rewind, Plus, TrendingUp, TrendingDown, Target, Clock, Calendar, DollarSign, ArrowUpRight, ArrowDownRight, Layers, ChevronRight, Loader2, Share2 } from "lucide-react";
 import { getSymbolInfo } from "@/lib/constants";
 import { formatCurrencyCompact } from "@/lib/utils";
 import { LogDialog } from "@/components/log-dialog";
@@ -19,6 +19,7 @@ import { TRADING_DAYS } from "@/lib/constants";
 import type { LogType } from "@/lib/types";
 import Link from "next/link";
 import { GrainOverlay } from "@/components/grain-overlay";
+import { ShareCardDialog } from "@/components/share-card-dialog";
 
 export default function EdgeDetailPage() {
   const params = useParams();
@@ -362,18 +363,32 @@ export default function EdgeDetailPage() {
                   <p className="text-[#0F0F0F]/50 dark:text-white/50 text-sm max-w-lg">{edge.description}</p>
                 )}
               </div>
-              {/* Add Sub-Edge Button - only show if this edge has no parent (can be a parent) */}
-              {!edge.parentEdgeId && (
-                <EdgeFormDialog
-                  defaultParentEdgeId={edge.id}
+              {/* Action Buttons */}
+              <div className="flex items-center gap-2">
+                {/* Share Card Button */}
+                <ShareCardDialog
+                  edge={edge}
+                  stats={stats}
                   trigger={
                     <button className="flex items-center gap-2 text-xs text-[#0F0F0F]/40 dark:text-white/40 hover:text-[#C45A3B] transition-colors border border-[#0F0F0F]/10 dark:border-white/10 hover:border-[#C45A3B]/30 px-3 py-1.5 rounded-full">
-                      <Plus className="w-3 h-3" />
-                      Add Sub-Edge
+                      <Share2 className="w-3 h-3" />
+                      Share
                     </button>
                   }
                 />
-              )}
+                {/* Add Sub-Edge Button - only show if this edge has no parent (can be a parent) */}
+                {!edge.parentEdgeId && (
+                  <EdgeFormDialog
+                    defaultParentEdgeId={edge.id}
+                    trigger={
+                      <button className="flex items-center gap-2 text-xs text-[#0F0F0F]/40 dark:text-white/40 hover:text-[#C45A3B] transition-colors border border-[#0F0F0F]/10 dark:border-white/10 hover:border-[#C45A3B]/30 px-3 py-1.5 rounded-full">
+                        <Plus className="w-3 h-3" />
+                        Add Sub-Edge
+                      </button>
+                    }
+                  />
+                )}
+              </div>
             </div>
             {/* Sub-edges indicator */}
             {hasSubEdges && (

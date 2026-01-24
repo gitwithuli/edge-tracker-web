@@ -13,8 +13,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Plus, Pencil, Trash2, Target, Loader2, ChevronRight } from "lucide-react";
+import { ArrowLeft, Plus, Pencil, Trash2, Target, Loader2, ChevronRight, Share2 } from "lucide-react";
 import { EdgeFormDialog } from "@/components/edge-form-dialog";
+import { ShareEdgeDialog } from "@/components/share-edge-dialog";
 import { GrainOverlay } from "@/components/grain-overlay";
 import Link from "next/link";
 
@@ -99,6 +100,15 @@ export default function EdgeSettingsPage() {
             </div>
 
             <div className="flex items-center gap-0.5 sm:gap-1 ml-2 sm:ml-4">
+              <ShareEdgeDialog
+                edge={edge}
+                trigger={
+                  <button className={`p-2 sm:p-2.5 rounded-full transition-all duration-300 ${edge.isPublic ? 'text-[#8B9A7D] hover:bg-[#8B9A7D]/10' : 'text-[#0F0F0F]/30 dark:text-white/30 hover:text-[#0F0F0F] dark:hover:text-white hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5'}`}>
+                    <Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  </button>
+                }
+              />
+
               <EdgeFormDialog
                 edge={edge}
                 trigger={

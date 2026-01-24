@@ -17,7 +17,7 @@ export default function AuthCallbackPage() {
 
       if (error) {
         console.error("Auth callback error:", error);
-        router.push("/gate-7k9x?error=" + encodeURIComponent(error.message));
+        router.push("/login?error=" + encodeURIComponent(error.message));
         return;
       }
 
@@ -38,7 +38,7 @@ export default function AuthCallbackPage() {
         // Timeout fallback
         setTimeout(() => {
           subscription.unsubscribe();
-          router.push("/gate-7k9x?error=timeout");
+          router.push("/login?error=timeout");
         }, 5000);
       }
     };

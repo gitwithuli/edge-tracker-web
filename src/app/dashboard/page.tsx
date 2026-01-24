@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { toast } from "sonner";
 import { useEdgeStore } from "@/hooks/use-edge-store";
 import { LogOut, Plus, Settings, Play, Rewind, BarChart3, Download, Timer, Loader2 } from "lucide-react";
 import { EconomicCalendarSidebar } from "@/components/dashboard/economic-calendar";
@@ -23,14 +24,27 @@ import Link from "next/link";
 import type { LogType } from "@/lib/types";
 
 export default function DashboardPage() {
-  const { logs, isLoaded, logout, user, addLog, deleteLog, updateLog, getEdgesWithLogs } = useEdgeStore();
+  const { logs, isLoaded, logout, user, addLog, deleteLog, updateLog, getEdgesWithLogs, fetchSubscription } = useEdgeStore();
   const [mounted, setMounted] = useState(false);
   const [activeView, setActiveView] = useState<LogType>("FRONTTEST");
   const [liveDateRange, setLiveDateRange] = useState<DateRange>(getDefaultDateRange);
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Handle upgrade success - refresh subscription state
+  useEffect(() => {
+    const upgraded = searchParams.get("upgraded") === "true";
+    if (upgraded && user) {
+      fetchSubscription().then(() => {
+        toast.success("Welcome to Edge Tracker!");
+        router.replace("/dashboard");
+      });
+    }
+  }, [searchParams, user, fetchSubscription, router]);
 
   // Filter by log type first
   const logsByType = useMemo(() => {
@@ -58,7 +72,6 @@ export default function DashboardPage() {
   }, [edgesWithLogs, activeView, liveDateRange]);
 
   const totalLogsForType = logsByType.length;
-  const router = useRouter();
 
   // Redirect to login if not authenticated (after auth has loaded)
   useEffect(() => {
@@ -227,8 +240,8 @@ export default function DashboardPage() {
                   }`}
                 >
                   <Play className="w-3 h-3 sm:w-4 sm:h-4" />
-                  <span className="hidden sm:inline">Live Trading</span>
-                  <span className="sm:hidden">Live</span>
+                  <span className="hidden sm:inline">Forwardtest</span>
+                  <span className="sm:hidden">Forward</span>
                 </button>
                 <button
                   onClick={() => setActiveView("BACKTEST")}
@@ -254,7 +267,7 @@ export default function DashboardPage() {
             <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
               <div className="flex items-center gap-4">
                 <span className="text-xs tracking-[0.2em] uppercase text-[#0F0F0F]/40 dark:text-white/40">
-                  {isBacktest ? 'Backtest Summary' : 'Live Summary'}
+                  {isBacktest ? 'Backtest Summary' : 'Forwardtest Summary'}
                 </span>
                 <div className="hidden sm:block flex-1 h-px bg-[#0F0F0F]/10 dark:bg-white/10 min-w-[40px]" />
               </div>

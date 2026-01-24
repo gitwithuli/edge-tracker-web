@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { GrainOverlay } from "@/components/grain-overlay";
-import { ArrowRight, Check, Loader2, Target, BarChart3, Calendar } from "lucide-react";
+import { ArrowRight, Target, BarChart3, Calendar } from "lucide-react";
 
 function FloatingCandles() {
   const candles = [
@@ -46,44 +46,12 @@ function FloatingCandles() {
   );
 }
 
-export default function WaitlistPage() {
+export default function LandingPage() {
   const [mounted, setMounted] = useState(false);
-  const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "loading" | "success" | "exists" | "error">("idle");
-  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email || status === "loading") return;
-
-    setStatus("loading");
-    setErrorMessage("");
-
-    try {
-      const res = await fetch("/api/waitlist", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        setStatus(data.alreadyExists ? "exists" : "success");
-        if (!data.alreadyExists) setEmail("");
-      } else {
-        setStatus("error");
-        setErrorMessage(data.error || "Something went wrong");
-      }
-    } catch {
-      setStatus("error");
-      setErrorMessage("Connection failed. Please try again.");
-    }
-  };
 
   return (
     <>
@@ -218,78 +186,16 @@ export default function WaitlistPage() {
               className={`opacity-0 ${mounted ? "animate-slide-up" : ""}`}
               style={{ animationDelay: "0.5s" }}
             >
-              {status === "success" ? (
-                <div className="flex flex-col items-center gap-4">
-                  <div className="w-16 h-16 rounded-full bg-[#8B9A7D]/10 dark:bg-[#8B9A7D]/20 flex items-center justify-center">
-                    <Check className="w-8 h-8 text-[#8B9A7D]" />
-                  </div>
-                  <div>
-                    <p
-                      className="text-xl sm:text-2xl mb-2"
-                      style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
-                    >
-                      You&apos;re on the list.
-                    </p>
-                    <p className="text-sm text-[#0F0F0F]/50 dark:text-white/50">
-                      We&apos;ll notify you the moment we launch.
-                    </p>
-                  </div>
-                </div>
-              ) : status === "exists" ? (
-                <div className="flex flex-col items-center gap-4">
-                  <div className="w-16 h-16 rounded-full bg-[#C45A3B]/10 dark:bg-[#C45A3B]/20 flex items-center justify-center">
-                    <Check className="w-8 h-8 text-[#C45A3B]" />
-                  </div>
-                  <div>
-                    <p
-                      className="text-xl sm:text-2xl mb-2"
-                      style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
-                    >
-                      Already on the list!
-                    </p>
-                    <p className="text-sm text-[#0F0F0F]/50 dark:text-white/50">
-                      We haven&apos;t forgotten you. Launch is coming.
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-                  <div className="flex-1 relative">
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="Enter your email"
-                      className="w-full px-5 py-4 bg-white dark:bg-white/5 border border-[#0F0F0F]/10 dark:border-white/10 rounded-full text-sm placeholder:text-[#0F0F0F]/30 dark:placeholder:text-white/30 focus:outline-none focus:border-[#0F0F0F]/30 dark:focus:border-white/30 focus:ring-2 focus:ring-[#0F0F0F]/5 dark:focus:ring-white/5 transition-all duration-300"
-                      required
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    disabled={status === "loading"}
-                    className="inline-flex items-center justify-center gap-2 bg-[#0F0F0F] dark:bg-white text-[#FAF7F2] dark:text-[#0F0F0F] px-6 py-4 rounded-full text-sm font-medium hover:bg-[#C45A3B] dark:hover:bg-[#C45A3B] dark:hover:text-white transition-all duration-500 disabled:opacity-60"
-                  >
-                    {status === "loading" ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <>
-                        Join Waitlist
-                        <ArrowRight className="w-4 h-4" />
-                      </>
-                    )}
-                  </button>
-                </form>
-              )}
-
-              {status === "error" && (
-                <p className="mt-4 text-sm text-[#C45A3B]">{errorMessage}</p>
-              )}
-
-              {status === "idle" && (
-                <p className="mt-4 text-xs text-[#0F0F0F]/40 dark:text-white/40">
-                  Be the first to know when we launch. No spam, ever.
-                </p>
-              )}
+              <a
+                href="/login"
+                className="inline-flex items-center justify-center gap-2 bg-[#0F0F0F] dark:bg-white text-[#FAF7F2] dark:text-[#0F0F0F] px-8 py-4 rounded-full text-sm font-medium hover:bg-[#C45A3B] dark:hover:bg-[#C45A3B] dark:hover:text-white transition-all duration-500"
+              >
+                Get Started
+                <ArrowRight className="w-4 h-4" />
+              </a>
+              <p className="mt-4 text-xs text-[#0F0F0F]/40 dark:text-white/40">
+                Start tracking your edge today.
+              </p>
             </div>
           </div>
 

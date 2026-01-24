@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import type { User } from '@supabase/supabase-js';
-import type { Edge, EdgeInput, TradeLog, TradeLogInput, EdgeWithLogs } from '@/lib/types';
+import type { Edge, EdgeInput, TradeLog, TradeLogInput, EdgeWithLogs, UserSubscription, Feature, SubscriptionTier } from '@/lib/types';
 import type { OptionalFieldGroup } from '@/lib/schemas';
 import { enqueue, dequeue, getQueue, type QueuedOperation } from '@/lib/request-queue';
 
@@ -19,6 +19,7 @@ interface LoadingStates {
   enrollingMfa: boolean;
   verifyingMfa: boolean;
   challengingMfa: boolean;
+  fetchingSubscription: boolean;
 }
 
 interface MfaEnrollResult {
@@ -35,6 +36,7 @@ interface EdgeStore {
   error: string | null;
   loadingStates: LoadingStates;
   mfaEnabled: boolean;
+  subscription: UserSubscription | null;
 
   // Computed
   getEdgesWithLogs: () => EdgeWithLogs[];
@@ -42,6 +44,10 @@ interface EdgeStore {
   getSubEdges: (parentEdgeId: string) => Edge[];
   getParentEdge: (edgeId: string) => Edge | undefined;
   getParentEdges: () => Edge[]; // Edges that have no parent (top-level)
+
+  // Subscription
+  canAccess: (feature: Feature) => boolean;
+  isPaid: () => boolean;
 
   // Setters
   setUser: (user: User | null) => void;
@@ -57,6 +63,7 @@ interface EdgeStore {
   addEdge: (data: EdgeInput) => Promise<string | null>;
   updateEdge: (edgeId: string, data: EdgeInput) => Promise<void>;
   deleteEdge: (edgeId: string) => Promise<void>;
+  updateEdgeSharing: (edgeId: string, isPublic: boolean, showTrades?: boolean, showScreenshots?: boolean) => Promise<string | null>;
 
   // Log CRUD
   fetchLogs: () => Promise<void>;
@@ -69,6 +76,9 @@ interface EdgeStore {
   enrollMfa: () => Promise<MfaEnrollResult | null>;
   verifyMfa: (factorId: string, code: string) => Promise<boolean>;
   challengeMfa: (code: string) => Promise<boolean>;
+
+  // Subscription
+  fetchSubscription: () => Promise<void>;
 
   // Queue
   processPendingOperations: () => Promise<void>;
@@ -87,7 +97,21 @@ const initialLoadingStates: LoadingStates = {
   enrollingMfa: false,
   verifyingMfa: false,
   challengingMfa: false,
+  fetchingSubscription: false,
 };
+
+function mapDbToSubscription(row: Record<string, unknown>): UserSubscription {
+  return {
+    id: row.id as string,
+    userId: row.user_id as string,
+    tier: row.subscription_tier as SubscriptionTier,
+    stripeCustomerId: (row.stripe_customer_id as string) || null,
+    stripeSubscriptionId: (row.stripe_subscription_id as string) || null,
+    currentPeriodStart: (row.current_period_start as string) || null,
+    currentPeriodEnd: (row.current_period_end as string) || null,
+    cancelAtPeriodEnd: (row.cancel_at_period_end as boolean) || false,
+  };
+}
 
 // Map database row to Edge type
 function mapDbToEdge(row: Record<string, unknown>): Edge {
@@ -101,6 +125,11 @@ function mapDbToEdge(row: Record<string, unknown>): Edge {
     parentEdgeId: (row.parent_edge_id as string) || null,
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
+    // Sharing fields
+    isPublic: (row.is_public as boolean) || false,
+    publicSlug: (row.public_slug as string) || null,
+    showTrades: row.show_trades !== false,
+    showScreenshots: row.show_screenshots !== false,
   };
 }
 
@@ -151,6 +180,7 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
   error: null,
   loadingStates: initialLoadingStates,
   mfaEnabled: false,
+  subscription: null,
 
   // Computed: Get edges with their logs attached
   getEdgesWithLogs: () => {
@@ -183,6 +213,26 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
     return get().edges.filter(edge => !edge.parentEdgeId);
   },
 
+  // Subscription: Check if user can access a feature
+  canAccess: (feature: Feature) => {
+    const { subscription } = get();
+    const isPaid = subscription?.tier === 'paid';
+
+    // Coming soon - always false
+    if (['ai_parser', 'voice_journal', 'ai_summaries'].includes(feature)) {
+      return false;
+    }
+
+    // Paid features - require subscription
+    return isPaid;
+  },
+
+  // Subscription: Check if user has paid tier
+  isPaid: () => {
+    const { subscription } = get();
+    return subscription?.tier === 'paid';
+  },
+
   setUser: (user) => set({ user, isLoaded: true }),
   setError: (error) => set({ error }),
   clearError: () => set({ error: null }),
@@ -204,6 +254,7 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
           get().fetchEdges(),
           get().fetchLogs(),
           get().checkMfaStatus(),
+          get().fetchSubscription(),
         ]);
       } else {
         set({ isLoaded: true });
@@ -217,9 +268,10 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
             get().fetchEdges(),
             get().fetchLogs(),
             get().checkMfaStatus(),
+            get().fetchSubscription(),
           ]);
         } else if (event === 'SIGNED_OUT') {
-          set({ user: null, logs: [], edges: [], mfaEnabled: false });
+          set({ user: null, logs: [], edges: [], mfaEnabled: false, subscription: null });
         }
       });
 
@@ -241,7 +293,7 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
 
   logout: async () => {
     await supabase.auth.signOut();
-    set({ user: null, logs: [], edges: [], error: null, mfaEnabled: false });
+    set({ user: null, logs: [], edges: [], error: null, mfaEnabled: false, subscription: null });
     window.location.href = '/';
   },
 
@@ -405,6 +457,55 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
       toast.error('Failed to delete edge');
     } finally {
       set({ loadingStates: { ...get().loadingStates, deletingEdgeId: null } });
+    }
+  },
+
+  updateEdgeSharing: async (edgeId, isPublic, showTrades = true, showScreenshots = true) => {
+    const { edges } = get();
+
+    set({ loadingStates: { ...get().loadingStates, updatingEdgeId: edgeId }, error: null });
+
+    const originalEdge = edges.find(e => e.id === edgeId);
+    if (!originalEdge) {
+      toast.error('Edge not found');
+      set({ loadingStates: { ...get().loadingStates, updatingEdgeId: null } });
+      return null;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('edges')
+        .update({
+          is_public: isPublic,
+          show_trades: showTrades,
+          show_screenshots: showScreenshots,
+        })
+        .eq('id', edgeId)
+        .select()
+        .single();
+
+      if (error) {
+        set({ error: `Failed to update sharing: ${error.message}` });
+        toast.error(`Failed to update sharing: ${error.message}`);
+        return null;
+      }
+
+      const updatedEdge = mapDbToEdge(data);
+      set({ edges: edges.map(e => e.id === edgeId ? updatedEdge : e) });
+
+      if (isPublic) {
+        toast.success('Edge is now public');
+      } else {
+        toast.success('Edge is now private');
+      }
+
+      return updatedEdge.publicSlug || null;
+    } catch (err) {
+      console.error('updateEdgeSharing error:', err);
+      toast.error('Failed to update sharing');
+      return null;
+    } finally {
+      set({ loadingStates: { ...get().loadingStates, updatingEdgeId: null } });
     }
   },
 
@@ -843,6 +944,53 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
       console.error('MFA challenge failed:', err);
       set({ loadingStates: { ...get().loadingStates, challengingMfa: false } });
       return false;
+    }
+  },
+
+  // === SUBSCRIPTION ===
+
+  fetchSubscription: async () => {
+    const { user } = get();
+    if (!user) return;
+
+    set({ loadingStates: { ...get().loadingStates, fetchingSubscription: true } });
+
+    try {
+      const { data, error } = await supabase
+        .from('user_subscriptions')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error) {
+        // If no subscription record exists, create one with 'unpaid' tier
+        if (error.code === 'PGRST116') {
+          const { data: newSub, error: insertError } = await supabase
+            .from('user_subscriptions')
+            .insert({ user_id: user.id, subscription_tier: 'unpaid' })
+            .select()
+            .single();
+
+          if (!insertError && newSub) {
+            set({
+              subscription: mapDbToSubscription(newSub),
+              loadingStates: { ...get().loadingStates, fetchingSubscription: false }
+            });
+            return;
+          }
+        }
+        console.error('Failed to fetch subscription:', error.message);
+        set({ loadingStates: { ...get().loadingStates, fetchingSubscription: false } });
+        return;
+      }
+
+      set({
+        subscription: mapDbToSubscription(data),
+        loadingStates: { ...get().loadingStates, fetchingSubscription: false }
+      });
+    } catch (err) {
+      console.error('Subscription fetch failed:', err);
+      set({ loadingStates: { ...get().loadingStates, fetchingSubscription: false } });
     }
   },
 

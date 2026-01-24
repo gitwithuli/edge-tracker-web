@@ -1,17 +1,38 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
-// Routes that don't require authentication
+// Routes that don't require authentication at all
 const publicRoutes = [
   '/',
-  '/gate-7k9x',
+  '/login',
+  '/pricing',
+  '/about',
   '/auth/callback',
+  '/auth/callback/client',
 ];
 
-// Routes that should redirect to dashboard if already logged in
+// Routes that should redirect to dashboard if already logged in AND paid
 const authRoutes = [
-  '/gate-7k9x',
+  '/login',
 ];
+
+// Routes that authenticated users can access without subscription
+const freeAuthenticatedRoutes = [
+  '/pricing',
+];
+
+function isPublicRoute(pathname: string): boolean {
+  // Exact match or starts with /share/ (public edge pages) or /api/
+  return (
+    publicRoutes.includes(pathname) ||
+    pathname.startsWith('/share/') ||
+    pathname.startsWith('/api/')
+  );
+}
+
+function isFreeAuthenticatedRoute(pathname: string): boolean {
+  return freeAuthenticatedRoutes.includes(pathname);
+}
 
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -48,11 +69,6 @@ export async function middleware(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
-  // Check if it's a public route
-  const isPublicRoute = publicRoutes.some(route =>
-    pathname === route || pathname.startsWith('/api/')
-  );
-
   // Check if it's an auth route (login pages)
   const isAuthRoute = authRoutes.some(route => pathname === route);
 
@@ -61,7 +77,6 @@ export async function middleware(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = '/dashboard';
     const redirectResponse = NextResponse.redirect(url);
-    // Copy any cookies that were set during session refresh
     supabaseResponse.cookies.getAll().forEach((cookie) => {
       redirectResponse.cookies.set(cookie.name, cookie.value);
     });
@@ -69,15 +84,34 @@ export async function middleware(request: NextRequest) {
   }
 
   // If user is not logged in and trying to access protected route, redirect to landing page
-  if (!user && !isPublicRoute) {
+  if (!user && !isPublicRoute(pathname)) {
     const url = request.nextUrl.clone();
     url.pathname = '/';
     const redirectResponse = NextResponse.redirect(url);
-    // Copy any cookies that were set during session refresh
     supabaseResponse.cookies.getAll().forEach((cookie) => {
       redirectResponse.cookies.set(cookie.name, cookie.value);
     });
     return redirectResponse;
+  }
+
+  // If user is logged in but route requires subscription, check subscription
+  if (user && !isPublicRoute(pathname) && !isFreeAuthenticatedRoute(pathname)) {
+    const { data: subscription } = await supabase
+      .from('user_subscriptions')
+      .select('subscription_tier')
+      .eq('user_id', user.id)
+      .single();
+
+    // If no subscription or unpaid, redirect to pricing
+    if (!subscription || subscription.subscription_tier !== 'paid') {
+      const url = request.nextUrl.clone();
+      url.pathname = '/pricing';
+      const redirectResponse = NextResponse.redirect(url);
+      supabaseResponse.cookies.getAll().forEach((cookie) => {
+        redirectResponse.cookies.set(cookie.name, cookie.value);
+      });
+      return redirectResponse;
+    }
   }
 
   return supabaseResponse;
@@ -91,8 +125,7 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - public folder files (images, etc)
-     * - auth/callback (let it handle cookies without middleware interference)
      */
-    '/((?!_next/static|_next/image|favicon.ico|auth/callback|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };

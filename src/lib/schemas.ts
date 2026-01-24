@@ -118,6 +118,11 @@ export const edgeSchema = z.object({
   parentEdgeId: z.string().nullable().optional(), // For sub-edges
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),
+  // Sharing fields
+  isPublic: z.boolean().optional().default(false),
+  publicSlug: z.string().nullable().optional(),
+  showTrades: z.boolean().optional().default(true),
+  showScreenshots: z.boolean().optional().default(true),
 });
 
 export type Edge = z.infer<typeof edgeSchema>;
