@@ -126,11 +126,18 @@ export const useMacroStore = create<MacroStore>()((set, get) => ({
     }
 
     try {
+      // Fetch last 90 days of logs to prevent loading entire history
+      const ninetyDaysAgo = new Date();
+      ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+      const dateFilter = ninetyDaysAgo.toISOString().split('T')[0];
+
       const { data, error } = await supabase
         .from('macro_logs')
         .select('*')
         .eq('user_id', user.id)
-        .order('date', { ascending: false });
+        .gte('date', dateFilter)
+        .order('date', { ascending: false })
+        .limit(1000); // Safety limit
 
       if (error) {
         console.error('Failed to fetch macro logs:', error.message);
