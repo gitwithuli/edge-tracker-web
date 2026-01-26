@@ -172,6 +172,10 @@ function mapDbToLog(row: Record<string, unknown>): TradeLog {
   };
 }
 
+// Track auth initialization state outside the store to prevent multiple initializations
+let authInitialized = false;
+let authSubscription: { unsubscribe: () => void } | null = null;
+
 export const useEdgeStore = create<EdgeStore>((set, get) => ({
   edges: [],
   logs: [],
@@ -238,6 +242,12 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
   clearError: () => set({ error: null }),
 
   initializeAuth: async () => {
+    // Prevent multiple initializations (e.g., from multiple tabs or re-renders)
+    if (authInitialized) {
+      return;
+    }
+    authInitialized = true;
+
     try {
       // Add timeout to prevent infinite loading if Supabase hangs
       const sessionPromise = supabase.auth.getSession();
@@ -260,7 +270,12 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
         set({ isLoaded: true });
       }
 
-      supabase.auth.onAuthStateChange(async (event, session) => {
+      // Clean up any existing subscription before adding new one
+      if (authSubscription) {
+        authSubscription.unsubscribe();
+      }
+
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
         if (event === 'SIGNED_IN' && session) {
           set({ user: session.user });
           // Parallelize independent fetches for better performance
@@ -274,6 +289,7 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
           set({ user: null, logs: [], edges: [], mfaEnabled: false, subscription: null });
         }
       });
+      authSubscription = subscription;
 
       // Set up visibility listener to process pending operations when tab becomes active
       if (typeof document !== 'undefined') {
@@ -287,11 +303,26 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
       }
     } catch (err) {
       console.error('Auth initialization failed:', err);
-      set({ isLoaded: true });
+      // On timeout or error, clear potentially corrupted session and let user re-login
+      try {
+        await supabase.auth.signOut();
+      } catch {
+        // Ignore signout errors
+      }
+      set({ user: null, isLoaded: true });
+      // Show user-friendly message
+      toast.error('Session expired. Please sign in again.');
     }
   },
 
   logout: async () => {
+    // Clean up auth subscription
+    if (authSubscription) {
+      authSubscription.unsubscribe();
+      authSubscription = null;
+    }
+    authInitialized = false;
+
     await supabase.auth.signOut();
     set({ user: null, logs: [], edges: [], error: null, mfaEnabled: false, subscription: null });
     window.location.href = '/';
