@@ -232,6 +232,9 @@ export const useMacroStore = create<MacroStore>()((set, get) => ({
     );
 
     if (existing) {
+      // Check if this log is still being created (has temp ID)
+      const isTempLog = existing.id.startsWith('temp-');
+
       // Update existing log - optimistic update FIRST
       const updates = {
         pointsMoved: data.pointsMoved ?? existing.pointsMoved,
@@ -247,6 +250,15 @@ export const useMacroStore = create<MacroStore>()((set, get) => ({
           log.id === existing.id ? { ...log, ...updates } : log
         ),
       });
+
+      // If this is a temp log, the insert is still in progress
+      // Just update local state and let the original insert complete
+      // The user can update again once the log is saved
+      if (isTempLog) {
+        // Don't show error - the local state is updated, just skip the DB update
+        // The original insert will save the initial data
+        return;
+      }
 
       // Now do async auth check and server update
       const { data: { user } } = await supabase.auth.getUser();
@@ -302,18 +314,25 @@ export const useMacroStore = create<MacroStore>()((set, get) => ({
         return;
       }
 
+      // Get the latest state of the temp log (may have been updated while we awaited auth)
+      const currentLog = get().logs.find(l => l.id === tempId);
+      if (!currentLog) {
+        // Log was removed, nothing to save
+        return;
+      }
+
       const { data: insertedData, error } = await supabase
         .from('macro_logs')
         .insert({
           user_id: user.id,
           macro_id: macroId,
           date,
-          points_moved: data.pointsMoved ?? null,
-          direction: data.direction ?? null,
-          displacement_quality: data.displacementQuality ?? null,
-          liquidity_sweep: data.liquiditySweep ?? null,
-          note: data.note ?? '',
-          tv_links: data.tvLinks ?? [],
+          points_moved: currentLog.pointsMoved,
+          direction: currentLog.direction,
+          displacement_quality: currentLog.displacementQuality,
+          liquidity_sweep: currentLog.liquiditySweep,
+          note: currentLog.note,
+          tv_links: currentLog.tvLinks,
         })
         .select()
         .single();
