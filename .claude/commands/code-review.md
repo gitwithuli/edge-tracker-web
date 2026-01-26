@@ -1,6 +1,6 @@
 # Senior Engineer Code Review
 
-Perform a comprehensive code review of this codebase from a senior software engineer's perspective. Be thorough and critical.
+Perform a comprehensive code review from a senior software engineer's perspective. Be thorough and critical.
 
 ## Areas to Analyze
 

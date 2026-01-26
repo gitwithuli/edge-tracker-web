@@ -28,48 +28,55 @@ interface LogDialogProps {
 export const LogDialog = memo(function LogDialog({ edgeName, edgeId, parentEdgeId, initialData, trigger, defaultLogType, onSave }: LogDialogProps) {
   const [open, setOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const { loadingStates, edges, getSubEdges } = useEdgeStore();
+  const { loadingStates, edges } = useEdgeStore();
 
-  // Filter to only show loggable edges:
-  // 1. Must not have sub-edges (only leaf edges can receive logs)
-  // 2. If parentEdgeId is provided, only show sub-edges of that parent
-  const loggableEdges = useMemo(() => {
-    const leafEdges = edges.filter(edge => getSubEdges(edge.id).length === 0);
-    if (parentEdgeId) {
-      return leafEdges.filter(edge => edge.parentEdgeId === parentEdgeId);
-    }
-    return leafEdges;
-  }, [edges, getSubEdges, parentEdgeId]);
+  // Build parent-child map once for O(n) instead of O(n²) lookups
+  const { loggableEdges, groupedEdges } = useMemo(() => {
+    // Build a map of parentId -> children (O(n))
+    const childrenByParent = new Map<string, typeof edges>();
+    const edgeById = new Map<string, typeof edges[0]>();
 
-  // Group edges by parent for better organization in dropdown
-  const groupedEdges = useMemo(() => {
-    // Get parent edges that have loggable sub-edges
-    const parentEdges = edges.filter(edge => {
-      const subs = getSubEdges(edge.id);
-      return subs.length > 0 && subs.some(sub => loggableEdges.some(le => le.id === sub.id));
-    });
-
-    // Standalone edges (no parent, and are loggable)
-    const standaloneEdges = loggableEdges.filter(edge => !edge.parentEdgeId);
-
-    // Build groups
-    const groups: { parent: typeof edges[0] | null; children: typeof loggableEdges }[] = [];
-
-    // Add parent groups with their sub-edges
-    parentEdges.forEach(parent => {
-      const children = loggableEdges.filter(edge => edge.parentEdgeId === parent.id);
-      if (children.length > 0) {
-        groups.push({ parent, children });
+    edges.forEach(edge => {
+      edgeById.set(edge.id, edge);
+      if (edge.parentEdgeId) {
+        const siblings = childrenByParent.get(edge.parentEdgeId) || [];
+        siblings.push(edge);
+        childrenByParent.set(edge.parentEdgeId, siblings);
       }
     });
 
-    // Add standalone edges as a group (no parent label)
+    // Leaf edges are those with no children (O(n))
+    const leafEdges = edges.filter(edge => !childrenByParent.has(edge.id));
+
+    // Apply parentEdgeId filter if provided
+    const filteredLeafEdges = parentEdgeId
+      ? leafEdges.filter(edge => edge.parentEdgeId === parentEdgeId)
+      : leafEdges;
+
+    // Build groups (O(n))
+    const groups: { parent: typeof edges[0] | null; children: typeof edges }[] = [];
+    const addedToGroup = new Set<string>();
+
+    // Group by parent
+    filteredLeafEdges.forEach(edge => {
+      if (edge.parentEdgeId && !addedToGroup.has(edge.parentEdgeId)) {
+        const parent = edgeById.get(edge.parentEdgeId);
+        if (parent) {
+          const children = filteredLeafEdges.filter(e => e.parentEdgeId === edge.parentEdgeId);
+          groups.push({ parent, children });
+          addedToGroup.add(edge.parentEdgeId);
+        }
+      }
+    });
+
+    // Add standalone edges (no parent)
+    const standaloneEdges = filteredLeafEdges.filter(edge => !edge.parentEdgeId);
     if (standaloneEdges.length > 0) {
       groups.push({ parent: null, children: standaloneEdges });
     }
 
-    return groups;
-  }, [edges, loggableEdges, getSubEdges]);
+    return { loggableEdges: filteredLeafEdges, groupedEdges: groups };
+  }, [edges, parentEdgeId]);
   const isLoading = loadingStates.addingLog || loadingStates.updatingLogId !== null;
   const isEditing = !!initialData;
 
