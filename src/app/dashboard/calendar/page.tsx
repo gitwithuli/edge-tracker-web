@@ -1,93 +1,40 @@
 "use client";
 
-import { useEffect, useState, useMemo, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { toast } from "sonner";
+import { useEffect, useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { useEdgeStore } from "@/hooks/use-edge-store";
-import { LogOut, Plus, Settings, Play, Rewind, BarChart3, Download, Timer, Loader2 } from "lucide-react";
-import { EconomicCalendarSidebar } from "@/components/dashboard/economic-calendar";
+import { LogOut, Plus, Settings, Play, Rewind, ArrowLeft, Loader2 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { StatsCards } from "@/components/dashboard/stats-cards";
-import { EdgeScorecard } from "@/components/dashboard/edge-scorecard";
-import { EdgeGrid } from "@/components/dashboard/edge-grid";
-import { RecentActivity } from "@/components/dashboard/recent-activity";
-import { BacktestStats } from "@/components/dashboard/backtest-stats";
 import { GrainOverlay } from "@/components/grain-overlay";
 import { CalendarPnL } from "@/components/calendar-pnl";
-import {
-  DateRangeFilter,
-  filterLogsByDateRange,
-  getDefaultDateRange,
-  type DateRange,
-} from "@/components/dashboard/date-range-filter";
 import { LogDialog } from "@/components/log-dialog";
 import Link from "next/link";
 import type { LogType } from "@/lib/types";
 
-function UpgradeHandler() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const { user, fetchSubscription } = useEdgeStore();
-
-  useEffect(() => {
-    const upgraded = searchParams.get("upgraded") === "true";
-    if (upgraded && user) {
-      fetchSubscription().then(() => {
-        toast.success("Welcome to Edge Tracker!");
-        router.replace("/dashboard");
-      });
-    }
-  }, [searchParams, user, fetchSubscription, router]);
-
-  return null;
-}
-
-export default function DashboardPage() {
-  const { logs, isLoaded, logout, user, addLog, deleteLog, updateLog, getEdgesWithLogs } = useEdgeStore();
+export default function CalendarPage() {
+  const { logs, edges, isLoaded, logout, user, addLog, deleteLog, updateLog, getEdgesWithLogs } = useEdgeStore();
   const [mounted, setMounted] = useState(false);
   const [activeView, setActiveView] = useState<LogType>("FRONTTEST");
-  const [liveDateRange, setLiveDateRange] = useState<DateRange>(getDefaultDateRange);
   const router = useRouter();
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Filter by log type first
-  const logsByType = useMemo(() => {
+  // Filter logs by log type
+  const filteredLogs = useMemo(() => {
     return logs.filter(log => (log.logType || 'FRONTTEST') === activeView);
   }, [logs, activeView]);
 
-  // Then filter by date range for live view
-  const filteredLogs = useMemo(() => {
-    if (activeView === 'BACKTEST') {
-      return logsByType; // Backtest has its own internal date filter
-    }
-    return filterLogsByDateRange(logsByType, liveDateRange);
-  }, [logsByType, activeView, liveDateRange]);
-
   const edgesWithLogs = getEdgesWithLogs();
 
-  const edgesWithFilteredLogs = useMemo(() => {
-    return edgesWithLogs.map(edge => {
-      const logsByTypeForEdge = edge.logs.filter(log => (log.logType || 'FRONTTEST') === activeView);
-      if (activeView === 'BACKTEST') {
-        return { ...edge, logs: logsByTypeForEdge };
-      }
-      return { ...edge, logs: filterLogsByDateRange(logsByTypeForEdge, liveDateRange) };
-    });
-  }, [edgesWithLogs, activeView, liveDateRange]);
-
-  const totalLogsForType = logsByType.length;
-
-  // Redirect to login if not authenticated (after auth has loaded)
+  // Redirect to login if not authenticated
   useEffect(() => {
     if (isLoaded && !user) {
       router.push('/login');
     }
   }, [isLoaded, user, router]);
 
-  // Show loading spinner while auth is loading
   if (!isLoaded) {
     return (
       <div className="min-h-screen bg-[#FAF7F2] dark:bg-[#0F0F0F] flex items-center justify-center">
@@ -96,7 +43,6 @@ export default function DashboardPage() {
     );
   }
 
-  // Don't render dashboard content if not logged in (redirect is in progress)
   if (!user) {
     return (
       <div className="min-h-screen bg-[#FAF7F2] dark:bg-[#0F0F0F] flex items-center justify-center">
@@ -109,9 +55,6 @@ export default function DashboardPage() {
 
   return (
     <>
-      <Suspense fallback={null}>
-        <UpgradeHandler />
-      </Suspense>
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap');
 
@@ -178,27 +121,6 @@ export default function DashboardPage() {
                 />
               )}
 
-              <Link
-                href="/macros"
-                className="p-2 rounded-full text-[#0F0F0F]/40 dark:text-white/40 hover:text-[#0F0F0F] dark:hover:text-white hover:bg-[#0F0F0F]/5 dark:hover:bg-white/10 transition-all duration-300"
-                title="Macro Tracker"
-                aria-label="Macro Tracker"
-              >
-                <Timer className="w-4 h-4" aria-hidden="true" />
-              </Link>
-
-              <EconomicCalendarSidebar />
-
-              <a
-                href="/api/backup"
-                download
-                className="p-2 rounded-full text-[#0F0F0F]/40 dark:text-white/40 hover:text-[#0F0F0F] dark:hover:text-white hover:bg-[#0F0F0F]/5 dark:hover:bg-white/10 transition-all duration-300"
-                title="Download Backup"
-                aria-label="Download Backup"
-              >
-                <Download className="w-4 h-4" aria-hidden="true" />
-              </a>
-
               <ThemeToggle />
 
               <Link
@@ -221,21 +143,25 @@ export default function DashboardPage() {
         </header>
 
         <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
-          {/* Welcome section with View Toggle */}
+          {/* Page header with back button */}
           <div
             className={`mb-8 sm:mb-10 lg:mb-12 opacity-0 ${mounted ? 'animate-slide-up' : ''}`}
             style={{ animationDelay: '0.1s' }}
           >
             <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 sm:gap-6">
               <div>
-                <p className="text-[#C45A3B] text-[10px] sm:text-xs tracking-[0.3em] uppercase font-medium mb-2 sm:mb-3">
-                  Dashboard
-                </p>
+                <Link
+                  href="/dashboard"
+                  className="inline-flex items-center gap-2 text-[#0F0F0F]/40 dark:text-white/40 hover:text-[#0F0F0F] dark:hover:text-white text-sm mb-3 transition-colors"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Back to Dashboard
+                </Link>
                 <h1
                   className="text-2xl sm:text-3xl lg:text-4xl tracking-tight"
                   style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
                 >
-                  Track your <span className="italic text-[#0F0F0F]/60 dark:text-white/60">edge</span>
+                  Calendar <span className="italic text-[#0F0F0F]/60 dark:text-white/60">P&L</span>
                 </h1>
               </div>
 
@@ -269,96 +195,21 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Stats Cards */}
-          <section
-            className={`mb-8 sm:mb-10 lg:mb-12 opacity-0 ${mounted ? 'animate-slide-up' : ''}`}
+          {/* Full Calendar */}
+          <div
+            className={`opacity-0 ${mounted ? 'animate-slide-up' : ''}`}
             style={{ animationDelay: '0.2s' }}
           >
-            <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
-              <div className="flex items-center gap-4">
-                <span className="text-xs tracking-[0.2em] uppercase text-[#0F0F0F]/40 dark:text-white/40">
-                  {isBacktest ? 'Backtest Summary' : 'Forwardtest Summary'}
-                </span>
-                <div className="hidden sm:block flex-1 h-px bg-[#0F0F0F]/10 dark:bg-white/10 min-w-[40px]" />
-              </div>
-              {!isBacktest && (
-                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:ml-auto">
-                  <DateRangeFilter value={liveDateRange} onChange={setLiveDateRange} />
-                  {filteredLogs.length !== totalLogsForType && (
-                    <span className="text-xs text-[#0F0F0F]/40 dark:text-white/40">
-                      {filteredLogs.length} of {totalLogsForType}
-                    </span>
-                  )}
-                </div>
-              )}
-            </div>
-            <StatsCards logs={filteredLogs} edgesWithLogs={edgesWithFilteredLogs} />
-          </section>
-
-          {/* Backtest-specific Statistics */}
-          {isBacktest && filteredLogs.length > 0 && (
-            <section
-              className={`mb-8 sm:mb-10 lg:mb-12 opacity-0 ${mounted ? 'animate-slide-up' : ''}`}
-              style={{ animationDelay: '0.25s' }}
-            >
-              <div className="flex items-center gap-4 mb-6">
-                <BarChart3 className="w-4 h-4 text-[#0F0F0F]/40 dark:text-white/40" />
-                <span className="text-xs tracking-[0.2em] uppercase text-[#0F0F0F]/40 dark:text-white/40">
-                  Backtest Analytics
-                </span>
-                <div className="flex-1 h-px bg-[#0F0F0F]/10 dark:bg-white/10" />
-              </div>
-              <BacktestStats logs={filteredLogs} edgesWithLogs={edgesWithFilteredLogs} />
-            </section>
-          )}
-
-          {/* Main Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
-            {/* Left Column - Chart + Edges */}
-            <div className="lg:col-span-2 space-y-6 sm:space-y-8">
-              <div
-                className={`opacity-0 ${mounted ? 'animate-slide-up' : ''}`}
-                style={{ animationDelay: '0.3s' }}
-              >
-                <EdgeScorecard edgesWithLogs={edgesWithFilteredLogs} />
-              </div>
-              <div
-                className={`opacity-0 ${mounted ? 'animate-slide-up' : ''}`}
-                style={{ animationDelay: '0.35s' }}
-              >
-                <CalendarPnL
-                  logs={filteredLogs}
-                  edges={edgesWithLogs.map(e => ({ ...e, logs: undefined }))}
-                  variant="compact"
-                  showWeeklySummary={false}
-                  showExpandLink={true}
-                  defaultLogType={activeView}
-                  onAddLog={addLog}
-                  onDeleteLog={deleteLog}
-                  onUpdateLog={updateLog}
-                />
-              </div>
-              <div
-                className={`opacity-0 ${mounted ? 'animate-slide-up' : ''}`}
-                style={{ animationDelay: '0.4s' }}
-              >
-                <EdgeGrid
-                  edgesWithLogs={edgesWithFilteredLogs}
-                  onAddLog={addLog}
-                  onDeleteLog={deleteLog}
-                  onUpdateLog={updateLog}
-                  defaultLogType={activeView}
-                />
-              </div>
-            </div>
-
-            {/* Right Column - Recent Activity */}
-            <div
-              className={`lg:col-span-1 opacity-0 ${mounted ? 'animate-slide-up' : ''}`}
-              style={{ animationDelay: '0.5s' }}
-            >
-              <RecentActivity logs={filteredLogs} edgesWithLogs={edgesWithFilteredLogs} />
-            </div>
+            <CalendarPnL
+              logs={filteredLogs}
+              edges={edges}
+              variant="full"
+              showWeeklySummary={true}
+              defaultLogType={activeView}
+              onAddLog={addLog}
+              onDeleteLog={deleteLog}
+              onUpdateLog={updateLog}
+            />
           </div>
         </main>
 

@@ -20,6 +20,7 @@ import type { LogType } from "@/lib/types";
 import Link from "next/link";
 import { GrainOverlay } from "@/components/grain-overlay";
 import { ShareCardDialog } from "@/components/share-card-dialog";
+import { CalendarPnL } from "@/components/calendar-pnl";
 
 export default function EdgeDetailPage() {
   const params = useParams();
@@ -750,6 +751,24 @@ export default function EdgeDetailPage() {
                 })}
               </div>
             )}
+          </div>
+
+          {/* Calendar P&L */}
+          <div
+            className={`mb-8 opacity-0 ${mounted ? 'animate-slide-up' : ''}`}
+            style={{ animationDelay: '0.45s' }}
+          >
+            <CalendarPnL
+              logs={filteredLogs}
+              edges={edges}
+              title={edge.name}
+              variant="compact"
+              showWeeklySummary={false}
+              defaultLogType={activeView}
+              onAddLog={(edgeId, data) => addLog(edgeId, data)}
+              onDeleteLog={deleteLog}
+              onUpdateLog={updateLog}
+            />
           </div>
 
           {/* History */}
