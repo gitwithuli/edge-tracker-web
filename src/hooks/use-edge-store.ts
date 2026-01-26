@@ -249,16 +249,37 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
     authInitialized = true;
 
     try {
-      // Add timeout to prevent infinite loading if Supabase hangs
-      const sessionPromise = supabase.auth.getSession();
-      const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('Session fetch timeout')), 10000)
-      );
+      // Helper to add timeout to any promise
+      const withTimeout = <T>(promise: Promise<T>, ms: number): Promise<T> => {
+        return Promise.race([
+          promise,
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('timeout')), ms)
+          ),
+        ]);
+      };
 
-      const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]);
+      let user = null;
 
-      if (session?.user) {
-        set({ user: session.user, isLoaded: true });
+      // Try getSession first (fast, uses cached token)
+      try {
+        const { data: { session } } = await withTimeout(supabase.auth.getSession(), 5000);
+        user = session?.user || null;
+      } catch {
+        // getSession failed/timed out - try getUser which forces a fresh API call
+        console.log('getSession timed out, trying getUser...');
+        try {
+          const { data: { user: freshUser } } = await withTimeout(supabase.auth.getUser(), 5000);
+          user = freshUser;
+        } catch {
+          // Both failed - session is likely corrupted
+          console.log('getUser also failed, clearing session...');
+          user = null;
+        }
+      }
+
+      if (user) {
+        set({ user, isLoaded: true });
         // Parallelize independent fetches for better performance
         await Promise.all([
           get().fetchEdges(),
