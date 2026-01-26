@@ -2,9 +2,9 @@ import { create } from 'zustand';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import type { User } from '@supabase/supabase-js';
-import type { Edge, EdgeInput, TradeLog, TradeLogInput, EdgeWithLogs, UserSubscription, Feature, SubscriptionTier } from '@/lib/types';
-import type { OptionalFieldGroup } from '@/lib/schemas';
-import { enqueue, dequeue, getQueue, type QueuedOperation } from '@/lib/request-queue';
+import type { Edge, EdgeInput, TradeLog, TradeLogInput, EdgeWithLogs, UserSubscription, Feature } from '@/lib/types';
+import { enqueue, dequeue, getQueue, markRetried } from '@/lib/request-queue';
+import { mapEdgeFromDb, mapLogFromDb, mapSubscriptionFromDb } from '@/lib/database.types';
 
 interface LoadingStates {
   fetchingEdges: boolean;
@@ -100,81 +100,15 @@ const initialLoadingStates: LoadingStates = {
   fetchingSubscription: false,
 };
 
-function mapDbToSubscription(row: Record<string, unknown>): UserSubscription {
-  return {
-    id: row.id as string,
-    userId: row.user_id as string,
-    tier: row.subscription_tier as SubscriptionTier,
-    stripeCustomerId: (row.stripe_customer_id as string) || null,
-    stripeSubscriptionId: (row.stripe_subscription_id as string) || null,
-    currentPeriodStart: (row.current_period_start as string) || null,
-    currentPeriodEnd: (row.current_period_end as string) || null,
-    cancelAtPeriodEnd: (row.cancel_at_period_end as boolean) || false,
-  };
-}
-
-// Map database row to Edge type
-function mapDbToEdge(row: Record<string, unknown>): Edge {
-  return {
-    id: row.id as string,
-    userId: row.user_id as string,
-    name: row.name as string,
-    description: (row.description as string) || '',
-    enabledFields: (row.enabled_fields as OptionalFieldGroup[]) || [],
-    symbol: (row.symbol as string) || null,
-    parentEdgeId: (row.parent_edge_id as string) || null,
-    createdAt: row.created_at as string,
-    updatedAt: row.updated_at as string,
-    // Sharing fields
-    isPublic: (row.is_public as boolean) || false,
-    publicSlug: (row.public_slug as string) || null,
-    showTrades: row.show_trades !== false,
-    showScreenshots: row.show_screenshots !== false,
-  };
-}
-
-// Map database row to TradeLog type
-function mapDbToLog(row: Record<string, unknown>): TradeLog {
-  // Handle tvLinks - could be array from DB or need to migrate from tv_link
-  let tvLinks: string[] = [];
-  if (Array.isArray(row.tv_links) && row.tv_links.length > 0) {
-    tvLinks = row.tv_links as string[];
-  } else if (row.tv_link && typeof row.tv_link === 'string' && row.tv_link !== '') {
-    tvLinks = [row.tv_link];
-  }
-
-  return {
-    id: row.id as string,
-    edgeId: row.edge_id as string,
-    result: row.result as TradeLog['result'],
-    outcome: (row.outcome as TradeLog['outcome']) || null,
-    logType: (row.log_type as TradeLog['logType']) || 'FRONTTEST',
-    dayOfWeek: row.day_of_week as TradeLog['dayOfWeek'],
-    durationMinutes: row.duration_minutes as number,
-    note: (row.note as string) || '',
-    tvLinks,
-    tvLink: tvLinks[0] || undefined, // Legacy compatibility
-    date: row.date as string,
-    // Optional fields
-    entryPrice: row.entry_price as number | null,
-    exitPrice: row.exit_price as number | null,
-    stopLoss: row.stop_loss as number | null,
-    entryTime: row.entry_time as string | null,
-    exitTime: row.exit_time as string | null,
-    dailyOpen: row.daily_open as number | null,
-    dailyHigh: row.daily_high as number | null,
-    dailyLow: row.daily_low as number | null,
-    dailyClose: row.daily_close as number | null,
-    nyOpen: row.ny_open as number | null,
-    positionSize: row.position_size as number | null,
-    direction: (row.direction as TradeLog['direction']) || null,
-    symbol: (row.symbol as string) || null,
-  };
-}
+// Type aliases for cleaner code - mapping functions imported from database.types.ts
+const mapDbToEdge = mapEdgeFromDb;
+const mapDbToLog = mapLogFromDb;
+const mapDbToSubscription = mapSubscriptionFromDb;
 
 // Track auth initialization state outside the store to prevent multiple initializations
 let authInitialized = false;
 let authSubscription: { unsubscribe: () => void } | null = null;
+let visibilityHandler: (() => void) | null = null;
 
 export const useEdgeStore = create<EdgeStore>((set, get) => ({
   edges: [],
@@ -315,11 +249,16 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
 
       // Set up visibility listener to process pending operations when tab becomes active
       if (typeof document !== 'undefined') {
-        document.addEventListener('visibilitychange', () => {
+        // Clean up existing listener if any (prevents duplicates on HMR)
+        if (visibilityHandler) {
+          document.removeEventListener('visibilitychange', visibilityHandler);
+        }
+        visibilityHandler = () => {
           if (document.visibilityState === 'visible') {
             get().processPendingOperations();
           }
-        });
+        };
+        document.addEventListener('visibilitychange', visibilityHandler);
         // Process any pending operations from previous session
         setTimeout(() => get().processPendingOperations(), 2000);
       }
@@ -343,9 +282,19 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
       authSubscription.unsubscribe();
       authSubscription = null;
     }
+    // Clean up visibility listener
+    if (visibilityHandler && typeof document !== 'undefined') {
+      document.removeEventListener('visibilitychange', visibilityHandler);
+      visibilityHandler = null;
+    }
     authInitialized = false;
 
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.error('Sign out error:', err);
+      // Continue with logout even if signOut fails - clear local state
+    }
     set({ user: null, logs: [], edges: [], error: null, mfaEnabled: false, subscription: null });
     window.location.href = '/';
   },
@@ -608,7 +557,7 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
     const logDate = logData.date || new Date().toISOString().split('T')[0];
     const logType = logData.logType || 'FRONTTEST';
     const outcome = logData.result === 'OCCURRED' ? (logData.outcome || null) : null;
-    const tvLinks = logData.tvLinks || (logData.tvLink ? [logData.tvLink] : []);
+    const tvLinks = logData.tvLinks || [];
     const optimisticLog: TradeLog = {
       id: tempId,
       edgeId,
@@ -620,7 +569,6 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
       durationMinutes: logData.durationMinutes,
       note: logData.note || '',
       tvLinks,
-      tvLink: tvLinks[0] || undefined,
       // Optional fields
       entryPrice: logData.entryPrice ?? null,
       exitPrice: logData.exitPrice ?? null,
@@ -657,7 +605,6 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
           duration_minutes: logData.durationMinutes,
           note: logData.note || '',
           tv_links: tvLinks,
-          tv_link: tvLinks[0] || null,
           date: logDate,
           entry_price: logData.entryPrice ?? null,
           exit_price: logData.exitPrice ?? null,
@@ -759,7 +706,7 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
     }
 
     const outcome = logData.result === 'OCCURRED' ? (logData.outcome || null) : null;
-    const tvLinks = logData.tvLinks || (logData.tvLink ? [logData.tvLink] : originalLog.tvLinks || []);
+    const tvLinks = logData.tvLinks || originalLog.tvLinks || [];
     const targetEdgeId = newEdgeId || originalLog.edgeId;
 
     const updatedLog: TradeLog = {
@@ -768,7 +715,6 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
       edgeId: targetEdgeId,
       outcome,
       tvLinks,
-      tvLink: tvLinks[0] || undefined,
       logType: logData.logType || originalLog.logType,
       date: logData.date || originalLog.date,
       entryPrice: logData.entryPrice ?? originalLog.entryPrice ?? null,
@@ -808,7 +754,6 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
           duration_minutes: logData.durationMinutes,
           note: logData.note || '',
           tv_links: tvLinks,
-          tv_link: tvLinks[0] || null,
           date: logData.date || originalLog.date,
           entry_price: logData.entryPrice ?? originalLog.entryPrice ?? null,
           exit_price: logData.exitPrice ?? originalLog.exitPrice ?? null,
@@ -1091,7 +1036,7 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
             const { edgeId, logData } = op.payload as { edgeId: string; logData: TradeLogInput };
             const logType = logData.logType || 'FRONTTEST';
             const outcome = logData.result === 'OCCURRED' ? (logData.outcome || null) : null;
-            const tvLinks = logData.tvLinks || (logData.tvLink ? [logData.tvLink] : []);
+            const tvLinks = logData.tvLinks || [];
             const logDate = logData.date || new Date().toISOString().split('T')[0];
 
             const { data, error } = await supabase
@@ -1136,7 +1081,7 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
               originalLog: TradeLog;
             };
             const outcome = logData.result === 'OCCURRED' ? (logData.outcome || null) : null;
-            const tvLinks = logData.tvLinks || (logData.tvLink ? [logData.tvLink] : originalLog.tvLinks || []);
+            const tvLinks = logData.tvLinks || originalLog.tvLinks || [];
             const targetEdgeId = newEdgeId || originalLog.edgeId;
 
             const { data, error } = await supabase
@@ -1150,7 +1095,6 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
                 duration_minutes: logData.durationMinutes,
                 note: logData.note || '',
                 tv_links: tvLinks,
-                tv_link: tvLinks[0] || null,
                 date: logData.date || originalLog.date,
                 entry_price: logData.entryPrice ?? originalLog.entryPrice ?? null,
                 exit_price: logData.exitPrice ?? originalLog.exitPrice ?? null,
@@ -1185,7 +1129,15 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
         }
       } catch (err) {
         console.error(`[Queue] Failed to process ${op.type}:`, err);
-        // Keep in queue for next retry
+        // Track retry count - if max retries exceeded, notify user and remove
+        const canRetry = markRetried(op.id);
+        if (!canRetry) {
+          // Operation permanently failed after max retries
+          toast.error(`Failed to save ${op.type === 'addLog' ? 'trade log' : op.type === 'addEdge' ? 'edge' : 'update'}. Please try again manually.`, {
+            duration: 10000,
+            description: 'The operation failed after multiple attempts.',
+          });
+        }
       }
     }
   },

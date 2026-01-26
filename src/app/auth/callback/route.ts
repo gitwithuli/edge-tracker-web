@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
         .eq('user_id', user.id)
         .single();
 
-      console.log('[Auth Callback] User:', user.id, 'Subscription:', subscription);
+      console.log('[Auth Callback] User authenticated, tier:', subscription?.subscription_tier || 'none');
 
       // If user is paid, go to dashboard
       if (subscription?.subscription_tier === 'paid') {

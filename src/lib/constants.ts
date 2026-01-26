@@ -25,7 +25,7 @@ export const DEFAULT_LOG_VALUES = {
   dayOfWeek: "Tuesday" as TradingDay,
   durationMinutes: 15,
   note: "",
-  tvLink: "",
+  tvLinks: [] as string[],
   date: new Date().toISOString().split('T')[0],
 } as const;
 

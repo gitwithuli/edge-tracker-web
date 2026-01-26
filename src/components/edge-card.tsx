@@ -8,6 +8,7 @@ import { Calendar, Clock, CalendarCheck, Plus, Check, X } from "lucide-react";
 import type { EdgeWithLogs, TradeLogInput } from "@/lib/types";
 import { LogDialog } from "./log-dialog";
 import { HistorySheet } from "./history-sheet";
+import { calculateEdgeStats } from "@/lib/edge-stats";
 
 interface EdgeCardProps {
   edge: EdgeWithLogs;
@@ -18,15 +19,17 @@ interface EdgeCardProps {
 
 export const EdgeCard = memo(function EdgeCard({ edge, onAddLog, onDeleteLog, onUpdateLog }: EdgeCardProps) {
   const stats = useMemo(() => {
-    const totalDays = edge.logs.length;
-    const occurrences = edge.logs.filter((l) => l.result === "OCCURRED").length;
-    const occurrenceRate = totalDays > 0 ? Math.round((occurrences / totalDays) * 100) : 0;
+    // Use edge's createdAt for proper occurrence rate calculation
+    const baseStats = calculateEdgeStats(edge.logs, edge.createdAt);
+    const { occurred: occurrences, occurrenceRate, tradingDays } = baseStats;
 
-    const totalDuration = edge.logs.filter(l => l.result === "OCCURRED").reduce((acc, log) => acc + log.durationMinutes, 0);
+    const occurredLogs = edge.logs.filter(l => l.result === "OCCURRED");
+    const totalDuration = occurredLogs.reduce((acc, log) => acc + log.durationMinutes, 0);
     const avgDuration = occurrences > 0 ? Math.round(totalDuration / occurrences) : 0;
 
+    // Best day by occurrence count (not win rate)
     const dayCounts: Record<string, number> = {};
-    edge.logs.filter(l => l.result === "OCCURRED").forEach(l => {
+    occurredLogs.forEach(l => {
       dayCounts[l.dayOfWeek] = (dayCounts[l.dayOfWeek] || 0) + 1;
     });
 
@@ -34,8 +37,8 @@ export const EdgeCard = memo(function EdgeCard({ edge, onAddLog, onDeleteLog, on
       ? Object.keys(dayCounts).reduce((a, b) => dayCounts[a] > dayCounts[b] ? a : b)
       : "N/A";
 
-    return { totalDays, occurrences, occurrenceRate, avgDuration, bestDay };
-  }, [edge.logs]);
+    return { tradingDays, occurrences, occurrenceRate, avgDuration, bestDay };
+  }, [edge.logs, edge.createdAt]);
 
   const recentLogs = useMemo(() => edge.logs.slice(0, 2), [edge.logs]);
 
@@ -59,13 +62,13 @@ export const EdgeCard = memo(function EdgeCard({ edge, onAddLog, onDeleteLog, on
         <div className="grid grid-cols-3 gap-2 mb-6">
           <div className="bg-zinc-900/50 p-3 rounded-lg text-center border border-zinc-800/50">
             <Calendar className="w-4 h-4 mx-auto mb-1 text-zinc-500" />
-            <div className="text-lg font-bold">{stats.totalDays}</div>
-            <div className="text-[10px] text-zinc-600 uppercase font-semibold">Days</div>
+            <div className="text-lg font-bold">{stats.tradingDays}</div>
+            <div className="text-[10px] text-zinc-600 uppercase font-semibold">Trading Days</div>
           </div>
           <div className="bg-zinc-900/50 p-3 rounded-lg text-center border border-zinc-800/50">
             <Clock className="w-4 h-4 mx-auto mb-1 text-zinc-500" />
-            <div className="text-lg font-bold">{stats.avgDuration}m</div>
-            <div className="text-[10px] text-zinc-600 uppercase font-semibold">Avg Time</div>
+            <div className="text-lg font-bold">{stats.occurrences}</div>
+            <div className="text-[10px] text-zinc-600 uppercase font-semibold">Occurrences</div>
           </div>
           <div className="bg-zinc-900/50 p-3 rounded-lg text-center border border-zinc-800/50">
             <CalendarCheck className="w-4 h-4 mx-auto mb-1 text-zinc-500" />
@@ -109,7 +112,7 @@ export const EdgeCard = memo(function EdgeCard({ edge, onAddLog, onDeleteLog, on
           onSave={onAddLog}
           trigger={
             <Button className="w-full gap-2 bg-white text-black hover:bg-zinc-200 font-bold tracking-tight">
-              <Plus className="w-4 h-4" /> Log Day
+              <Plus className="w-4 h-4" /> Log Trade
             </Button>
           }
         />

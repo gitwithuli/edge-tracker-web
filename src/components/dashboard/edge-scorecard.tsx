@@ -5,6 +5,7 @@ import { Target, TrendingUp, ArrowRight, DollarSign, ArrowUpRight, ArrowDownRigh
 import type { EdgeWithLogs, TradeLog } from "@/lib/types";
 import { getSymbolInfo } from "@/lib/constants";
 import { formatCurrencyCompact } from "@/lib/utils";
+import { countTradingDays } from "@/lib/edge-stats";
 import Link from "next/link";
 
 interface EdgeScorecardProps {
@@ -24,7 +25,8 @@ interface EdgeScore {
   name: string;
   occurrenceRate: number;
   winRate: number;
-  totalLogs: number;
+  tradingDays: number;
+  occurrences: number;
   wins: number;
   losses: number;
   pnl: number | null;
@@ -40,12 +42,15 @@ interface EdgeGroup {
   subEdges: EdgeScore[];
 }
 
-function calculateEdgeScore(edge: EdgeWithLogs, logs?: TradeLog[]): EdgeScore {
+function calculateEdgeScore(edge: EdgeWithLogs, logs?: TradeLog[], createdAt?: string): EdgeScore {
   const edgeLogs = logs || edge.logs;
-  const totalLogs = edgeLogs.length;
   const occurredLogs = edgeLogs.filter((l) => l.result === "OCCURRED");
   const occurrences = occurredLogs.length;
-  const occurrenceRate = totalLogs > 0 ? Math.round((occurrences / totalLogs) * 100) : 0;
+
+  // Use trading days since edge creation for occurrence rate
+  const edgeCreatedAt = createdAt || edge.createdAt;
+  const tradingDays = edgeCreatedAt ? countTradingDays(edgeCreatedAt) : 0;
+  const occurrenceRate = tradingDays > 0 ? Math.round((occurrences / tradingDays) * 100) : 0;
 
   const wins = occurredLogs.filter((l) => l.outcome === "WIN").length;
   const losses = occurredLogs.filter((l) => l.outcome === "LOSS").length;
@@ -140,7 +145,8 @@ function calculateEdgeScore(edge: EdgeWithLogs, logs?: TradeLog[]): EdgeScore {
     name: edge.name,
     occurrenceRate,
     winRate,
-    totalLogs,
+    tradingDays,
+    occurrences,
     wins,
     losses,
     pnl,
@@ -188,8 +194,9 @@ export function EdgeScorecard({ edgesWithLogs }: EdgeScorecardProps) {
 
       if (subEdges.length > 0) {
         // Parent edge with sub-edges - calculate combined stats
+        // Use parent's createdAt for the combined occurrence rate
         const allLogs = [...edge.logs, ...subEdges.flatMap(s => s.logs)];
-        const parentScore = calculateEdgeScore(edge, allLogs);
+        const parentScore = calculateEdgeScore(edge, allLogs, edge.createdAt);
         const subEdgeScores = subEdges.map(s => calculateEdgeScore(s));
         groups.push({ parent: parentScore, subEdges: subEdgeScores });
       } else if (!subEdgeIds.has(edge.id)) {
@@ -254,7 +261,7 @@ export function EdgeScorecard({ edgesWithLogs }: EdgeScorecardProps) {
           </h4>
         </div>
         <div className="flex items-center gap-1 text-[#0F0F0F]/30 dark:text-white/30">
-          <span className="text-xs">{score.totalLogs} days</span>
+          <span className="text-xs">{score.occurrences} in {score.tradingDays}d</span>
           <ArrowRight className="w-3 h-3 group-hover:text-[#C45A3B] group-hover:translate-x-0.5 transition-all" />
         </div>
       </div>
@@ -442,7 +449,7 @@ export function EdgeScorecard({ edgesWithLogs }: EdgeScorecardProps) {
                     </span>
                   </div>
                   <div className="flex items-center gap-1 text-[#0F0F0F]/30 dark:text-white/30">
-                    <span className="text-xs">{parent.totalLogs} days</span>
+                    <span className="text-xs">{parent.occurrences} in {parent.tradingDays}d</span>
                     <ArrowRight className="w-3 h-3 group-hover:text-[#C45A3B] group-hover:translate-x-0.5 transition-all" />
                   </div>
                 </div>
@@ -521,7 +528,7 @@ export function EdgeScorecard({ edgesWithLogs }: EdgeScorecardProps) {
 
         {/* Standalone edges */}
         {standaloneScores.map((score, index) =>
-          renderScoreCard(score, index === 0 && edgeGroups.length === 0 && score.totalLogs >= 3)
+          renderScoreCard(score, index === 0 && edgeGroups.length === 0 && score.tradingDays >= 3)
         )}
       </div>
     </div>

@@ -5,9 +5,10 @@ import Link from 'next/link';
 import { TrendingUp, Calendar, Target, CheckCircle, XCircle } from 'lucide-react';
 import { SharePageHeader } from './header';
 
+// Use anon key for public data - RLS policy allows reading public edges
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
 interface PublicEdge {

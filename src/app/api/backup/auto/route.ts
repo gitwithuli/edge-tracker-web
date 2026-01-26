@@ -1,8 +1,8 @@
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { NextRequest, NextResponse } from "next/server";
 
-// User email to backup (your account)
-const BACKUP_USER_EMAIL = "savkinulas34@gmail.com";
+// User email to backup - configured via environment variable
+const BACKUP_USER_EMAIL = process.env.BACKUP_USER_EMAIL;
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,6 +13,11 @@ export async function GET(request: NextRequest) {
     if (!cronSecret) {
       console.error("CRON_SECRET not configured");
       return NextResponse.json({ error: "Server misconfigured" }, { status: 500 });
+    }
+
+    if (!BACKUP_USER_EMAIL) {
+      console.error("BACKUP_USER_EMAIL not configured");
+      return NextResponse.json({ error: "Backup user not configured" }, { status: 500 });
     }
 
     if (authHeader !== `Bearer ${cronSecret}`) {

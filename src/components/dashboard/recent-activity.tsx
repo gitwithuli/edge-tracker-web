@@ -21,7 +21,7 @@ export function RecentActivity({ logs, edgesWithLogs, limit = 5 }: RecentActivit
     });
 
     return logs.slice(0, limit).map(log => {
-      const tvLinks = log.tvLinks || (log.tvLink ? [log.tvLink] : []);
+      const tvLinks = log.tvLinks || [];
       const firstLink = tvLinks[0] || null;
 
       // Calculate P&L if prices are available

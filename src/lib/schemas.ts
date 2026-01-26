@@ -51,8 +51,6 @@ export const tradeLogInputSchema = z.object({
   note: z.string().max(2000).default(""),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format").optional(),
   tvLinks: z.array(tvLinkSchema).default([]),
-  // Legacy field for backward compatibility
-  tvLink: tvLinkSchema.optional().or(z.literal("")),
   // Optional fields (enabled per edge)
   entryPrice: z.number().nullable().optional(),
   exitPrice: z.number().nullable().optional(),

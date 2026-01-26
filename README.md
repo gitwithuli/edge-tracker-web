@@ -1,36 +1,141 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Edge Tracker Web
+
+A trading edge journaling and analysis platform built with Next.js 16, Supabase, and Stripe.
+
+## Features
+
+- **Edge Management**: Create and organize trading edges with parent-child hierarchies
+- **Trade Logging**: Log trades with results, outcomes, and notes
+- **Macro Analysis**: Track macro time windows and their performance
+- **Backtest & Fronttest**: Separate logging for backtesting and live trading
+- **Statistics Dashboard**: View win rates, occurrence rates, and performance metrics
+- **Subscription Tiers**: Free tier with limits, Pro tier with unlimited access
+
+## Tech Stack
+
+- **Framework**: Next.js 16 (App Router)
+- **Language**: TypeScript
+- **Database**: Supabase (PostgreSQL)
+- **Auth**: Supabase Auth
+- **Payments**: Stripe
+- **Styling**: Tailwind CSS v4
+- **UI Components**: Radix UI
+- **State Management**: Zustand
+- **Validation**: Zod
+- **Testing**: Vitest + Testing Library
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
+- Node.js 20+
+- npm
+- Supabase account
+- Stripe account (for payments)
+
+### Installation
+
+1. Clone the repository:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/your-username/edge-tracker-web.git
+cd edge-tracker-web
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Install dependencies:
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Copy the environment template:
+```bash
+cp .env.example .env.local
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. Fill in your environment variables in `.env.local`
 
-## Learn More
+5. Run the development server:
+```bash
+npm run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+Open [http://localhost:3000](http://localhost:3000) to see the app.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Scripts
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start development server |
+| `npm run build` | Build for production |
+| `npm run start` | Start production server |
+| `npm run lint` | Run ESLint |
+| `npm run typecheck` | Run TypeScript compiler check |
+| `npm run test` | Run tests in watch mode |
+| `npm run test:run` | Run tests once |
+| `npm run test:coverage` | Run tests with coverage |
 
-## Deploy on Vercel
+## Project Structure
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
+src/
+├── app/                    # Next.js App Router pages
+│   ├── (auth)/            # Auth-related pages
+│   ├── (protected)/       # Protected routes (dashboard, edges)
+│   └── api/               # API routes
+├── components/            # React components
+│   └── ui/               # Reusable UI components
+├── hooks/                # Custom React hooks
+│   ├── use-edge-store.ts # Edge & auth state management
+│   └── use-macro-store.ts # Macro logging state
+├── lib/                  # Utilities and constants
+│   ├── schemas.ts        # Zod validation schemas
+│   ├── macro-constants.ts # Macro time windows
+│   └── utils.ts          # Helper functions
+└── test/                 # Test setup and utilities
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Testing
+
+Run the test suite:
+
+```bash
+# Watch mode
+npm run test
+
+# Single run
+npm run test:run
+
+# With coverage
+npm run test:coverage
+```
+
+Tests are located alongside source files with `.test.ts` suffix.
+
+## Environment Variables
+
+See `.env.example` for all required and optional environment variables.
+
+Required:
+- `NEXT_PUBLIC_SUPABASE_URL` - Supabase project URL
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Supabase anonymous key
+- `NEXT_PUBLIC_APP_URL` - Application URL
+- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` - Stripe publishable key
+- `STRIPE_SECRET_KEY` - Stripe secret key
+- `STRIPE_WEBHOOK_SECRET` - Stripe webhook signing secret
+
+## Deployment
+
+### Vercel (Recommended)
+
+1. Connect your GitHub repository to Vercel
+2. Configure environment variables in Vercel dashboard
+3. Deploy
+
+The app includes a GitHub Actions CI pipeline that runs on every push and PR to main:
+- TypeScript type checking
+- ESLint
+- Test suite
+- Production build verification
+
+## License
+
+Private project - All rights reserved.

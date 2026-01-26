@@ -54,6 +54,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
+    site: "@edgeofict",
+    creator: "@edgeofict",
     title: "Edge of ICT",
     description: "Track your trading edges with surgical precision",
     images: ["/og-image.png"],

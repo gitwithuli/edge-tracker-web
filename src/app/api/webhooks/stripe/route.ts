@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
             onConflict: 'user_id',
           });
 
-        console.log(`User ${userId} upgraded to paid`);
+        console.log('User upgraded to paid');
         break;
       }
 
@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
           })
           .eq('user_id', targetUserId);
 
-        console.log(`Subscription updated for user ${targetUserId}: ${subscription.status}`);
+        console.log(`Subscription updated: ${subscription.status}`);
         break;
       }
 
@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
           })
           .eq('user_id', sub.user_id);
 
-        console.log(`Subscription deleted for user ${sub.user_id}`);
+        console.log('Subscription deleted');
         break;
       }
 
@@ -151,7 +151,7 @@ export async function POST(request: NextRequest) {
           .single();
 
         if (sub) {
-          console.log(`Payment failed for user ${sub.user_id}`);
+          console.log('Payment failed for subscription');
           // Optionally send notification or update status
         }
         break;

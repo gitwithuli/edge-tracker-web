@@ -160,7 +160,7 @@ export const HistorySheet = memo(function HistorySheet({ edge, onDeleteLog, onUp
 
                     <div className="space-y-3">
                       {group.logs.map((log) => {
-                        const tvLinks = log.tvLinks || (log.tvLink ? [log.tvLink] : []);
+                        const tvLinks = log.tvLinks || [];
                         const imageUrls = tvLinks.map(link => getTVImageUrl(link)).filter((url): url is string => url !== null);
                         const isOccurred = log.result === "OCCURRED";
                         const isBacktest = log.logType === "BACKTEST";

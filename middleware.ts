@@ -103,7 +103,7 @@ export async function middleware(request: NextRequest) {
 
   // If user is logged in but route requires subscription, check subscription
   if (user && !isPublicRoute(pathname) && !isFreeAuthenticatedRoute(pathname)) {
-    console.log('[Middleware] Checking subscription for user:', user.id, 'pathname:', pathname);
+    // Subscription check for protected route
 
     // Use admin client to bypass RLS
     const { data: subscription, error: subError } = await supabaseAdmin
@@ -112,11 +112,13 @@ export async function middleware(request: NextRequest) {
       .eq('user_id', user.id)
       .single();
 
-    console.log('[Middleware] Subscription result:', subscription, 'error:', subError);
+    if (subError) {
+      console.error('[Middleware] Subscription check error');
+    }
 
     // If no subscription or unpaid, redirect to pricing
     if (!subscription || subscription.subscription_tier !== 'paid') {
-      console.log('[Middleware] Redirecting to /pricing - subscription:', subscription?.subscription_tier);
+      // User not subscribed, redirect to pricing
       const url = request.nextUrl.clone();
       url.pathname = '/pricing';
       const redirectResponse = NextResponse.redirect(url);

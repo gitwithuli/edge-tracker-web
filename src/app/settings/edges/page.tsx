@@ -13,16 +13,21 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Plus, Pencil, Trash2, Target, Loader2, ChevronRight, Share2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { ArrowLeft, Plus, Pencil, Trash2, Target, Loader2, ChevronRight, Share2, RotateCcw } from "lucide-react";
 import { EdgeFormDialog } from "@/components/edge-form-dialog";
 import { ShareEdgeDialog } from "@/components/share-edge-dialog";
 import { GrainOverlay } from "@/components/grain-overlay";
 import Link from "next/link";
 
 export default function EdgeSettingsPage() {
-  const { edges, logs, isLoaded, user, deleteEdge, loadingStates } = useEdgeStore();
+  const { edges, logs, isLoaded, user, deleteEdge, loadingStates, fetchEdges, fetchLogs } = useEdgeStore();
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [showFreshStart, setShowFreshStart] = useState(false);
+  const [freshStartConfirm, setFreshStartConfirm] = useState("");
+  const [freshStartLoading, setFreshStartLoading] = useState(false);
+  const [freshStartResult, setFreshStartResult] = useState<{ success: boolean; message: string } | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -47,6 +52,52 @@ export default function EdgeSettingsPage() {
     if (deleteTarget) {
       await deleteEdge(deleteTarget.id);
       setDeleteTarget(null);
+    }
+  };
+
+  const handleFreshStart = async () => {
+    if (freshStartConfirm !== "FRESH START") return;
+
+    setFreshStartLoading(true);
+    setFreshStartResult(null);
+
+    try {
+      const response = await fetch("/api/reset-edges", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          confirmCode: "FRESH_START_2025",
+          userId: user?.id,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to reset edges");
+      }
+
+      setFreshStartResult({
+        success: true,
+        message: `Fresh start complete! Deleted ${data.deletedLogs} logs and reset ${data.updatedEdges} edges.`,
+      });
+
+      // Refresh the store data
+      await Promise.all([fetchEdges(), fetchLogs()]);
+
+      // Close dialog after a delay
+      setTimeout(() => {
+        setShowFreshStart(false);
+        setFreshStartConfirm("");
+        setFreshStartResult(null);
+      }, 2000);
+    } catch (error) {
+      setFreshStartResult({
+        success: false,
+        message: error instanceof Error ? error.message : "An error occurred",
+      });
+    } finally {
+      setFreshStartLoading(false);
     }
   };
 
@@ -267,6 +318,39 @@ export default function EdgeSettingsPage() {
               ))}
             </div>
           )}
+
+          {/* Fresh Start Section */}
+          {edges.length > 0 && (
+            <div
+              className={`mt-12 sm:mt-16 pt-8 sm:pt-10 border-t border-[#C45A3B]/20 opacity-0 ${mounted ? 'animate-slide-up' : ''}`}
+              style={{ animationDelay: `${0.2 + edges.length * 0.05}s` }}
+            >
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#C45A3B]/10 flex items-center justify-center flex-shrink-0">
+                  <RotateCcw className="w-5 h-5 sm:w-6 sm:h-6 text-[#C45A3B]" />
+                </div>
+                <div className="flex-1">
+                  <h3
+                    className="text-lg sm:text-xl text-[#0F0F0F] dark:text-white mb-1.5"
+                    style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                  >
+                    Fresh Start
+                  </h3>
+                  <p className="text-xs sm:text-sm text-[#0F0F0F]/50 dark:text-white/50 mb-4 max-w-md">
+                    Reset all your edges to start tracking from today. This will delete all logs
+                    and set each edge&apos;s creation date to today for accurate occurrence rate calculation.
+                  </p>
+                  <button
+                    onClick={() => setShowFreshStart(true)}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#C45A3B]/30 text-[#C45A3B] text-xs sm:text-sm font-medium hover:bg-[#C45A3B]/5 transition-colors duration-300"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    Start Fresh
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </main>
 
         {/* Footer */}
@@ -304,6 +388,80 @@ export default function EdgeSettingsPage() {
             >
               Delete
             </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Fresh Start Confirmation Dialog */}
+      <AlertDialog open={showFreshStart} onOpenChange={(open) => {
+        if (!open && !freshStartLoading) {
+          setShowFreshStart(false);
+          setFreshStartConfirm("");
+          setFreshStartResult(null);
+        }
+      }}>
+        <AlertDialogContent className="bg-[#FAF7F2] dark:bg-[#1a1a1a] border-[#0F0F0F]/10 dark:border-white/10 max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle
+              className="text-[#0F0F0F] dark:text-white text-xl flex items-center gap-2"
+              style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+            >
+              <RotateCcw className="w-5 h-5 text-[#C45A3B]" />
+              Fresh Start
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-[#0F0F0F]/50 dark:text-white/50 space-y-3">
+              <span className="block">
+                This will permanently delete all your trade logs and reset all edge creation dates to today.
+              </span>
+              <span className="block text-[#C45A3B] font-medium">
+                This action cannot be undone.
+              </span>
+              <span className="block mt-4">
+                Type <span className="font-mono bg-[#0F0F0F]/5 dark:bg-white/10 px-1.5 py-0.5 rounded">FRESH START</span> to confirm:
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <div className="py-2">
+            <Input
+              value={freshStartConfirm}
+              onChange={(e) => setFreshStartConfirm(e.target.value)}
+              placeholder="Type FRESH START"
+              className="bg-white dark:bg-white/5 border-[#0F0F0F]/10 dark:border-white/10 text-[#0F0F0F] dark:text-white placeholder:text-[#0F0F0F]/30 dark:placeholder:text-white/30"
+              disabled={freshStartLoading}
+            />
+          </div>
+
+          {freshStartResult && (
+            <div className={`p-3 rounded-lg text-sm ${freshStartResult.success ? 'bg-[#8B9A7D]/10 text-[#8B9A7D]' : 'bg-[#C45A3B]/10 text-[#C45A3B]'}`}>
+              {freshStartResult.message}
+            </div>
+          )}
+
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel
+              className="bg-transparent border-[#0F0F0F]/10 dark:border-white/10 text-[#0F0F0F]/60 dark:text-white/60 hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5 hover:text-[#0F0F0F] dark:hover:text-white rounded-full px-5"
+              disabled={freshStartLoading}
+            >
+              Cancel
+            </AlertDialogCancel>
+            <button
+              onClick={handleFreshStart}
+              disabled={freshStartConfirm !== "FRESH START" || freshStartLoading}
+              className="inline-flex items-center justify-center gap-2 bg-[#C45A3B] text-white hover:bg-[#B34D30] rounded-full px-5 py-2 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {freshStartLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Resetting...
+                </>
+              ) : (
+                <>
+                  <RotateCcw className="w-4 h-4" />
+                  Reset Everything
+                </>
+              )}
+            </button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
