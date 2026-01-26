@@ -262,14 +262,15 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
       let user = null;
 
       // Try getSession first (fast, uses cached token)
+      // Using longer timeouts to handle Supabase free tier cold starts
       try {
-        const { data: { session } } = await withTimeout(supabase.auth.getSession(), 5000);
+        const { data: { session } } = await withTimeout(supabase.auth.getSession(), 15000);
         user = session?.user || null;
       } catch {
         // getSession failed/timed out - try getUser which forces a fresh API call
         console.log('getSession timed out, trying getUser...');
         try {
-          const { data: { user: freshUser } } = await withTimeout(supabase.auth.getUser(), 5000);
+          const { data: { user: freshUser } } = await withTimeout(supabase.auth.getUser(), 15000);
           user = freshUser;
         } catch {
           // Both failed - session is likely corrupted
