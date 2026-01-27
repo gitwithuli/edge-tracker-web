@@ -22,12 +22,12 @@ const PAID_FEATURES = [
 
 const FREE_FEATURES = [
   { name: "1 Edge (basic logging)", included: true },
-  { name: "7-day rolling history", included: true },
-  { name: "Forwardtest only", included: true },
+  { name: "14-day rolling history", included: true },
+  { name: "Backtest only", included: true },
 ];
 
 const FREE_LIMITATIONS = [
-  { name: "Backtest Logging", locked: true },
+  { name: "Forwardtest Tracking", locked: true },
   { name: "Macro Tracker", locked: true },
   { name: "Data Export", locked: true },
   { name: "Unlimited Edges", locked: true },

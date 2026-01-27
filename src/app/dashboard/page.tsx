@@ -56,6 +56,13 @@ export default function DashboardPage() {
     setMounted(true);
   }, []);
 
+  // Free tier defaults to backtest view
+  useEffect(() => {
+    if (subscription && !canAccess('forwardtest')) {
+      setActiveView("BACKTEST");
+    }
+  }, [subscription, canAccess]);
+
   // Filter by log type first
   const logsByType = useMemo(() => {
     return logs.filter(log => (log.logType || 'FRONTTEST') === activeView);
@@ -240,30 +247,18 @@ export default function DashboardPage() {
 
               {/* View Toggle */}
               <div className="flex p-0.5 sm:p-1 bg-[#0F0F0F]/5 dark:bg-white/5 rounded-full">
-                <button
-                  onClick={() => setActiveView("FRONTTEST")}
-                  className={`flex items-center gap-1 sm:gap-2 px-2.5 sm:px-5 py-1.5 sm:py-2.5 rounded-full text-[11px] sm:text-sm font-medium transition-all duration-300 ${
-                    activeView === "FRONTTEST"
-                      ? "bg-[#0F0F0F] dark:bg-white text-[#FAF7F2] dark:text-[#0F0F0F] shadow-sm"
-                      : "text-[#0F0F0F]/50 dark:text-white/50 hover:text-[#0F0F0F] dark:hover:text-white"
-                  }`}
-                >
-                  <Play className="w-3 h-3 sm:w-4 sm:h-4" />
-                  <span className="hidden sm:inline">Forwardtest</span>
-                  <span className="sm:hidden">Forward</span>
-                </button>
-                {canAccess('backtest') ? (
+                {canAccess('forwardtest') ? (
                   <button
-                    onClick={() => setActiveView("BACKTEST")}
+                    onClick={() => setActiveView("FRONTTEST")}
                     className={`flex items-center gap-1 sm:gap-2 px-2.5 sm:px-5 py-1.5 sm:py-2.5 rounded-full text-[11px] sm:text-sm font-medium transition-all duration-300 ${
-                      activeView === "BACKTEST"
+                      activeView === "FRONTTEST"
                         ? "bg-[#0F0F0F] dark:bg-white text-[#FAF7F2] dark:text-[#0F0F0F] shadow-sm"
                         : "text-[#0F0F0F]/50 dark:text-white/50 hover:text-[#0F0F0F] dark:hover:text-white"
                     }`}
                   >
-                    <Rewind className="w-3 h-3 sm:w-4 sm:h-4" />
-                    <span className="hidden sm:inline">Backtest</span>
-                    <span className="sm:hidden">Back</span>
+                    <Play className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <span className="hidden sm:inline">Forwardtest</span>
+                    <span className="sm:hidden">Forward</span>
                   </button>
                 ) : (
                   <Link
@@ -271,10 +266,22 @@ export default function DashboardPage() {
                     className="flex items-center gap-1 sm:gap-2 px-2.5 sm:px-5 py-1.5 sm:py-2.5 rounded-full text-[11px] sm:text-sm font-medium text-[#0F0F0F]/45 dark:text-white/45 hover:text-[#C45A3B] transition-colors"
                   >
                     <Lock className="w-3 h-3 sm:w-4 sm:h-4" />
-                    <span className="hidden sm:inline">Backtest</span>
-                    <span className="sm:hidden">Back</span>
+                    <span className="hidden sm:inline">Forwardtest</span>
+                    <span className="sm:hidden">Forward</span>
                   </Link>
                 )}
+                <button
+                  onClick={() => setActiveView("BACKTEST")}
+                  className={`flex items-center gap-1 sm:gap-2 px-2.5 sm:px-5 py-1.5 sm:py-2.5 rounded-full text-[11px] sm:text-sm font-medium transition-all duration-300 ${
+                    activeView === "BACKTEST"
+                      ? "bg-[#0F0F0F] dark:bg-white text-[#FAF7F2] dark:text-[#0F0F0F] shadow-sm"
+                      : "text-[#0F0F0F]/50 dark:text-white/50 hover:text-[#0F0F0F] dark:hover:text-white"
+                  }`}
+                >
+                  <Rewind className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span className="hidden sm:inline">Backtest</span>
+                  <span className="sm:hidden">Back</span>
+                </button>
               </div>
             </div>
           </div>

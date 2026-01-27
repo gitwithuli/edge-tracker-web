@@ -166,10 +166,10 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
       return true;
     }
 
-    // Free / unpaid: limited access
+    // Free / unpaid: backtest only, 1 edge, 14-day history
     if (tier === 'free' || tier === 'unpaid') {
-      if (feature === 'forwardtest') return true;
-      // Everything else blocked for free tier
+      if (feature === 'backtest') return true;
+      // Everything else blocked for free tier (forwardtest, macros, export, unlimited_edges)
       return false;
     }
 
@@ -547,11 +547,13 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
       .eq('user_id', user.id)
       .order('date', { ascending: false });
 
-    // Free tier: only fetch last 7 days of logs
-    if (!canAccess('backtest')) {
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-      query = query.gte('date', sevenDaysAgo.toISOString().split('T')[0]);
+    // Free tier: only fetch last 14 days of logs
+    const { subscription } = get();
+    const tier = subscription?.tier;
+    if (tier === 'free' || tier === 'unpaid') {
+      const fourteenDaysAgo = new Date();
+      fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+      query = query.gte('date', fourteenDaysAgo.toISOString().split('T')[0]);
     }
 
     const { data, error } = await query;
