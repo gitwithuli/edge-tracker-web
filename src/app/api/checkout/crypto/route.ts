@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server';
 
 const NOWPAYMENTS_API_KEY = process.env.NOWPAYMENTS_API_KEY!;
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://edgeofict.com';
-const PRICE_AMOUNT = 14.50;
+const PRICE_AMOUNT = parseFloat(process.env.CHECKOUT_PRICE_AMOUNT || '14.50');
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
