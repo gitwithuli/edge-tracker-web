@@ -43,7 +43,7 @@ const ACCEPTED_COINS = ["BTC", "ETH", "USDT", "USDC"];
 
 export default function PricingPage() {
   const router = useRouter();
-  const { user, isLoaded, isPaid, subscription } = useEdgeStore();
+  const { user, isLoaded, subscription } = useEdgeStore();
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -51,12 +51,12 @@ export default function PricingPage() {
     setMounted(true);
   }, []);
 
-  // If already paid, redirect to dashboard
+  // If already paid (not trial), redirect to dashboard
   useEffect(() => {
-    if (isLoaded && user && isPaid()) {
+    if (isLoaded && user && subscription?.tier === 'paid') {
       router.push('/dashboard');
     }
-  }, [isLoaded, user, isPaid, router]);
+  }, [isLoaded, user, subscription, router]);
 
   // Trial countdown
   const trialInfo = useMemo(() => {
