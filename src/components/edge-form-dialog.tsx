@@ -124,7 +124,7 @@ export function EdgeFormDialog({ edge, trigger, onSuccess, defaultParentEdgeId }
         <DialogHeader className="p-6 pb-0">
           <DialogTitle
             className="text-xl tracking-tight"
-            style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+            style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
           >
             {edge ? "Edit Edge" : "Create New Edge"}
           </DialogTitle>
@@ -132,7 +132,7 @@ export function EdgeFormDialog({ edge, trigger, onSuccess, defaultParentEdgeId }
 
         <form onSubmit={handleSubmit} className="p-6 pt-4 space-y-5">
           <div className="space-y-2">
-            <Label className="text-[#0F0F0F]/40 text-xs uppercase tracking-[0.15em]">
+            <Label className="text-[#0F0F0F]/50 text-xs uppercase tracking-[0.15em]">
               Name <span className="text-[#C45A3B]">*</span>
             </Label>
             <Input
@@ -146,7 +146,7 @@ export function EdgeFormDialog({ edge, trigger, onSuccess, defaultParentEdgeId }
           </div>
 
           <div className="space-y-2">
-            <Label className="text-[#0F0F0F]/40 text-xs uppercase tracking-[0.15em]">
+            <Label className="text-[#0F0F0F]/50 text-xs uppercase tracking-[0.15em]">
               Description
             </Label>
             <Textarea
@@ -157,13 +157,13 @@ export function EdgeFormDialog({ edge, trigger, onSuccess, defaultParentEdgeId }
               maxLength={500}
               disabled={isSubmitting}
             />
-            <p className="text-xs text-[#0F0F0F]/30">{description.length}/500</p>
+            <p className="text-xs text-[#0F0F0F]/45">{description.length}/500</p>
           </div>
 
           {/* Parent Edge Selector (for sub-edges) */}
           {availableParentEdges.length > 0 && (
             <div className="space-y-2">
-              <Label className="text-[#0F0F0F]/40 text-xs uppercase tracking-[0.15em]">
+              <Label className="text-[#0F0F0F]/50 text-xs uppercase tracking-[0.15em]">
                 Parent Edge (Optional)
               </Label>
               <Select
@@ -183,7 +183,7 @@ export function EdgeFormDialog({ edge, trigger, onSuccess, defaultParentEdgeId }
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-[#0F0F0F]/30">
+              <p className="text-xs text-[#0F0F0F]/45">
                 Make this a sub-edge of another edge to group them together
               </p>
             </div>
@@ -192,10 +192,10 @@ export function EdgeFormDialog({ edge, trigger, onSuccess, defaultParentEdgeId }
           {/* Optional Tracking Fields */}
           <div className="space-y-3 pt-2">
             <div className="border-t border-[#0F0F0F]/10 pt-4">
-              <Label className="text-[#0F0F0F]/40 text-xs uppercase tracking-[0.15em]">
+              <Label className="text-[#0F0F0F]/50 text-xs uppercase tracking-[0.15em]">
                 Optional Tracking Fields
               </Label>
-              <p className="text-xs text-[#0F0F0F]/30 mt-1">
+              <p className="text-xs text-[#0F0F0F]/45 mt-1">
                 Enable additional fields to track for this edge
               </p>
             </div>
@@ -209,7 +209,7 @@ export function EdgeFormDialog({ edge, trigger, onSuccess, defaultParentEdgeId }
                     type="button"
                     onClick={() => toggleField(field)}
                     disabled={isSubmitting}
-                    className={`w-full flex items-start gap-3 p-3 rounded-xl border transition-all duration-200 text-left ${
+                    className={`w-full flex items-start gap-3 p-3 rounded-xl border transition-colors duration-200 text-left ${
                       isEnabled
                         ? "border-[#C45A3B] bg-[#C45A3B]/5"
                         : "border-[#0F0F0F]/10 bg-white hover:border-[#0F0F0F]/20"
@@ -228,7 +228,7 @@ export function EdgeFormDialog({ edge, trigger, onSuccess, defaultParentEdgeId }
                       <p className={`text-sm font-medium ${isEnabled ? "text-[#0F0F0F]" : "text-[#0F0F0F]/70"}`}>
                         {info.label}
                       </p>
-                      <p className="text-xs text-[#0F0F0F]/40 mt-0.5">
+                      <p className="text-xs text-[#0F0F0F]/50 mt-0.5">
                         {info.description}
                       </p>
                     </div>

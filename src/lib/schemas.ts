@@ -99,7 +99,7 @@ export const edgeInputSchema = z.object({
   name: z.string().min(1, "Name is required").max(100, "Name too long"),
   description: z.string().max(500).default(""),
   enabledFields: z.array(z.enum(OPTIONAL_FIELD_GROUPS)).default([]),
-  symbol: z.enum(FUTURES_SYMBOL_LIST as unknown as [string, ...string[]]).nullable().optional(),
+  symbol: z.enum(FUTURES_SYMBOL_LIST).nullable().optional(),
   parentEdgeId: z.string().nullable().optional(), // For sub-edges
 });
 

@@ -62,24 +62,6 @@ export default function LoginPage() {
   return (
     <>
       <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap');
-
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-
-        @keyframes fadeSlideUp {
-          from {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
         @keyframes growUp {
           from {
             opacity: 0;
@@ -91,14 +73,6 @@ export default function LoginPage() {
             transform: scaleY(1);
             transform-origin: bottom;
           }
-        }
-
-        .animate-fade-in {
-          animation: fadeIn 0.8s ease-out forwards;
-        }
-
-        .animate-slide-up {
-          animation: fadeSlideUp 0.8s ease-out forwards;
         }
 
         /* Custom Supabase Auth UI overrides */
@@ -160,7 +134,7 @@ export default function LoginPage() {
                 <h1
                   className={`text-4xl xl:text-5xl text-[#FAF7F2] leading-[1.1] tracking-tight opacity-0 ${mounted ? 'animate-slide-up' : ''}`}
                   style={{
-                    fontFamily: "'Libre Baskerville', Georgia, serif",
+                    fontFamily: "var(--font-libre-baskerville), Georgia, serif",
                     animationDelay: '0.5s'
                   }}
                 >
@@ -199,7 +173,7 @@ export default function LoginPage() {
             {/* Mobile back link */}
             <Link
               href="/"
-              className={`lg:hidden inline-flex items-center gap-2 text-[#0F0F0F]/40 dark:text-white/40 hover:text-[#0F0F0F] dark:hover:text-white transition-colors text-sm mb-12 opacity-0 ${mounted ? 'animate-fade-in' : ''}`}
+              className={`lg:hidden inline-flex items-center gap-2 text-[#0F0F0F]/50 dark:text-white/50 hover:text-[#0F0F0F] dark:hover:text-white transition-colors text-sm mb-12 opacity-0 ${mounted ? 'animate-fade-in' : ''}`}
             >
               <ArrowLeft className="w-4 h-4" />
               <span className="tracking-[0.15em] uppercase">Back</span>
@@ -211,7 +185,7 @@ export default function LoginPage() {
             >
               <h2
                 className="text-3xl sm:text-4xl tracking-tight text-[#0F0F0F] dark:text-white"
-                style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
               >
                 {isSignUp ? 'Get started' : 'Welcome back'}
               </h2>
@@ -322,7 +296,7 @@ export default function LoginPage() {
                   {isSignUp ? 'Sign in' : 'Sign up'}
                 </button>
               </p>
-              <p className="mt-4 text-xs text-[#0F0F0F]/30 dark:text-white/30">
+              <p className="mt-4 text-xs text-[#0F0F0F]/45 dark:text-white/45">
                 By continuing, you agree to our terms of service
               </p>
             </div>

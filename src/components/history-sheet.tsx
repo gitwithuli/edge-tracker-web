@@ -113,22 +113,22 @@ export const HistorySheet = memo(function HistorySheet({ edge, onDeleteLog, onUp
           <div className="p-5 sm:p-6 pb-4 border-b border-[#0F0F0F]/[0.06] dark:border-white/[0.06] shrink-0">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <div className="text-[10px] tracking-[0.2em] uppercase text-[#0F0F0F]/40 dark:text-white/40 mb-1">
+                <div className="text-[10px] tracking-[0.2em] uppercase text-[#0F0F0F]/50 dark:text-white/50 mb-1">
                   Log History
                 </div>
                 <DialogTitle
                   className="text-2xl sm:text-3xl font-normal text-[#0F0F0F] dark:text-white"
-                  style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                  style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
                 >
                   {edge.name}
                 </DialogTitle>
-                <div className="text-sm text-[#0F0F0F]/40 dark:text-white/40 mt-1">
+                <div className="text-sm text-[#0F0F0F]/50 dark:text-white/50 mt-1">
                   {edge.logs.length} {edge.logs.length === 1 ? 'entry' : 'entries'}
                 </div>
               </div>
               <button
                 onClick={() => setOpen(false)}
-                className="p-2 -mr-2 -mt-1 rounded-xl hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5 transition-colors text-[#0F0F0F]/40 dark:text-white/40 hover:text-[#0F0F0F] dark:hover:text-white"
+                className="p-2 -mr-2 -mt-1 rounded-xl hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5 transition-colors text-[#0F0F0F]/50 dark:text-white/50 hover:text-[#0F0F0F] dark:hover:text-white"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -140,9 +140,9 @@ export const HistorySheet = memo(function HistorySheet({ edge, onDeleteLog, onUp
             {groupedLogs.length === 0 ? (
               <div className="text-center py-16">
                 <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#0F0F0F]/5 dark:bg-white/5 flex items-center justify-center">
-                  <History className="w-6 h-6 text-[#0F0F0F]/30 dark:text-white/30" />
+                  <History className="w-6 h-6 text-[#0F0F0F]/45 dark:text-white/45" />
                 </div>
-                <p className="text-[#0F0F0F]/40 dark:text-white/40 text-sm" style={{ fontFamily: "'Libre Baskerville', Georgia, serif", fontStyle: 'italic' }}>
+                <p className="text-[#0F0F0F]/50 dark:text-white/50 text-sm" style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif", fontStyle: 'italic' }}>
                   No days logged yet
                 </p>
               </div>
@@ -151,8 +151,8 @@ export const HistorySheet = memo(function HistorySheet({ edge, onDeleteLog, onUp
                 {groupedLogs.map((group) => (
                   <div key={group.date} className="space-y-3">
                     <div className="flex items-center gap-3">
-                      <Calendar className="w-3 h-3 text-[#0F0F0F]/30 dark:text-white/30" />
-                      <span className="text-xs text-[#0F0F0F]/40 dark:text-white/40 uppercase tracking-[0.15em] font-medium">
+                      <Calendar className="w-3 h-3 text-[#0F0F0F]/45 dark:text-white/45" />
+                      <span className="text-xs text-[#0F0F0F]/50 dark:text-white/50 uppercase tracking-[0.15em] font-medium">
                         {group.date === 'Unknown' ? 'Unknown Date' : formatDate(group.date)}
                       </span>
                       <div className="flex-1 h-px bg-[#0F0F0F]/10 dark:bg-white/10" />
@@ -237,7 +237,7 @@ export const HistorySheet = memo(function HistorySheet({ edge, onDeleteLog, onUp
                                     </div>
                                   ) : (
                                     <div className="w-10 h-10 rounded-full bg-[#0F0F0F]/5 dark:bg-white/10 flex items-center justify-center">
-                                      <X className="w-4 h-4 text-[#0F0F0F]/30 dark:text-white/30" />
+                                      <X className="w-4 h-4 text-[#0F0F0F]/45 dark:text-white/45" />
                                     </div>
                                   )}
                                   <div>
@@ -269,7 +269,7 @@ export const HistorySheet = memo(function HistorySheet({ edge, onDeleteLog, onUp
                                   <DropdownMenuTrigger asChild>
                                     <Button
                                       variant="ghost"
-                                      className="h-8 w-8 p-0 hover:bg-[#0F0F0F]/5 dark:hover:bg-white/10 text-[#0F0F0F]/30 dark:text-white/30 hover:text-[#0F0F0F] dark:hover:text-white"
+                                      className="h-8 w-8 p-0 hover:bg-[#0F0F0F]/5 dark:hover:bg-white/10 text-[#0F0F0F]/45 dark:text-white/45 hover:text-[#0F0F0F] dark:hover:text-white"
                                     >
                                       <MoreHorizontal className="w-4 h-4" />
                                     </Button>
@@ -284,7 +284,7 @@ export const HistorySheet = memo(function HistorySheet({ edge, onDeleteLog, onUp
                                       onSave={(newData, newEdgeId) => onUpdateLog(String(log.id), newData, newEdgeId)}
                                       trigger={
                                         <div className="relative flex cursor-pointer items-center rounded-lg px-3 py-2 text-sm hover:bg-[#0F0F0F]/5 dark:hover:bg-white/10 w-full font-medium transition-colors">
-                                          <Pencil className="mr-2 h-4 w-4 text-[#0F0F0F]/40 dark:text-white/40" /> Edit
+                                          <Pencil className="mr-2 h-4 w-4 text-[#0F0F0F]/50 dark:text-white/50" /> Edit
                                         </div>
                                       }
                                     />
@@ -337,7 +337,7 @@ export const HistorySheet = memo(function HistorySheet({ edge, onDeleteLog, onUp
           <AlertDialogHeader>
             <AlertDialogTitle
               className="text-[#0F0F0F] dark:text-white text-lg"
-              style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+              style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
             >
               Delete Log
             </AlertDialogTitle>

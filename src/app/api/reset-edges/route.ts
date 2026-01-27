@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { createClient as createAuthClient } from '@/lib/supabase-server';
 import { createClient } from '@supabase/supabase-js';
 
 /**
@@ -13,24 +14,29 @@ import { createClient } from '@supabase/supabase-js';
  */
 export async function POST(request: Request) {
   try {
-    const { confirmCode, userId } = await request.json();
+    // Authenticate the user via session
+    const authSupabase = await createAuthClient();
+    const { data: { user }, error: authError } = await authSupabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    const { confirmCode } = await request.json();
 
     // Require confirmation code to prevent accidental calls
-    if (confirmCode !== 'FRESH_START_2025') {
+    const expectedCode = process.env.FRESH_START_CODE || 'FRESH_START_2025';
+    if (confirmCode !== expectedCode) {
       return NextResponse.json(
         { error: 'Invalid confirmation code' },
         { status: 400 }
       );
     }
 
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'User ID required' },
-        { status: 400 }
-      );
-    }
-
-    // Use service role for admin operations
+    // Use service role for admin operations (to bypass RLS for bulk delete)
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -42,6 +48,9 @@ export async function POST(request: Request) {
     }
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
+
+    // Use the authenticated user's ID -- never accept userId from the request body
+    const userId = user.id;
 
     // Get today's date in ISO format
     const today = new Date().toISOString();
@@ -55,7 +64,7 @@ export async function POST(request: Request) {
     if (deleteLogsError) {
       console.error('Failed to delete logs:', deleteLogsError);
       return NextResponse.json(
-        { error: `Failed to delete logs: ${deleteLogsError.message}` },
+        { error: 'Failed to delete logs' },
         { status: 500 }
       );
     }
@@ -69,7 +78,7 @@ export async function POST(request: Request) {
     if (updateEdgesError) {
       console.error('Failed to update edges:', updateEdgesError);
       return NextResponse.json(
-        { error: `Failed to update edges: ${updateEdgesError.message}` },
+        { error: 'Failed to update edges' },
         { status: 500 }
       );
     }

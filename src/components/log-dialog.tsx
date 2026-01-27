@@ -310,7 +310,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, parentEdgeI
         <DialogHeader className="p-6 pb-0 shrink-0">
           <DialogTitle
             className="text-xl tracking-tight"
-            style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+            style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
           >
             {initialData ? "Edit Log" : `Log ${isBacktest ? 'Backtest' : 'Day'}${edgeName ? ` — ${edgeName}` : ""}`}
           </DialogTitle>
@@ -320,10 +320,10 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, parentEdgeI
           {/* Edge Display - show which edge when only one available */}
           {!edgeId && loggableEdges.length === 1 && (
             <div className="flex items-center gap-3 pb-2">
-              <span className="text-[#0F0F0F]/40 text-xs uppercase tracking-[0.15em]">Logging to</span>
+              <span className="text-[#0F0F0F]/50 text-xs uppercase tracking-[0.15em]">Logging to</span>
               <span
                 className="text-sm font-medium text-[#0F0F0F] px-3 py-1 bg-[#0F0F0F]/5 rounded-full"
-                style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
               >
                 {loggableEdges[0].name}
               </span>
@@ -333,7 +333,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, parentEdgeI
           {/* Edge Selector - when editing OR when multiple edges available */}
           {((isEditing || !edgeId) && loggableEdges.length > 1) && (
             <div className="space-y-2">
-              <Label className="text-[#0F0F0F]/40 text-xs uppercase tracking-[0.15em]">Edge</Label>
+              <Label className="text-[#0F0F0F]/50 text-xs uppercase tracking-[0.15em]">Edge</Label>
               <Select value={selectedEdgeId} onValueChange={setSelectedEdgeId}>
                 <SelectTrigger className="bg-white border-[#0F0F0F]/10 text-[#0F0F0F] rounded-xl h-11 focus:border-[#C45A3B] focus:ring-[#C45A3B]/20">
                   <SelectValue placeholder="Select edge" />
@@ -342,14 +342,14 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, parentEdgeI
                   {groupedEdges.map((group, groupIndex) => (
                     <SelectGroup key={group.parent?.id || 'standalone'}>
                       {group.parent && (
-                        <SelectLabel className="text-[10px] text-[#0F0F0F]/40 uppercase tracking-wider px-2 pt-2 pb-1">
+                        <SelectLabel className="text-[10px] text-[#0F0F0F]/50 uppercase tracking-wider px-2 pt-2 pb-1">
                           {group.parent.name}
                         </SelectLabel>
                       )}
                       {!group.parent && groupIndex > 0 && (
                         <>
                           <SelectSeparator className="my-2" />
-                          <SelectLabel className="text-[10px] text-[#0F0F0F]/40 uppercase tracking-wider px-2 pt-1 pb-1">
+                          <SelectLabel className="text-[10px] text-[#0F0F0F]/50 uppercase tracking-wider px-2 pt-1 pb-1">
                             Standalone
                           </SelectLabel>
                         </>
@@ -372,11 +372,11 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, parentEdgeI
 
           {/* Log Type Toggle */}
           <div className="space-y-2">
-            <Label className="text-[#0F0F0F]/40 text-xs uppercase tracking-[0.15em]">Log Type</Label>
+            <Label className="text-[#0F0F0F]/50 text-xs uppercase tracking-[0.15em]">Log Type</Label>
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
-                className={`h-12 flex items-center justify-center gap-2 rounded-xl border transition-all duration-300 ${
+                className={`h-12 flex items-center justify-center gap-2 rounded-xl border transition-colors duration-300 ${
                   logType === "FRONTTEST"
                     ? "bg-[#0F0F0F] text-[#FAF7F2] border-[#0F0F0F]"
                     : "bg-transparent border-[#0F0F0F]/10 text-[#0F0F0F]/50 hover:border-[#0F0F0F]/30"
@@ -388,7 +388,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, parentEdgeI
               </button>
               <button
                 type="button"
-                className={`h-12 flex items-center justify-center gap-2 rounded-xl border transition-all duration-300 ${
+                className={`h-12 flex items-center justify-center gap-2 rounded-xl border transition-colors duration-300 ${
                   logType === "BACKTEST"
                     ? "bg-[#0F0F0F] text-[#FAF7F2] border-[#0F0F0F]"
                     : "bg-transparent border-[#0F0F0F]/10 text-[#0F0F0F]/50 hover:border-[#0F0F0F]/30"
@@ -407,11 +407,11 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, parentEdgeI
           {/* Occurrence Toggle - only for Live logs (backtests are by definition setups that occurred) */}
           {!isBacktest && (
             <div className="space-y-2">
-              <Label className="text-[#0F0F0F]/40 text-xs uppercase tracking-[0.15em]">Did the setup appear?</Label>
+              <Label className="text-[#0F0F0F]/50 text-xs uppercase tracking-[0.15em]">Did the setup appear?</Label>
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
-                  className={`h-14 flex flex-col items-center justify-center gap-1 rounded-xl border transition-all duration-300 ${
+                  className={`h-14 flex flex-col items-center justify-center gap-1 rounded-xl border transition-colors duration-300 ${
                     result === "OCCURRED"
                       ? "bg-[#8B9A7D] text-white border-[#8B9A7D]"
                       : "bg-transparent border-[#0F0F0F]/10 text-[#0F0F0F]/50 hover:border-[#0F0F0F]/30"
@@ -423,7 +423,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, parentEdgeI
                 </button>
                 <button
                   type="button"
-                  className={`h-14 flex flex-col items-center justify-center gap-1 rounded-xl border transition-all duration-300 ${
+                  className={`h-14 flex flex-col items-center justify-center gap-1 rounded-xl border transition-colors duration-300 ${
                     result === "NO_SETUP"
                       ? "bg-[#C45A3B] text-white border-[#C45A3B]"
                       : "bg-transparent border-[#0F0F0F]/10 text-[#0F0F0F]/50 hover:border-[#0F0F0F]/30"
@@ -443,13 +443,13 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, parentEdgeI
           {/* Outcome Toggle - only shown when OCCURRED */}
           {result === "OCCURRED" && (
             <div className="space-y-2">
-              <Label className={`text-xs uppercase tracking-[0.15em] ${showOutcomeError && !outcome ? "text-[#C45A3B]" : "text-[#0F0F0F]/40"}`}>
+              <Label className={`text-xs uppercase tracking-[0.15em] ${showOutcomeError && !outcome ? "text-[#C45A3B]" : "text-[#0F0F0F]/50"}`}>
                 {hasPriceTracking ? "Did it hit TP or SL?" : "Trade outcome"} {showOutcomeError && !outcome && <span className="normal-case tracking-normal">— required</span>}
               </Label>
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
-                  className={`h-14 flex flex-col items-center justify-center gap-1 rounded-xl border transition-all duration-300 ${
+                  className={`h-14 flex flex-col items-center justify-center gap-1 rounded-xl border transition-colors duration-300 ${
                     outcome === "WIN"
                       ? "bg-[#8B9A7D] text-white border-[#8B9A7D]"
                       : showOutcomeError && !outcome
@@ -463,7 +463,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, parentEdgeI
                 </button>
                 <button
                   type="button"
-                  className={`h-14 flex flex-col items-center justify-center gap-1 rounded-xl border transition-all duration-300 ${
+                  className={`h-14 flex flex-col items-center justify-center gap-1 rounded-xl border transition-colors duration-300 ${
                     outcome === "LOSS"
                       ? "bg-[#C45A3B] text-white border-[#C45A3B]"
                       : showOutcomeError && !outcome
@@ -481,7 +481,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, parentEdgeI
 
           {/* Date Picker */}
           <div className="space-y-2">
-            <Label className="text-[#0F0F0F]/40 text-xs uppercase tracking-[0.15em] flex items-center gap-2">
+            <Label className="text-[#0F0F0F]/50 text-xs uppercase tracking-[0.15em] flex items-center gap-2">
               <CalendarIcon className="w-3 h-3" /> Date
             </Label>
             <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
@@ -489,10 +489,10 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, parentEdgeI
                 <button
                   type="button"
                   className={`w-full h-11 px-3 text-sm bg-white border border-[#0F0F0F]/10 rounded-xl hover:border-[#0F0F0F]/20 transition-colors flex items-center gap-2 ${
-                    selectedDate ? "text-[#0F0F0F]" : "text-[#0F0F0F]/40"
+                    selectedDate ? "text-[#0F0F0F]" : "text-[#0F0F0F]/50"
                   }`}
                 >
-                  <CalendarIcon className="w-4 h-4 text-[#0F0F0F]/40" />
+                  <CalendarIcon className="w-4 h-4 text-[#0F0F0F]/50" />
                   {selectedDate ? format(selectedDate, "EEEE, MMMM d, yyyy") : "Select date"}
                 </button>
               </PopoverTrigger>
@@ -522,12 +522,12 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, parentEdgeI
                     nav: "flex items-center gap-1",
                     button_previous: "size-7 bg-transparent hover:bg-[#0F0F0F]/5 rounded-full p-0 text-[#0F0F0F]/60 hover:text-[#0F0F0F]",
                     button_next: "size-7 bg-transparent hover:bg-[#0F0F0F]/5 rounded-full p-0 text-[#0F0F0F]/60 hover:text-[#0F0F0F]",
-                    weekday: "text-[#0F0F0F]/40 text-xs font-medium w-8",
+                    weekday: "text-[#0F0F0F]/50 text-xs font-medium w-8",
                     day: "w-8 h-8 text-[#0F0F0F] hover:bg-[#0F0F0F]/5 rounded-full",
                     today: "bg-[#C45A3B]/10 text-[#C45A3B] rounded-full",
                     selected: "bg-[#0F0F0F] text-[#FAF7F2] rounded-full hover:bg-[#0F0F0F]",
-                    outside: "text-[#0F0F0F]/30",
-                    disabled: "text-[#0F0F0F]/30 hover:bg-transparent cursor-not-allowed",
+                    outside: "text-[#0F0F0F]/45",
+                    disabled: "text-[#0F0F0F]/45 hover:bg-transparent cursor-not-allowed",
                   }}
                 />
               </PopoverContent>
@@ -536,7 +536,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, parentEdgeI
 
           {/* Day Selection */}
           <div className="space-y-2">
-            <Label className="text-[#0F0F0F]/40 text-xs uppercase tracking-[0.15em]">Day of Week</Label>
+            <Label className="text-[#0F0F0F]/50 text-xs uppercase tracking-[0.15em]">Day of Week</Label>
             <Select value={day} onValueChange={(v) => setDay(v as TradingDay)}>
               <SelectTrigger className="bg-white border-[#0F0F0F]/10 text-[#0F0F0F] rounded-xl h-11 focus:border-[#C45A3B] focus:ring-[#C45A3B]/20">
                 <SelectValue />
@@ -553,7 +553,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, parentEdgeI
           {!isNoSetup && (
             <>
               <div className="space-y-2">
-                <Label className="text-[#0F0F0F]/40 text-xs uppercase tracking-[0.15em] flex items-center gap-2">
+                <Label className="text-[#0F0F0F]/50 text-xs uppercase tracking-[0.15em] flex items-center gap-2">
                   <Clock className="w-3 h-3" /> Duration (minutes)
                 </Label>
                 <Input
@@ -567,7 +567,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, parentEdgeI
               </div>
 
               <div className="space-y-2">
-                <Label className="text-[#0F0F0F]/40 text-xs uppercase tracking-[0.15em] flex items-center gap-2">
+                <Label className="text-[#0F0F0F]/50 text-xs uppercase tracking-[0.15em] flex items-center gap-2">
                   <LinkIcon className="w-3 h-3" /> TradingView Links
                 </Label>
                 <div className="space-y-2">
@@ -582,7 +582,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, parentEdgeI
                       <button
                         type="button"
                         onClick={() => removeTvLink(index)}
-                        className="p-2.5 rounded-xl border border-[#0F0F0F]/10 text-[#0F0F0F]/40 hover:text-[#C45A3B] hover:border-[#C45A3B]/30 transition-colors"
+                        className="p-2.5 rounded-xl border border-[#0F0F0F]/10 text-[#0F0F0F]/50 hover:text-[#C45A3B] hover:border-[#C45A3B]/30 transition-colors"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -591,7 +591,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, parentEdgeI
                   <button
                     type="button"
                     onClick={addTvLink}
-                    className="w-full h-11 rounded-xl border border-dashed border-[#0F0F0F]/20 text-[#0F0F0F]/40 hover:border-[#0F0F0F]/40 hover:text-[#0F0F0F]/60 transition-colors flex items-center justify-center gap-2 text-sm"
+                    className="w-full h-11 rounded-xl border border-dashed border-[#0F0F0F]/20 text-[#0F0F0F]/50 hover:border-[#0F0F0F]/40 hover:text-[#0F0F0F]/60 transition-colors flex items-center justify-center gap-2 text-sm"
                   >
                     <Plus className="w-4 h-4" />
                     Add Screenshot Link
@@ -603,8 +603,8 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, parentEdgeI
               {enabledFields.includes('entryExitPrices') && (
                 <div className="space-y-3">
                   <div className="space-y-2">
-                    <Label className="text-[#0F0F0F]/40 text-xs uppercase tracking-[0.15em]">Entry / Stop Loss / Take Profit</Label>
-                    <div className="grid grid-cols-3 gap-3">
+                    <Label className="text-[#0F0F0F]/50 text-xs uppercase tracking-[0.15em]">Entry / Stop Loss / Take Profit</Label>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <Input
                         type="number"
                         step="any"
@@ -632,7 +632,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, parentEdgeI
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[#0F0F0F]/40 text-xs uppercase tracking-[0.15em]">Symbol</Label>
+                    <Label className="text-[#0F0F0F]/50 text-xs uppercase tracking-[0.15em]">Symbol</Label>
                     {/* Asset Class Tabs */}
                     <div className="flex gap-1 p-1 bg-[#0F0F0F]/5 rounded-xl">
                       {(['futures', 'fx', 'crypto'] as const).map((ac) => (
@@ -643,7 +643,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, parentEdgeI
                           className={`flex-1 py-1.5 text-xs font-medium rounded-lg transition-all ${
                             assetClass === ac
                               ? 'bg-white text-[#0F0F0F] shadow-sm'
-                              : 'text-[#0F0F0F]/40 hover:text-[#0F0F0F]/60'
+                              : 'text-[#0F0F0F]/50 hover:text-[#0F0F0F]/60'
                           }`}
                         >
                           {ac === 'futures' ? 'Futures' : ac === 'fx' ? 'FX' : 'Crypto'}
@@ -661,7 +661,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, parentEdgeI
                       <SelectContent className="bg-white border-[#0F0F0F]/10 text-[#0F0F0F] rounded-xl max-h-[280px]">
                         {assetClass === 'futures' && (
                           <>
-                            <div className="px-2 py-1.5 text-[10px] text-[#0F0F0F]/40 uppercase tracking-wider">
+                            <div className="px-2 py-1.5 text-[10px] text-[#0F0F0F]/50 uppercase tracking-wider">
                               Mini
                             </div>
                             {Object.entries(FUTURES_SYMBOLS)
@@ -674,12 +674,12 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, parentEdgeI
                                   <SelectItem key={key} value={key} className="rounded-lg">
                                     <span className="flex items-center justify-between gap-2 w-full">
                                       <span className="truncate text-sm">{info.name}</span>
-                                      <span className="text-[#0F0F0F]/40 text-xs shrink-0">{formatted}/pt</span>
+                                      <span className="text-[#0F0F0F]/50 text-xs shrink-0">{formatted}/pt</span>
                                     </span>
                                   </SelectItem>
                                 );
                               })}
-                            <div className="px-2 py-1.5 text-[10px] text-[#0F0F0F]/40 uppercase tracking-wider mt-1 border-t border-[#0F0F0F]/5">
+                            <div className="px-2 py-1.5 text-[10px] text-[#0F0F0F]/50 uppercase tracking-wider mt-1 border-t border-[#0F0F0F]/5">
                               Micro
                             </div>
                             {Object.entries(FUTURES_SYMBOLS)
@@ -692,7 +692,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, parentEdgeI
                                   <SelectItem key={key} value={key} className="rounded-lg">
                                     <span className="flex items-center justify-between gap-2 w-full">
                                       <span className="truncate text-sm">{info.name}</span>
-                                      <span className="text-[#0F0F0F]/40 text-xs shrink-0">{formatted}/pt</span>
+                                      <span className="text-[#0F0F0F]/50 text-xs shrink-0">{formatted}/pt</span>
                                     </span>
                                   </SelectItem>
                                 );
@@ -705,7 +705,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, parentEdgeI
                               <SelectItem key={key} value={key} className="rounded-lg">
                                 <span className="flex items-center justify-between gap-2 w-full">
                                   <span className="truncate text-sm">{info.name}</span>
-                                  <span className="text-[#0F0F0F]/40 text-xs shrink-0">${info.multiplier}/pip</span>
+                                  <span className="text-[#0F0F0F]/50 text-xs shrink-0">${info.multiplier}/pip</span>
                                 </span>
                               </SelectItem>
                             ))}
@@ -717,7 +717,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, parentEdgeI
                               <SelectItem key={key} value={key} className="rounded-lg">
                                 <span className="flex items-center justify-between gap-2 w-full">
                                   <span className="truncate text-sm">{info.name}</span>
-                                  <span className="text-[#0F0F0F]/40 text-xs shrink-0">$1/pt</span>
+                                  <span className="text-[#0F0F0F]/50 text-xs shrink-0">$1/pt</span>
                                 </span>
                               </SelectItem>
                             ))}
@@ -732,7 +732,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, parentEdgeI
               {/* Entry/Exit Times - conditional */}
               {enabledFields.includes('entryExitTimes') && (
                 <div className="space-y-2">
-                  <Label className="text-[#0F0F0F]/40 text-xs uppercase tracking-[0.15em]">Entry / Exit Times</Label>
+                  <Label className="text-[#0F0F0F]/50 text-xs uppercase tracking-[0.15em]">Entry / Exit Times</Label>
                   <div className="grid grid-cols-2 gap-3">
                     <Input
                       type="time"
@@ -756,8 +756,8 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, parentEdgeI
               {enabledFields.includes('dailyOHLC') && (
                 <div className="space-y-3">
                   <div className="space-y-2">
-                    <Label className="text-[#0F0F0F]/40 text-xs uppercase tracking-[0.15em]">Daily OHLC</Label>
-                    <div className="grid grid-cols-4 gap-2">
+                    <Label className="text-[#0F0F0F]/50 text-xs uppercase tracking-[0.15em]">Daily OHLC</Label>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                       <Input
                         type="number"
                         step="any"
@@ -793,7 +793,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, parentEdgeI
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-[#0F0F0F]/40 text-xs uppercase tracking-[0.15em]">NY Midnight Open (True Open)</Label>
+                    <Label className="text-[#0F0F0F]/50 text-xs uppercase tracking-[0.15em]">NY Midnight Open (True Open)</Label>
                     <Input
                       type="number"
                       step="any"
@@ -809,7 +809,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, parentEdgeI
               {/* Position Size - conditional */}
               {enabledFields.includes('positionSize') && (
                 <div className="space-y-2">
-                  <Label className="text-[#0F0F0F]/40 text-xs uppercase tracking-[0.15em]">Position Size</Label>
+                  <Label className="text-[#0F0F0F]/50 text-xs uppercase tracking-[0.15em]">Position Size</Label>
                   <Input
                     type="number"
                     step="any"
@@ -826,7 +826,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, parentEdgeI
 
           {/* Note */}
           <div className="space-y-2">
-            <Label className="text-[#0F0F0F]/40 text-xs uppercase tracking-[0.15em]">Note (optional)</Label>
+            <Label className="text-[#0F0F0F]/50 text-xs uppercase tracking-[0.15em]">Note (optional)</Label>
             <Textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}

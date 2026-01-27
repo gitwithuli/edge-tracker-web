@@ -18,6 +18,7 @@ import { ArrowLeft, Plus, Pencil, Trash2, Target, Loader2, ChevronRight, Share2,
 import { EdgeFormDialog } from "@/components/edge-form-dialog";
 import { ShareEdgeDialog } from "@/components/share-edge-dialog";
 import { GrainOverlay } from "@/components/grain-overlay";
+import Image from "next/image";
 import Link from "next/link";
 
 export default function EdgeSettingsPage() {
@@ -43,7 +44,7 @@ export default function EdgeSettingsPage() {
   if (!isLoaded || !user) {
     return (
       <div className="min-h-screen bg-[#FAF7F2] dark:bg-[#0F0F0F] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#0F0F0F]/40 dark:text-white/40" />
+        <Loader2 className="w-8 h-8 animate-spin text-[#0F0F0F]/50 dark:text-white/50" />
       </div>
     );
   }
@@ -67,7 +68,6 @@ export default function EdgeSettingsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           confirmCode: "FRESH_START_2025",
-          userId: user?.id,
         }),
       });
 
@@ -119,7 +119,7 @@ export default function EdgeSettingsPage() {
     return (
       <div key={edge.id}>
         <div
-          className={`p-4 sm:p-5 lg:p-6 rounded-xl sm:rounded-2xl bg-white dark:bg-white/[0.03] border border-[#0F0F0F]/5 dark:border-white/10 hover:border-[#0F0F0F]/10 dark:hover:border-white/20 transition-all duration-300 opacity-0 ${mounted ? 'animate-slide-up' : ''} ${isSubEdge ? 'ml-4 sm:ml-6 border-l-2 border-l-[#8B9A7D]/30 dark:border-l-[#8B9A7D]/20' : ''}`}
+          className={`p-4 sm:p-5 lg:p-6 rounded-xl sm:rounded-2xl bg-white dark:bg-white/[0.03] border border-[#0F0F0F]/5 dark:border-white/10 hover:border-[#0F0F0F]/10 dark:hover:border-white/20 transition-colors duration-300 opacity-0 ${mounted ? 'animate-slide-up' : ''} ${isSubEdge ? 'ml-4 sm:ml-6 border-l-2 border-l-[#8B9A7D]/30 dark:border-l-[#8B9A7D]/20' : ''}`}
           style={{ animationDelay: `${0.15 + index * 0.05}s` }}
         >
           <div className="flex items-start justify-between">
@@ -130,7 +130,7 @@ export default function EdgeSettingsPage() {
                 )}
                 <h3
                   className={`font-normal tracking-tight text-[#0F0F0F] dark:text-white ${isSubEdge ? 'text-sm sm:text-base' : 'text-base sm:text-lg'}`}
-                  style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                  style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
                 >
                   {edge.name}
                 </h3>
@@ -141,11 +141,11 @@ export default function EdgeSettingsPage() {
                 )}
               </div>
               {edge.description && (
-                <p className={`text-[#0F0F0F]/40 dark:text-white/40 mt-1 line-clamp-2 ${isSubEdge ? 'text-xs' : 'text-xs sm:text-sm'}`}>
+                <p className={`text-[#0F0F0F]/50 dark:text-white/50 mt-1 line-clamp-2 ${isSubEdge ? 'text-xs' : 'text-xs sm:text-sm'}`}>
                   {edge.description}
                 </p>
               )}
-              <p className="text-[10px] sm:text-xs text-[#0F0F0F]/30 dark:text-white/30 mt-2 sm:mt-3 uppercase tracking-wider">
+              <p className="text-[10px] sm:text-xs text-[#0F0F0F]/45 dark:text-white/45 mt-2 sm:mt-3 uppercase tracking-wider">
                 {logCount} day{logCount !== 1 ? "s" : ""} logged
               </p>
             </div>
@@ -154,7 +154,7 @@ export default function EdgeSettingsPage() {
               <ShareEdgeDialog
                 edge={edge}
                 trigger={
-                  <button className={`p-2 sm:p-2.5 rounded-full transition-all duration-300 ${edge.isPublic ? 'text-[#8B9A7D] hover:bg-[#8B9A7D]/10' : 'text-[#0F0F0F]/30 dark:text-white/30 hover:text-[#0F0F0F] dark:hover:text-white hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5'}`}>
+                  <button className={`p-2 sm:p-2.5 rounded-full transition-colors duration-300 ${edge.isPublic ? 'text-[#8B9A7D] hover:bg-[#8B9A7D]/10' : 'text-[#0F0F0F]/45 dark:text-white/45 hover:text-[#0F0F0F] dark:hover:text-white hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5'}`}>
                     <Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   </button>
                 }
@@ -163,14 +163,14 @@ export default function EdgeSettingsPage() {
               <EdgeFormDialog
                 edge={edge}
                 trigger={
-                  <button className="p-2 sm:p-2.5 rounded-full text-[#0F0F0F]/30 dark:text-white/30 hover:text-[#0F0F0F] dark:hover:text-white hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5 transition-all duration-300">
+                  <button className="p-2 sm:p-2.5 rounded-full text-[#0F0F0F]/45 dark:text-white/45 hover:text-[#0F0F0F] dark:hover:text-white hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5 transition-colors duration-300">
                     <Pencil className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   </button>
                 }
               />
 
               <button
-                className="p-2 sm:p-2.5 rounded-full text-[#0F0F0F]/30 dark:text-white/30 hover:text-[#C45A3B] hover:bg-[#C45A3B]/5 transition-all duration-300 disabled:opacity-50"
+                className="p-2 sm:p-2.5 rounded-full text-[#0F0F0F]/45 dark:text-white/45 hover:text-[#C45A3B] hover:bg-[#C45A3B]/5 transition-colors duration-300 disabled:opacity-50"
                 onClick={() => setDeleteTarget({ id: edge.id, name: edge.name })}
                 disabled={isDeleting}
               >
@@ -198,34 +198,6 @@ export default function EdgeSettingsPage() {
 
   return (
     <>
-      <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap');
-
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-
-        @keyframes fadeSlideUp {
-          from {
-            opacity: 0;
-            transform: translateY(12px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        .animate-fade-in {
-          animation: fadeIn 0.6s ease-out forwards;
-        }
-
-        .animate-slide-up {
-          animation: fadeSlideUp 0.6s ease-out forwards;
-        }
-      `}</style>
-
       <GrainOverlay />
 
       <div className="min-h-screen bg-[#FAF7F2] dark:bg-[#0F0F0F] text-[#0F0F0F] dark:text-white selection:bg-[#C45A3B]/20 transition-colors duration-300">
@@ -235,19 +207,19 @@ export default function EdgeSettingsPage() {
             <div className="flex items-center gap-2 sm:gap-4">
               <Link
                 href="/dashboard"
-                className="inline-flex items-center gap-1.5 sm:gap-2 text-[#0F0F0F]/40 dark:text-white/40 hover:text-[#0F0F0F] dark:hover:text-white transition-colors text-sm"
+                className="inline-flex items-center gap-1.5 sm:gap-2 text-[#0F0F0F]/50 dark:text-white/50 hover:text-[#0F0F0F] dark:hover:text-white transition-colors text-sm"
               >
                 <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 <span className="hidden sm:inline">Back</span>
               </Link>
               <div className="h-4 w-px bg-[#0F0F0F]/10 dark:bg-white/10" />
               <Link href="/dashboard" className="flex items-center gap-1.5 sm:gap-2">
-                <img src="/logo-icon-transparent.png" alt="Edge of ICT" className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 xl:w-14 xl:h-14 2xl:w-16 2xl:h-16" />
+                <Image src="/logo-icon-transparent.png" alt="Edge of ICT" width={64} height={64} className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 xl:w-14 xl:h-14 2xl:w-16 2xl:h-16" />
                 <span
                   className="hidden sm:inline text-xs sm:text-sm tracking-[0.08em] font-medium"
-                  style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                  style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
                 >
-                  EDGE <span className="text-[#0F0F0F]/40 dark:text-white/40 text-[10px] sm:text-xs">OF</span> ICT
+                  EDGE <span className="text-[#0F0F0F]/50 dark:text-white/50 text-[10px] sm:text-xs">OF</span> ICT
                 </span>
               </Link>
             </div>
@@ -265,11 +237,11 @@ export default function EdgeSettingsPage() {
               </p>
               <h1
                 className="text-2xl sm:text-3xl lg:text-4xl tracking-tight"
-                style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
               >
                 My <span className="italic text-[#0F0F0F]/60 dark:text-white/60">Edges</span>
               </h1>
-              <p className="text-[#0F0F0F]/40 dark:text-white/40 text-xs sm:text-sm mt-1.5 sm:mt-2">
+              <p className="text-[#0F0F0F]/50 dark:text-white/50 text-xs sm:text-sm mt-1.5 sm:mt-2">
                 Manage your trading strategies and models.
               </p>
             </div>
@@ -290,15 +262,15 @@ export default function EdgeSettingsPage() {
               style={{ animationDelay: '0.2s' }}
             >
               <div className="w-12 h-12 sm:w-14 sm:h-14 mx-auto mb-4 sm:mb-5 rounded-full bg-[#0F0F0F]/5 dark:bg-white/5 flex items-center justify-center">
-                <Target className="w-6 h-6 sm:w-7 sm:h-7 text-[#0F0F0F]/30 dark:text-white/30" />
+                <Target className="w-6 h-6 sm:w-7 sm:h-7 text-[#0F0F0F]/45 dark:text-white/45" />
               </div>
               <h3
                 className="text-lg sm:text-xl mb-2"
-                style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
               >
                 No edges yet
               </h3>
-              <p className="text-xs sm:text-sm text-[#0F0F0F]/40 dark:text-white/40 mb-4 sm:mb-6 max-w-sm mx-auto">
+              <p className="text-xs sm:text-sm text-[#0F0F0F]/50 dark:text-white/50 mb-4 sm:mb-6 max-w-sm mx-auto">
                 Create your first trading edge to start tracking occurrences.
                 Common edges include Silver Bullet, London Killzone, etc.
               </p>
@@ -332,7 +304,7 @@ export default function EdgeSettingsPage() {
                 <div className="flex-1">
                   <h3
                     className="text-lg sm:text-xl text-[#0F0F0F] dark:text-white mb-1.5"
-                    style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                    style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
                   >
                     Fresh Start
                   </h3>
@@ -355,8 +327,8 @@ export default function EdgeSettingsPage() {
 
         {/* Footer */}
         <footer className="border-t border-[#0F0F0F]/5 dark:border-white/5 py-4 sm:py-6 mt-8 sm:mt-12">
-          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-[#0F0F0F]/30 dark:text-white/30">
-            <span className="flex items-center gap-2 tracking-[0.15em] uppercase"><img src="/logo-icon-transparent.png" alt="" className="w-4 h-4 sm:w-5 sm:h-5" />Edge of ICT</span>
+          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-[#0F0F0F]/45 dark:text-white/45">
+            <span className="flex items-center gap-2 tracking-[0.15em] uppercase"><Image src="/logo-icon-transparent.png" alt="" width={20} height={20} className="w-4 h-4 sm:w-5 sm:h-5" />Edge of ICT</span>
             <span>Built for ICT traders</span>
           </div>
         </footer>
@@ -368,7 +340,7 @@ export default function EdgeSettingsPage() {
           <AlertDialogHeader>
             <AlertDialogTitle
               className="text-[#0F0F0F] dark:text-white text-xl"
-              style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+              style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
             >
               Delete Edge?
             </AlertDialogTitle>
@@ -404,7 +376,7 @@ export default function EdgeSettingsPage() {
           <AlertDialogHeader>
             <AlertDialogTitle
               className="text-[#0F0F0F] dark:text-white text-xl flex items-center gap-2"
-              style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+              style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
             >
               <RotateCcw className="w-5 h-5 text-[#C45A3B]" />
               Fresh Start

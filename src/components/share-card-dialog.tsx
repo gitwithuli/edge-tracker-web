@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import Image from "next/image";
 import { Download, Twitter, Copy, Check } from "lucide-react";
 import { toPng } from "html-to-image";
 
@@ -123,7 +124,7 @@ export function ShareCardDialog({ edge, stats, trigger }: ShareCardDialogProps) 
         <DialogHeader className="p-6 pb-0">
           <DialogTitle
             className="text-xl text-[#0F0F0F] dark:text-white"
-            style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+            style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
           >
             Share Your Edge
           </DialogTitle>
@@ -164,7 +165,7 @@ export function ShareCardDialog({ edge, stats, trigger }: ShareCardDialogProps) 
                 <div className="flex items-center justify-between mb-8">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#C45A3B]/20 to-[#8B9A7D]/20 flex items-center justify-center backdrop-blur-sm border border-white/10">
-                      <img src="/logo-icon-transparent.png" alt="" className="w-5 h-5" />
+                      <Image src="/logo-icon-transparent.png" alt="" width={20} height={20} className="w-5 h-5" />
                     </div>
                     <span className="text-[10px] tracking-[0.2em] uppercase text-[#FAF7F2]/40">
                       Edge of ICT
@@ -181,7 +182,7 @@ export function ShareCardDialog({ edge, stats, trigger }: ShareCardDialogProps) 
                 <div className="mb-8">
                   <h2
                     className="text-3xl text-[#FAF7F2] tracking-tight leading-tight"
-                    style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                    style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
                   >
                     {edge.name}
                   </h2>
@@ -203,7 +204,7 @@ export function ShareCardDialog({ edge, stats, trigger }: ShareCardDialogProps) 
                       <div className="flex items-baseline gap-1">
                         <span
                           className="text-5xl font-light text-[#FAF7F2]"
-                          style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                          style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
                         >
                           {stats.winRate}
                         </span>
@@ -226,7 +227,7 @@ export function ShareCardDialog({ edge, stats, trigger }: ShareCardDialogProps) 
                       <div className="flex items-baseline gap-1">
                         <span
                           className="text-5xl font-light text-[#FAF7F2]"
-                          style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                          style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
                         >
                           {stats.occurrenceRate}
                         </span>
@@ -325,7 +326,7 @@ export function ShareCardDialog({ edge, stats, trigger }: ShareCardDialogProps) 
             </button>
           </div>
 
-          <p className="text-center text-xs text-[#0F0F0F]/40 dark:text-white/40 mt-4">
+          <p className="text-center text-xs text-[#0F0F0F]/50 dark:text-white/50 mt-4">
             Download the image and upload to X or Instagram
           </p>
         </div>

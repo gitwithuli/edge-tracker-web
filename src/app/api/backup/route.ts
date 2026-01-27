@@ -22,8 +22,9 @@ export async function GET() {
       .order("created_at", { ascending: true });
 
     if (edgesError) {
+      console.error('Backup: Failed to fetch edges:', edgesError.message);
       return NextResponse.json(
-        { error: `Failed to fetch edges: ${edgesError.message}` },
+        { error: 'Failed to export data. Please try again.' },
         { status: 500 }
       );
     }
@@ -36,8 +37,9 @@ export async function GET() {
       .order("date", { ascending: false });
 
     if (logsError) {
+      console.error('Backup: Failed to fetch logs:', logsError.message);
       return NextResponse.json(
-        { error: `Failed to fetch logs: ${logsError.message}` },
+        { error: 'Failed to export data. Please try again.' },
         { status: 500 }
       );
     }
@@ -50,8 +52,9 @@ export async function GET() {
       .order("date", { ascending: false });
 
     if (macroLogsError) {
+      console.error('Backup: Failed to fetch macro logs:', macroLogsError.message);
       return NextResponse.json(
-        { error: `Failed to fetch macro logs: ${macroLogsError.message}` },
+        { error: 'Failed to export data. Please try again.' },
         { status: 500 }
       );
     }

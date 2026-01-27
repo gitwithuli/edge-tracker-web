@@ -17,6 +17,7 @@ import {
 } from "@/components/dashboard/date-range-filter";
 import { TRADING_DAYS } from "@/lib/constants";
 import type { LogType } from "@/lib/types";
+import Image from "next/image";
 import Link from "next/link";
 import { GrainOverlay } from "@/components/grain-overlay";
 import { ShareCardDialog } from "@/components/share-card-dialog";
@@ -247,7 +248,7 @@ export default function EdgeDetailPage() {
   if (!isLoaded) {
     return (
       <div className="min-h-screen bg-[#FAF7F2] dark:bg-[#0F0F0F] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#0F0F0F]/40 dark:text-white/40" />
+        <Loader2 className="w-8 h-8 animate-spin text-[#0F0F0F]/50 dark:text-white/50" />
       </div>
     );
   }
@@ -256,7 +257,7 @@ export default function EdgeDetailPage() {
   if (!user) {
     return (
       <div className="min-h-screen bg-[#FAF7F2] dark:bg-[#0F0F0F] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#0F0F0F]/40 dark:text-white/40" />
+        <Loader2 className="w-8 h-8 animate-spin text-[#0F0F0F]/50 dark:text-white/50" />
       </div>
     );
   }
@@ -265,7 +266,7 @@ export default function EdgeDetailPage() {
     return (
       <div className="min-h-screen bg-[#FAF7F2] dark:bg-[#0F0F0F] flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-xl text-[#0F0F0F] dark:text-white mb-4" style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}>
+          <h1 className="text-xl text-[#0F0F0F] dark:text-white mb-4" style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}>
             Edge not found
           </h1>
           <Link href="/dashboard" className="text-[#C45A3B] text-sm hover:underline">
@@ -280,34 +281,6 @@ export default function EdgeDetailPage() {
 
   return (
     <>
-      <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap');
-
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-
-        @keyframes fadeSlideUp {
-          from {
-            opacity: 0;
-            transform: translateY(12px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        .animate-fade-in {
-          animation: fadeIn 0.6s ease-out forwards;
-        }
-
-        .animate-slide-up {
-          animation: fadeSlideUp 0.6s ease-out forwards;
-        }
-      `}</style>
-
       <GrainOverlay />
 
       <div className="min-h-screen bg-[#FAF7F2] dark:bg-[#0F0F0F] text-[#0F0F0F] dark:text-white selection:bg-[#C45A3B]/20 transition-colors duration-300">
@@ -348,7 +321,7 @@ export default function EdgeDetailPage() {
             {parentEdge && (
               <Link
                 href={`/edge/${parentEdge.id}`}
-                className="inline-flex items-center gap-2 text-xs text-[#0F0F0F]/40 dark:text-white/40 hover:text-[#C45A3B] transition-colors mb-3"
+                className="inline-flex items-center gap-2 text-xs text-[#0F0F0F]/50 dark:text-white/50 hover:text-[#C45A3B] transition-colors mb-3"
               >
                 <Layers className="w-3 h-3" />
                 <span>Part of <span className="font-medium">{parentEdge.name}</span></span>
@@ -362,7 +335,7 @@ export default function EdgeDetailPage() {
               <div>
                 <h1
                   className="text-3xl sm:text-4xl tracking-tight mb-2 text-[#0F0F0F] dark:text-white"
-                  style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                  style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
                 >
                   {edge.name}
                 </h1>
@@ -377,7 +350,7 @@ export default function EdgeDetailPage() {
                   edge={edge}
                   stats={stats}
                   trigger={
-                    <button className="flex items-center gap-2 text-xs text-[#0F0F0F]/40 dark:text-white/40 hover:text-[#C45A3B] transition-colors border border-[#0F0F0F]/10 dark:border-white/10 hover:border-[#C45A3B]/30 px-3 py-1.5 rounded-full">
+                    <button className="flex items-center gap-2 text-xs text-[#0F0F0F]/50 dark:text-white/50 hover:text-[#C45A3B] transition-colors border border-[#0F0F0F]/10 dark:border-white/10 hover:border-[#C45A3B]/30 px-3 py-1.5 rounded-full">
                       <Share2 className="w-3 h-3" />
                       Share
                     </button>
@@ -388,7 +361,7 @@ export default function EdgeDetailPage() {
                   <EdgeFormDialog
                     defaultParentEdgeId={edge.id}
                     trigger={
-                      <button className="flex items-center gap-2 text-xs text-[#0F0F0F]/40 dark:text-white/40 hover:text-[#C45A3B] transition-colors border border-[#0F0F0F]/10 dark:border-white/10 hover:border-[#C45A3B]/30 px-3 py-1.5 rounded-full">
+                      <button className="flex items-center gap-2 text-xs text-[#0F0F0F]/50 dark:text-white/50 hover:text-[#C45A3B] transition-colors border border-[#0F0F0F]/10 dark:border-white/10 hover:border-[#C45A3B]/30 px-3 py-1.5 rounded-full">
                         <Plus className="w-3 h-3" />
                         Add Sub-Edge
                       </button>
@@ -415,7 +388,7 @@ export default function EdgeDetailPage() {
               style={{ animationDelay: '0.15s' }}
             >
               <div className="flex items-center gap-4 mb-4">
-                <h3 className="text-sm tracking-[0.15em] uppercase text-[#0F0F0F]/40 dark:text-white/40">
+                <h3 className="text-sm tracking-[0.15em] uppercase text-[#0F0F0F]/50 dark:text-white/50">
                   Sub-Edges
                 </h3>
                 <div className="flex-1 h-px bg-[#0F0F0F]/10 dark:bg-white/10" />
@@ -430,12 +403,12 @@ export default function EdgeDetailPage() {
                     <Link
                       key={subEdge.id}
                       href={`/edge/${subEdge.id}`}
-                      className="p-4 rounded-xl bg-white dark:bg-white/5 border border-[#0F0F0F]/5 dark:border-white/10 hover:border-[#C45A3B]/30 transition-all group"
+                      className="p-4 rounded-xl bg-white dark:bg-white/5 border border-[#0F0F0F]/5 dark:border-white/10 hover:border-[#C45A3B]/30 transition-colors group"
                     >
                       <p className="text-sm font-medium text-[#0F0F0F] dark:text-white group-hover:text-[#C45A3B] transition-colors mb-1">
                         {subEdge.name}
                       </p>
-                      <div className="flex items-center gap-2 text-xs text-[#0F0F0F]/40 dark:text-white/40">
+                      <div className="flex items-center gap-2 text-xs text-[#0F0F0F]/50 dark:text-white/50">
                         <span>{subEdgeLogs.length} days</span>
                         <span>•</span>
                         <span className={subWinRate >= 50 ? 'text-[#8B9A7D]' : 'text-[#C45A3B]'}>
@@ -485,7 +458,7 @@ export default function EdgeDetailPage() {
             <div className="flex items-center gap-3 sm:ml-auto">
               <DateRangeFilter value={dateRange} onChange={setDateRange} />
               {filteredLogs.length !== edgeLogs.filter(l => (l.logType || 'FRONTTEST') === activeView).length && (
-                <span className="text-xs text-[#0F0F0F]/40 dark:text-white/40">
+                <span className="text-xs text-[#0F0F0F]/50 dark:text-white/50">
                   {filteredLogs.length} of {edgeLogs.filter(l => (l.logType || 'FRONTTEST') === activeView).length}
                 </span>
               )}
@@ -500,29 +473,29 @@ export default function EdgeDetailPage() {
             <div className="bg-white dark:bg-white/5 border border-[#0F0F0F]/5 dark:border-white/10 rounded-2xl p-4 sm:p-5">
               <div className="flex items-center gap-2 mb-2">
                 <Target className="w-4 h-4 text-[#8B9A7D]" />
-                <span className="text-[10px] tracking-[0.15em] uppercase text-[#0F0F0F]/40 dark:text-white/40">Occurrence</span>
+                <span className="text-[10px] tracking-[0.15em] uppercase text-[#0F0F0F]/50 dark:text-white/50">Occurrence</span>
               </div>
               <p
                 className="text-2xl sm:text-3xl font-medium text-[#0F0F0F] dark:text-white"
-                style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
               >
                 {stats.occurrenceRate}%
               </p>
-              <p className="text-xs text-[#0F0F0F]/40 dark:text-white/40">{stats.occurrences} of {stats.totalLogs} days</p>
+              <p className="text-xs text-[#0F0F0F]/50 dark:text-white/50">{stats.occurrences} of {stats.totalLogs} days</p>
             </div>
 
             <div className="bg-white dark:bg-white/5 border border-[#0F0F0F]/5 dark:border-white/10 rounded-2xl p-4 sm:p-5">
               <div className="flex items-center gap-2 mb-2">
                 <TrendingUp className="w-4 h-4 text-[#8B9A7D]" />
-                <span className="text-[10px] tracking-[0.15em] uppercase text-[#0F0F0F]/40 dark:text-white/40">Win Rate</span>
+                <span className="text-[10px] tracking-[0.15em] uppercase text-[#0F0F0F]/50 dark:text-white/50">Win Rate</span>
               </div>
               <p
                 className="text-2xl sm:text-3xl font-medium text-[#0F0F0F] dark:text-white"
-                style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
               >
                 {stats.winRate}%
               </p>
-              <p className="text-xs text-[#0F0F0F]/40 dark:text-white/40">
+              <p className="text-xs text-[#0F0F0F]/50 dark:text-white/50">
                 <span className="text-[#8B9A7D]">{stats.wins}W</span>
                 {' / '}
                 <span className="text-[#C45A3B]">{stats.losses}L</span>
@@ -531,37 +504,37 @@ export default function EdgeDetailPage() {
 
             <div className="bg-white dark:bg-white/5 border border-[#0F0F0F]/5 dark:border-white/10 rounded-2xl p-4 sm:p-5">
               <div className="flex items-center gap-2 mb-2">
-                <Clock className="w-4 h-4 text-[#0F0F0F]/30 dark:text-white/30" />
-                <span className="text-[10px] tracking-[0.15em] uppercase text-[#0F0F0F]/40 dark:text-white/40">Avg Duration</span>
+                <Clock className="w-4 h-4 text-[#0F0F0F]/45 dark:text-white/45" />
+                <span className="text-[10px] tracking-[0.15em] uppercase text-[#0F0F0F]/50 dark:text-white/50">Avg Duration</span>
               </div>
               <p
                 className="text-2xl sm:text-3xl font-medium text-[#0F0F0F] dark:text-white"
-                style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
               >
                 {stats.avgDuration}m
               </p>
-              <p className="text-xs text-[#0F0F0F]/40 dark:text-white/40">per occurrence</p>
+              <p className="text-xs text-[#0F0F0F]/50 dark:text-white/50">per occurrence</p>
             </div>
 
             <div className="bg-white dark:bg-white/5 border border-[#0F0F0F]/5 dark:border-white/10 rounded-2xl p-4 sm:p-5">
               <div className="flex items-center gap-2 mb-2">
                 <Calendar className="w-4 h-4 text-[#C45A3B]" />
-                <span className="text-[10px] tracking-[0.15em] uppercase text-[#0F0F0F]/40 dark:text-white/40">Best Day</span>
+                <span className="text-[10px] tracking-[0.15em] uppercase text-[#0F0F0F]/50 dark:text-white/50">Best Day</span>
               </div>
               {stats.bestDay ? (
                 <>
                   <p
                     className="text-lg sm:text-xl font-medium text-[#0F0F0F] dark:text-white"
-                    style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                    style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
                   >
                     {stats.bestDay.day}
                   </p>
-                  <p className="text-xs text-[#0F0F0F]/40 dark:text-white/40">
+                  <p className="text-xs text-[#0F0F0F]/50 dark:text-white/50">
                     {Math.round((stats.bestDay.occurred / stats.bestDay.total) * 100)}% ({stats.bestDay.occurred}/{stats.bestDay.total})
                   </p>
                 </>
               ) : (
-                <p className="text-sm text-[#0F0F0F]/40 dark:text-white/40">Need more data</p>
+                <p className="text-sm text-[#0F0F0F]/50 dark:text-white/50">Need more data</p>
               )}
             </div>
 
@@ -570,7 +543,7 @@ export default function EdgeDetailPage() {
               <div className="bg-white dark:bg-white/5 border border-[#0F0F0F]/5 dark:border-white/10 rounded-2xl p-4 sm:p-5">
                 <div className="flex items-center gap-2 mb-2">
                   <DollarSign className={`w-4 h-4 ${(stats.dollarPnl ?? stats.pnl) >= 0 ? 'text-[#8B9A7D]' : 'text-[#C45A3B]'}`} />
-                  <span className="text-[10px] tracking-[0.15em] uppercase text-[#0F0F0F]/40 dark:text-white/40">
+                  <span className="text-[10px] tracking-[0.15em] uppercase text-[#0F0F0F]/50 dark:text-white/50">
                     Total P&L
                   </span>
                 </div>
@@ -578,21 +551,21 @@ export default function EdgeDetailPage() {
                   <>
                     <p
                       className={`text-2xl sm:text-3xl font-medium ${stats.dollarPnl >= 0 ? 'text-[#8B9A7D]' : 'text-[#C45A3B]'}`}
-                      style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                      style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
                     >
                       {formatCurrencyCompact(stats.dollarPnl)}
                     </p>
-                    <p className="text-xs text-[#0F0F0F]/40 dark:text-white/40">{stats.pnl >= 0 ? '+' : ''}{stats.pnl.toFixed(2)} pts</p>
+                    <p className="text-xs text-[#0F0F0F]/50 dark:text-white/50">{stats.pnl >= 0 ? '+' : ''}{stats.pnl.toFixed(2)} pts</p>
                   </>
                 ) : (
                   <>
                     <p
                       className={`text-2xl sm:text-3xl font-medium ${stats.pnl >= 0 ? 'text-[#8B9A7D]' : 'text-[#C45A3B]'}`}
-                      style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                      style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
                     >
                       {stats.pnl >= 0 ? '+' : ''}{stats.pnl.toFixed(2)}
                     </p>
-                    <p className="text-xs text-[#0F0F0F]/40 dark:text-white/40">points (no symbol set)</p>
+                    <p className="text-xs text-[#0F0F0F]/50 dark:text-white/50">points (no symbol set)</p>
                   </>
                 )}
               </div>
@@ -603,7 +576,7 @@ export default function EdgeDetailPage() {
               <div className="bg-white dark:bg-white/5 border border-[#C45A3B]/20 rounded-2xl p-4 sm:p-5">
                 <div className="flex items-center gap-2 mb-2">
                   <Target className="w-4 h-4 text-[#C45A3B]" />
-                  <span className="text-[10px] tracking-[0.15em] uppercase text-[#0F0F0F]/40 dark:text-white/40">
+                  <span className="text-[10px] tracking-[0.15em] uppercase text-[#0F0F0F]/50 dark:text-white/50">
                     Avg Risk
                   </span>
                 </div>
@@ -611,21 +584,21 @@ export default function EdgeDetailPage() {
                   <>
                     <p
                       className="text-2xl sm:text-3xl font-medium text-[#C45A3B]"
-                      style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                      style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
                     >
                       ${stats.avgDollarRisk >= 1000 ? `${(stats.avgDollarRisk / 1000).toFixed(1)}k` : Math.round(stats.avgDollarRisk)}
                     </p>
-                    <p className="text-xs text-[#0F0F0F]/40 dark:text-white/40">{stats.avgRisk.toFixed(2)} pts per trade</p>
+                    <p className="text-xs text-[#0F0F0F]/50 dark:text-white/50">{stats.avgRisk.toFixed(2)} pts per trade</p>
                   </>
                 ) : (
                   <>
                     <p
                       className="text-2xl sm:text-3xl font-medium text-[#C45A3B]"
-                      style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                      style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
                     >
                       {stats.avgRisk.toFixed(2)}
                     </p>
-                    <p className="text-xs text-[#0F0F0F]/40 dark:text-white/40">points per trade</p>
+                    <p className="text-xs text-[#0F0F0F]/50 dark:text-white/50">points per trade</p>
                   </>
                 )}
               </div>
@@ -636,12 +609,12 @@ export default function EdgeDetailPage() {
               <div className="bg-white dark:bg-white/5 border border-[#8B9A7D]/20 rounded-2xl p-4 sm:p-5">
                 <div className="flex items-center gap-2 mb-2">
                   <ArrowUpRight className="w-4 h-4 text-[#8B9A7D]" />
-                  <span className="text-[10px] tracking-[0.15em] uppercase text-[#0F0F0F]/40 dark:text-white/40">Long Trades</span>
+                  <span className="text-[10px] tracking-[0.15em] uppercase text-[#0F0F0F]/50 dark:text-white/50">Long Trades</span>
                 </div>
                 <div className="flex items-baseline gap-2">
                   <p
                     className="text-2xl sm:text-3xl font-medium text-[#0F0F0F] dark:text-white"
-                    style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                    style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
                   >
                     {stats.longStats.winRate}%
                   </p>
@@ -652,7 +625,7 @@ export default function EdgeDetailPage() {
                     }
                   </span>
                 </div>
-                <p className="text-xs text-[#0F0F0F]/40 dark:text-white/40">
+                <p className="text-xs text-[#0F0F0F]/50 dark:text-white/50">
                   <span className="text-[#8B9A7D]">{stats.longStats.wins}W</span>
                   {' / '}
                   <span className="text-[#C45A3B]">{stats.longStats.count - stats.longStats.wins}L</span>
@@ -666,12 +639,12 @@ export default function EdgeDetailPage() {
               <div className="bg-white dark:bg-white/5 border border-[#C45A3B]/20 rounded-2xl p-4 sm:p-5">
                 <div className="flex items-center gap-2 mb-2">
                   <ArrowDownRight className="w-4 h-4 text-[#C45A3B]" />
-                  <span className="text-[10px] tracking-[0.15em] uppercase text-[#0F0F0F]/40 dark:text-white/40">Short Trades</span>
+                  <span className="text-[10px] tracking-[0.15em] uppercase text-[#0F0F0F]/50 dark:text-white/50">Short Trades</span>
                 </div>
                 <div className="flex items-baseline gap-2">
                   <p
                     className="text-2xl sm:text-3xl font-medium text-[#0F0F0F] dark:text-white"
-                    style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                    style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
                   >
                     {stats.shortStats.winRate}%
                   </p>
@@ -682,7 +655,7 @@ export default function EdgeDetailPage() {
                     }
                   </span>
                 </div>
-                <p className="text-xs text-[#0F0F0F]/40 dark:text-white/40">
+                <p className="text-xs text-[#0F0F0F]/50 dark:text-white/50">
                   <span className="text-[#8B9A7D]">{stats.shortStats.wins}W</span>
                   {' / '}
                   <span className="text-[#C45A3B]">{stats.shortStats.count - stats.shortStats.wins}L</span>
@@ -700,7 +673,7 @@ export default function EdgeDetailPage() {
             <div className="flex items-center gap-4 mb-6">
               <h3
                 className="text-lg tracking-tight"
-                style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
               >
                 Occurrence by Day
               </h3>
@@ -708,7 +681,7 @@ export default function EdgeDetailPage() {
             </div>
 
             {stats.totalLogs === 0 ? (
-              <p className="text-[#0F0F0F]/40 dark:text-white/40 text-sm py-8 text-center">
+              <p className="text-[#0F0F0F]/50 dark:text-white/50 text-sm py-8 text-center">
                 No days logged yet. Start tracking to see patterns.
               </p>
             ) : (
@@ -735,7 +708,7 @@ export default function EdgeDetailPage() {
                         <span className="absolute inset-0 flex items-center px-3 text-xs font-medium text-[#0F0F0F]/70 dark:text-white/70">
                           {data.total > 0 ? `${Math.round(rate)}%` : "—"}
                           {data.total > 0 && (
-                            <span className="text-[#0F0F0F]/30 dark:text-white/30 ml-1">
+                            <span className="text-[#0F0F0F]/45 dark:text-white/45 ml-1">
                               ({data.occurred}/{data.total})
                             </span>
                           )}
@@ -780,7 +753,7 @@ export default function EdgeDetailPage() {
               <div className="flex items-center gap-4">
                 <h3
                   className="text-lg tracking-tight"
-                  style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                  style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
                 >
                   Log History
                 </h3>
@@ -804,7 +777,7 @@ export default function EdgeDetailPage() {
 
             {filteredLogs.length === 0 ? (
               <div className="p-8 rounded-2xl border-2 border-dashed border-[#0F0F0F]/10 dark:border-white/10 text-center">
-                <p className="text-[#0F0F0F]/40 dark:text-white/40 text-sm">
+                <p className="text-[#0F0F0F]/50 dark:text-white/50 text-sm">
                   No {isBacktest ? 'backtest' : 'live'} logs yet for this edge.
                 </p>
               </div>
@@ -851,7 +824,7 @@ export default function EdgeDetailPage() {
                               "No Setup"
                             )}
                           </p>
-                          <p className="text-xs text-[#0F0F0F]/40 dark:text-white/40">
+                          <p className="text-xs text-[#0F0F0F]/50 dark:text-white/50">
                             {log.dayOfWeek} • {log.date}
                           </p>
                         </div>
@@ -863,21 +836,21 @@ export default function EdgeDetailPage() {
                               {tradePnl >= 0 ? '+' : ''}{tradePnl.toFixed(2)} pts
                             </p>
                             {dollarPnl !== null && (
-                              <p className="text-[10px] text-[#0F0F0F]/30 dark:text-white/30">
+                              <p className="text-[10px] text-[#0F0F0F]/45 dark:text-white/45">
                                 {formatCurrencyCompact(dollarPnl)}
                               </p>
                             )}
                           </div>
                         )}
                         {log.result === "OCCURRED" && (
-                          <span className="text-xs text-[#0F0F0F]/40 dark:text-white/40 min-w-[32px]">{log.durationMinutes}m</span>
+                          <span className="text-xs text-[#0F0F0F]/50 dark:text-white/50 min-w-[32px]">{log.durationMinutes}m</span>
                         )}
                       </div>
                     </div>
                   );
                 })}
                 {filteredLogs.length > 10 && (
-                  <p className="text-center text-xs text-[#0F0F0F]/40 dark:text-white/40 pt-2">
+                  <p className="text-center text-xs text-[#0F0F0F]/50 dark:text-white/50 pt-2">
                     +{filteredLogs.length - 10} more entries
                   </p>
                 )}
@@ -888,8 +861,8 @@ export default function EdgeDetailPage() {
 
         {/* Footer */}
         <footer className="border-t border-[#0F0F0F]/5 dark:border-white/10 py-6 mt-12">
-          <div className="max-w-4xl mx-auto px-6 sm:px-8 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-[#0F0F0F]/30 dark:text-white/30">
-            <span className="flex items-center gap-2 tracking-[0.15em] uppercase"><img src="/logo-icon-transparent.png" alt="" className="w-5 h-5" />Edge of ICT</span>
+          <div className="max-w-4xl mx-auto px-6 sm:px-8 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-[#0F0F0F]/45 dark:text-white/45">
+            <span className="flex items-center gap-2 tracking-[0.15em] uppercase"><Image src="/logo-icon-transparent.png" alt="" width={20} height={20} className="w-5 h-5" />Edge of ICT</span>
             <span>Built for ICT traders</span>
           </div>
         </footer>

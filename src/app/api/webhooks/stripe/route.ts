@@ -93,7 +93,9 @@ export async function POST(request: NextRequest) {
 
         const isActive = subscription.status === 'active' || subscription.status === 'trialing';
 
-        // Access period info (cast to unknown first for type safety)
+        // Stripe API returns current_period_start/end on the subscription object at runtime,
+        // but the Stripe SDK v20+ types moved these to items.data[]. Double-cast is required
+        // until we migrate to reading from subscription items instead.
         const subData = subscription as unknown as Record<string, unknown>;
         const periodStart = subData.current_period_start as number | undefined;
         const periodEnd = subData.current_period_end as number | undefined;

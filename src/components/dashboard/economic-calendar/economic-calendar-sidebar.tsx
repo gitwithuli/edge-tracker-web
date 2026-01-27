@@ -120,7 +120,7 @@ function DaySection({
             <div className="flex items-center gap-2">
               <span
                 className={`text-sm font-medium ${dayGroup.isToday ? "text-[#C45A3B]" : "text-[#0F0F0F] dark:text-white"}`}
-                style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
               >
                 {dayGroup.fullDayName}
               </span>
@@ -135,16 +135,16 @@ function DaySection({
                 </span>
               )}
             </div>
-            <span className="text-[10px] text-[#0F0F0F]/40 dark:text-white/40">
+            <span className="text-[10px] text-[#0F0F0F]/50 dark:text-white/50">
               {filteredEvents.length} event{filteredEvents.length !== 1 ? "s" : ""}
             </span>
           </div>
         </div>
         {!dayGroup.isPast && (
           expanded ? (
-            <ChevronUp className="w-4 h-4 text-[#0F0F0F]/30 dark:text-white/30" />
+            <ChevronUp className="w-4 h-4 text-[#0F0F0F]/45 dark:text-white/45" />
           ) : (
-            <ChevronDown className="w-4 h-4 text-[#0F0F0F]/30 dark:text-white/30" />
+            <ChevronDown className="w-4 h-4 text-[#0F0F0F]/45 dark:text-white/45" />
           )
         )}
       </button>
@@ -298,7 +298,7 @@ export function EconomicCalendarSidebar() {
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <button
-          className="relative p-2 rounded-full text-[#0F0F0F]/40 dark:text-white/40 hover:text-[#0F0F0F] dark:hover:text-white hover:bg-[#0F0F0F]/5 dark:hover:bg-white/10 transition-all duration-300"
+          className="relative p-2 rounded-full text-[#0F0F0F]/50 dark:text-white/50 hover:text-[#0F0F0F] dark:hover:text-white hover:bg-[#0F0F0F]/5 dark:hover:bg-white/10 transition-colors duration-300"
           title="Economic Calendar"
           aria-label="Economic Calendar"
         >
@@ -324,11 +324,11 @@ export function EconomicCalendarSidebar() {
               <div>
                 <SheetTitle
                   className="text-base tracking-tight text-[#0F0F0F] dark:text-white text-left"
-                  style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                  style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
                 >
                   {isWeekendData ? "Upcoming Week" : "This Week"}
                 </SheetTitle>
-                <p className="text-[10px] text-[#0F0F0F]/40 dark:text-white/40 mt-0.5">
+                <p className="text-[10px] text-[#0F0F0F]/50 dark:text-white/50 mt-0.5">
                   {weekRange || "Loading..."}
                 </p>
               </div>
@@ -356,7 +356,7 @@ export function EconomicCalendarSidebar() {
           <div className="mt-3 flex gap-2">
             <button
               onClick={() => setHighImpactOnly(!highImpactOnly)}
-              className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+              className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
                 highImpactOnly
                   ? "bg-[#C45A3B] text-white"
                   : "bg-[#0F0F0F]/5 dark:bg-white/10 text-[#0F0F0F]/60 dark:text-white/60"
@@ -367,7 +367,7 @@ export function EconomicCalendarSidebar() {
             </button>
             <button
               onClick={() => setSelectedCurrency(selectedCurrency === "USD" ? null : "USD")}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
                 selectedCurrency === "USD"
                   ? "bg-[#0F0F0F] dark:bg-white text-white dark:text-[#0F0F0F]"
                   : "bg-[#0F0F0F]/5 dark:bg-white/10 text-[#0F0F0F]/60 dark:text-white/60"
@@ -395,7 +395,7 @@ export function EconomicCalendarSidebar() {
                 <Bell className="w-6 h-6 text-[#C45A3B]" />
               </div>
               <p className="text-sm text-[#C45A3B] mb-2">Unable to load events</p>
-              <p className="text-xs text-[#0F0F0F]/40 dark:text-white/40 mb-4">{error}</p>
+              <p className="text-xs text-[#0F0F0F]/50 dark:text-white/50 mb-4">{error}</p>
               <button
                 onClick={fetchEvents}
                 className="text-sm text-[#0F0F0F] dark:text-white hover:text-[#C45A3B] font-medium transition-colors"
@@ -409,8 +409,8 @@ export function EconomicCalendarSidebar() {
             <>
               {dayGroups.length === 0 ? (
                 <div className="text-center py-12 px-5">
-                  <Calendar className="w-8 h-8 text-[#0F0F0F]/20 dark:text-white/20 mx-auto mb-3" />
-                  <p className="text-sm text-[#0F0F0F]/40 dark:text-white/40">No upcoming events this week</p>
+                  <Calendar className="w-8 h-8 text-[#0F0F0F]/50 dark:text-white/50 mx-auto mb-3" />
+                  <p className="text-sm text-[#0F0F0F]/50 dark:text-white/50">No upcoming events this week</p>
                 </div>
               ) : (
                 <div>
@@ -429,7 +429,7 @@ export function EconomicCalendarSidebar() {
         </div>
 
         <div className="p-3 border-t border-[#0F0F0F]/5 dark:border-white/10 bg-[#0F0F0F]/[0.02] dark:bg-white/[0.02]">
-          <p className="text-[9px] text-center text-[#0F0F0F]/30 dark:text-white/30">
+          <p className="text-[9px] text-center text-[#0F0F0F]/45 dark:text-white/45">
             Data from Forex Factory • Times in your local timezone
           </p>
         </div>

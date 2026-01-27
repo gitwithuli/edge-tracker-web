@@ -82,11 +82,11 @@ export function EventCard({ event, compact = false }: EventCardProps) {
             {event.event}
           </p>
           <div className="flex items-center gap-2 mt-0.5">
-            <span className="text-[10px] text-[#0F0F0F]/40 dark:text-white/40">
+            <span className="text-[10px] text-[#0F0F0F]/50 dark:text-white/50">
               {formatEventTime(event.time)}
             </span>
             {event.estimate && (
-              <span className="text-[10px] text-[#0F0F0F]/30 dark:text-white/30">
+              <span className="text-[10px] text-[#0F0F0F]/45 dark:text-white/45">
                 F: {event.estimate}
               </span>
             )}
@@ -127,14 +127,14 @@ export function EventCard({ event, compact = false }: EventCardProps) {
             {event.impact}
           </span>
         </div>
-        <span className="text-[11px] font-medium text-[#0F0F0F]/40 dark:text-white/40">
+        <span className="text-[11px] font-medium text-[#0F0F0F]/50 dark:text-white/50">
           {formatEventTime(event.time)}
         </span>
       </div>
 
       <h4
         className="text-sm text-[#0F0F0F] dark:text-white leading-snug mb-3"
-        style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+        style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
       >
         {event.event}
       </h4>
@@ -143,12 +143,12 @@ export function EventCard({ event, compact = false }: EventCardProps) {
         <div className="flex items-center gap-3 text-[10px]">
           {event.estimate && (
             <span className="text-[#0F0F0F]/50 dark:text-white/50">
-              <span className="text-[#0F0F0F]/30 dark:text-white/30">F:</span> {event.estimate}
+              <span className="text-[#0F0F0F]/45 dark:text-white/45">F:</span> {event.estimate}
             </span>
           )}
           {event.prev && (
             <span className="text-[#0F0F0F]/50 dark:text-white/50">
-              <span className="text-[#0F0F0F]/30 dark:text-white/30">P:</span> {event.prev}
+              <span className="text-[#0F0F0F]/45 dark:text-white/45">P:</span> {event.prev}
             </span>
           )}
         </div>

@@ -69,39 +69,43 @@ export function CalendarDaySheet({
     setExpandedLogId(expandedLogId === logId ? null : logId);
   };
 
+  // Shorter date format for mobile
+  const formattedDateShort = format(dateObj, "EEE, MMM d");
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
         className="w-full sm:max-w-md bg-[#FAF7F2] dark:bg-[#0F0F0F] border-l border-[#0F0F0F]/10 dark:border-white/10 p-0 flex flex-col"
       >
-        <SheetHeader className="p-6 pb-4 border-b border-[#0F0F0F]/10 dark:border-white/10">
+        <SheetHeader className="p-4 sm:p-6 pb-3 sm:pb-4 border-b border-[#0F0F0F]/10 dark:border-white/10">
           <SheetTitle
-            className="text-lg text-[#0F0F0F] dark:text-white"
-            style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+            className="text-base sm:text-lg text-[#0F0F0F] dark:text-white"
+            style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
           >
-            {formattedDate}
+            <span className="hidden sm:inline">{formattedDate}</span>
+            <span className="sm:hidden">{formattedDateShort}</span>
           </SheetTitle>
 
           {/* Daily summary */}
           {dailyStats.trades > 0 && (
-            <div className="flex items-center gap-4 mt-3">
+            <div className="flex items-center gap-3 sm:gap-4 mt-2 sm:mt-3">
               <div
-                className={`text-xl font-semibold ${
+                className={`text-lg sm:text-xl font-semibold ${
                   (dailyStats.hasDollarPnL ? dailyStats.dollarPnL : dailyStats.pointsPnL) >= 0
                     ? "text-[#8B9A7D]"
                     : "text-[#C45A3B]"
                 }`}
-                style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
               >
                 {formatPnL(
                   dailyStats.hasDollarPnL ? dailyStats.dollarPnL : dailyStats.pointsPnL,
                   dailyStats.hasDollarPnL
                 )}
               </div>
-              <div className="text-sm text-[#0F0F0F]/40 dark:text-white/40">
+              <div className="text-xs sm:text-sm text-[#0F0F0F]/50 dark:text-white/50">
                 {dailyStats.trades} trade{dailyStats.trades !== 1 ? "s" : ""}
-                <span className="mx-2">·</span>
+                <span className="mx-1.5 sm:mx-2">·</span>
                 <span className="text-[#8B9A7D]">{dailyStats.wins}W</span>
                 {" / "}
                 <span className="text-[#C45A3B]">{dailyStats.losses}L</span>
@@ -111,10 +115,10 @@ export function CalendarDaySheet({
         </SheetHeader>
 
         {/* Trades list */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6">
           {logs.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-[#0F0F0F]/40 dark:text-white/40 mb-6">
+              <p className="text-[#0F0F0F]/50 dark:text-white/50 mb-6">
                 No trades logged for this day
               </p>
               <LogDialog
@@ -136,7 +140,7 @@ export function CalendarDaySheet({
               />
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2.5 sm:space-y-3">
               {logs
                 .filter((log) => log.result === "OCCURRED")
                 .map((log) => {
@@ -152,8 +156,8 @@ export function CalendarDaySheet({
                       {/* Trade header - clickable if has details */}
                       <button
                         onClick={() => hasDetails && toggleLog(log.id)}
-                        className={`w-full p-4 text-left ${
-                          hasDetails ? "hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5 cursor-pointer" : "cursor-default"
+                        className={`w-full p-3 sm:p-4 text-left ${
+                          hasDetails ? "hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5 cursor-pointer active:bg-[#0F0F0F]/5 dark:active:bg-white/5" : "cursor-default"
                         } transition-colors`}
                       >
                         <div className="flex items-start justify-between">
@@ -162,7 +166,7 @@ export function CalendarDaySheet({
                             <div className="flex items-center gap-2">
                               <span
                                 className="text-sm font-medium text-[#0F0F0F] dark:text-white"
-                                style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                                style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
                               >
                                 {getEdgeName(log.edgeId)}
                               </span>
@@ -186,7 +190,7 @@ export function CalendarDaySheet({
                             </div>
 
                             {/* Outcome + symbol */}
-                            <div className="flex items-center gap-2 text-xs text-[#0F0F0F]/40 dark:text-white/40">
+                            <div className="flex items-center gap-2 text-xs text-[#0F0F0F]/50 dark:text-white/50">
                               <span
                                 className={`flex items-center gap-1 ${
                                   log.outcome === "WIN" ? "text-[#8B9A7D]" : "text-[#C45A3B]"
@@ -201,7 +205,7 @@ export function CalendarDaySheet({
                               </span>
                               {log.symbol && (
                                 <>
-                                  <span className="text-[#0F0F0F]/20 dark:text-white/20">·</span>
+                                  <span className="text-[#0F0F0F]/50 dark:text-white/50">·</span>
                                   <span>{log.symbol}</span>
                                 </>
                               )}
@@ -214,7 +218,7 @@ export function CalendarDaySheet({
                               className={`text-sm font-semibold ${
                                 (dollars ?? points) >= 0 ? "text-[#8B9A7D]" : "text-[#C45A3B]"
                               }`}
-                              style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                              style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
                             >
                               {formatPnL(dollars ?? points, dollars !== null)}
                             </div>
@@ -222,9 +226,9 @@ export function CalendarDaySheet({
                             {/* Expand indicator */}
                             {hasDetails && (
                               isExpanded ? (
-                                <ChevronDown className="w-4 h-4 text-[#0F0F0F]/30 dark:text-white/30" />
+                                <ChevronDown className="w-4 h-4 text-[#0F0F0F]/45 dark:text-white/45" />
                               ) : (
-                                <ChevronRight className="w-4 h-4 text-[#0F0F0F]/30 dark:text-white/30" />
+                                <ChevronRight className="w-4 h-4 text-[#0F0F0F]/45 dark:text-white/45" />
                               )
                             )}
                           </div>
@@ -233,7 +237,7 @@ export function CalendarDaySheet({
 
                       {/* Expanded details */}
                       {isExpanded && hasDetails && (
-                        <div className="px-4 pb-4 pt-0 space-y-3 border-t border-[#0F0F0F]/5 dark:border-white/5">
+                        <div className="px-3 pb-3 sm:px-4 sm:pb-4 pt-0 space-y-3 border-t border-[#0F0F0F]/5 dark:border-white/5">
                           {/* Note */}
                           {log.note && (
                             <p className="text-sm text-[#0F0F0F]/60 dark:text-white/60 whitespace-pre-wrap pt-3">
@@ -297,7 +301,7 @@ export function CalendarDaySheet({
                     }
                   }}
                   trigger={
-                    <button className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-dashed border-[#0F0F0F]/20 dark:border-white/20 text-[#0F0F0F]/40 dark:text-white/40 hover:border-[#0F0F0F]/40 dark:hover:border-white/40 hover:text-[#0F0F0F]/60 dark:hover:text-white/60 transition-colors text-sm">
+                    <button className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-dashed border-[#0F0F0F]/20 dark:border-white/20 text-[#0F0F0F]/50 dark:text-white/50 hover:border-[#0F0F0F]/40 dark:hover:border-white/40 hover:text-[#0F0F0F]/60 dark:hover:text-white/60 transition-colors text-sm">
                       <Plus className="w-4 h-4" />
                       Add Another Trade
                     </button>

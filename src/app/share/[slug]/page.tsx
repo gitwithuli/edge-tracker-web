@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
+import Image from 'next/image';
 import Link from 'next/link';
 import { TrendingUp, Calendar, Target, CheckCircle, XCircle } from 'lucide-react';
 import { SharePageHeader } from './header';
@@ -130,7 +131,7 @@ export default async function SharedEdgePage({ params }: { params: Promise<{ slu
           </p>
           <h1
             className="text-2xl sm:text-3xl lg:text-4xl tracking-tight mb-2"
-            style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+            style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
           >
             {edge.name}
           </h1>
@@ -144,14 +145,14 @@ export default async function SharedEdgePage({ params }: { params: Promise<{ slu
         {/* Stats Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
           <div className="bg-white dark:bg-white/5 rounded-xl p-4 border border-[#0F0F0F]/10 dark:border-white/10">
-            <div className="flex items-center gap-2 text-[#0F0F0F]/40 dark:text-white/40 text-xs mb-1">
+            <div className="flex items-center gap-2 text-[#0F0F0F]/50 dark:text-white/50 text-xs mb-1">
               <TrendingUp className="w-3 h-3" />
               Win Rate
             </div>
             <p className="text-2xl font-semibold">{stats.winRate}%</p>
           </div>
           <div className="bg-white dark:bg-white/5 rounded-xl p-4 border border-[#0F0F0F]/10 dark:border-white/10">
-            <div className="flex items-center gap-2 text-[#0F0F0F]/40 dark:text-white/40 text-xs mb-1">
+            <div className="flex items-center gap-2 text-[#0F0F0F]/50 dark:text-white/50 text-xs mb-1">
               <Calendar className="w-3 h-3" />
               Total Trades
             </div>
@@ -177,7 +178,7 @@ export default async function SharedEdgePage({ params }: { params: Promise<{ slu
         <div className="bg-white dark:bg-white/5 rounded-xl p-4 border border-[#0F0F0F]/10 dark:border-white/10 mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <div className="flex items-center gap-2 text-[#0F0F0F]/40 dark:text-white/40 text-xs mb-1">
+              <div className="flex items-center gap-2 text-[#0F0F0F]/50 dark:text-white/50 text-xs mb-1">
                 <Target className="w-3 h-3" />
                 Occurrence Rate
               </div>
@@ -192,7 +193,7 @@ export default async function SharedEdgePage({ params }: { params: Promise<{ slu
         {/* Trade History */}
         {edge.show_trades && logs.length > 0 && (
           <div>
-            <h2 className="text-xs tracking-[0.2em] uppercase text-[#0F0F0F]/40 dark:text-white/40 mb-4">
+            <h2 className="text-xs tracking-[0.2em] uppercase text-[#0F0F0F]/50 dark:text-white/50 mb-4">
               Recent Activity
             </h2>
             <div className="space-y-2">
@@ -217,7 +218,7 @@ export default async function SharedEdgePage({ params }: { params: Promise<{ slu
                         : 'Loss'}
                     </span>
                   </div>
-                  <div className="flex items-center gap-4 text-sm text-[#0F0F0F]/40 dark:text-white/40">
+                  <div className="flex items-center gap-4 text-sm text-[#0F0F0F]/50 dark:text-white/50">
                     <span>{log.day_of_week}</span>
                     <span>{new Date(log.date).toLocaleDateString()}</span>
                   </div>
@@ -231,7 +232,7 @@ export default async function SharedEdgePage({ params }: { params: Promise<{ slu
         <div className="mt-12 text-center p-8 bg-[#0F0F0F]/5 dark:bg-white/5 rounded-2xl">
           <h2
             className="text-xl sm:text-2xl mb-3"
-            style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+            style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
           >
             Track your own <span className="italic">edge</span>
           </h2>
@@ -249,9 +250,9 @@ export default async function SharedEdgePage({ params }: { params: Promise<{ slu
 
       {/* Footer */}
       <footer className="border-t border-[#0F0F0F]/5 dark:border-white/5 py-6 mt-12">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center text-xs text-[#0F0F0F]/30 dark:text-white/30">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center text-xs text-[#0F0F0F]/45 dark:text-white/45">
           <span className="flex items-center gap-2 tracking-[0.15em] uppercase">
-            <img src="/logo-icon-transparent.png" alt="" className="w-4 h-4" />
+            <Image src="/logo-icon-transparent.png" alt="" width={16} height={16} className="w-4 h-4" />
             Edge of ICT
           </span>
           <span>Built for ICT traders</span>

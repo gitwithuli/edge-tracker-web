@@ -2,6 +2,7 @@
 
 import { useState, useRef, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import Image from "next/image";
 import { Download, Twitter, Copy, Check } from "lucide-react";
 import { toPng } from "html-to-image";
 import type { TradeLog } from "@/lib/types";
@@ -148,17 +149,17 @@ export function ShareCalendarDialog({ logs, year, month, title, trigger }: Share
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="bg-[#FAF7F2] dark:bg-[#1a1a1a] border-[#0F0F0F]/10 dark:border-white/10 max-w-lg p-0 overflow-hidden">
-        <DialogHeader className="p-6 pb-0">
+      <DialogContent className="bg-[#FAF7F2] dark:bg-[#1a1a1a] border-[#0F0F0F]/10 dark:border-white/10 max-w-lg p-0 overflow-hidden max-h-[90vh] sm:max-h-[85vh]">
+        <DialogHeader className="p-4 sm:p-6 pb-0">
           <DialogTitle
-            className="text-xl text-[#0F0F0F] dark:text-white"
-            style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+            className="text-lg sm:text-xl text-[#0F0F0F] dark:text-white"
+            style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
           >
             Share Calendar
           </DialogTitle>
         </DialogHeader>
 
-        <div className="p-6">
+        <div className="p-4 sm:p-6 overflow-y-auto">
           {/* Card Preview */}
           <div className="mb-6 rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10">
             <div
@@ -193,7 +194,7 @@ export function ShareCalendarDialog({ logs, year, month, title, trigger }: Share
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#C45A3B]/20 to-[#8B9A7D]/20 flex items-center justify-center backdrop-blur-sm border border-white/10">
-                      <img src="/logo-icon-transparent.png" alt="" className="w-5 h-5" />
+                      <Image src="/logo-icon-transparent.png" alt="" width={20} height={20} className="w-5 h-5" />
                     </div>
                     <span className="text-[10px] tracking-[0.2em] uppercase text-[#FAF7F2]/40">
                       Edge of ICT
@@ -210,7 +211,7 @@ export function ShareCalendarDialog({ logs, year, month, title, trigger }: Share
                 <div className="mb-6">
                   <h2
                     className="text-3xl text-[#FAF7F2] tracking-tight leading-tight"
-                    style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                    style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
                   >
                     {monthName} {year}
                   </h2>
@@ -232,7 +233,7 @@ export function ShareCalendarDialog({ logs, year, month, title, trigger }: Share
                             ? "text-[#8B9A7D]"
                             : "text-[#C45A3B]"
                         }`}
-                        style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                        style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
                       >
                         {formatPnL(
                           monthStats.hasDollarPnL ? monthStats.dollarPnL! : monthStats.pointsPnL,
@@ -248,7 +249,7 @@ export function ShareCalendarDialog({ logs, year, month, title, trigger }: Share
                         className={`text-2xl font-light ${
                           monthStats.winRate >= 50 ? "text-[#8B9A7D]" : "text-[#C45A3B]"
                         }`}
-                        style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                        style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
                       >
                         {monthStats.winRate}%
                       </div>
@@ -259,7 +260,7 @@ export function ShareCalendarDialog({ logs, year, month, title, trigger }: Share
                       </span>
                       <div
                         className="text-2xl font-light text-[#FAF7F2]"
-                        style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                        style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
                       >
                         {monthStats.totalTrades}
                       </div>
@@ -356,7 +357,7 @@ export function ShareCalendarDialog({ logs, year, month, title, trigger }: Share
             </button>
           </div>
 
-          <p className="text-center text-xs text-[#0F0F0F]/40 dark:text-white/40 mt-4">
+          <p className="text-center text-xs text-[#0F0F0F]/50 dark:text-white/50 mt-4">
             {copied
               ? "Image copied! Paste (Cmd+V) in your tweet to attach it"
               : "Click X button to copy image & open tweet composer"

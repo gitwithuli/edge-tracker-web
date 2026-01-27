@@ -133,7 +133,7 @@ export const useMacroStore = create<MacroStore>()((set, get) => ({
 
       const { data, error } = await supabase
         .from('macro_logs')
-        .select('*')
+        .select('id, macro_id, date, points_moved, direction, displacement_quality, liquidity_sweep, note, tv_links, created_at')
         .eq('user_id', user.id)
         .gte('date', dateFilter)
         .order('date', { ascending: false })

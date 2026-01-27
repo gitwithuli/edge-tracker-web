@@ -138,7 +138,7 @@ function TvLinkCard({ url, index }: { url: string; index: number }) {
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <ImageIcon className="w-8 h-8 text-[#0F0F0F]/20 dark:text-white/20" />
+            <ImageIcon className="w-8 h-8 text-[#0F0F0F]/50 dark:text-white/50" />
           </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -229,13 +229,13 @@ export function MacroDetailSheet({
         <div className="p-5 sm:p-6 pb-4 border-b border-[#0F0F0F]/[0.06] dark:border-white/[0.06]">
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
-              <p className="text-[10px] tracking-[0.2em] uppercase text-[#0F0F0F]/40 dark:text-white/40 mb-1">
+              <p className="text-[10px] tracking-[0.2em] uppercase text-[#0F0F0F]/50 dark:text-white/50 mb-1">
                 {macro ? categoryLabels[macro.category] : "Macro"}
               </p>
               <div className="flex items-center gap-3 flex-wrap">
                 <DialogTitle
                   className="text-xl sm:text-2xl font-normal text-[#0F0F0F] dark:text-white"
-                  style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                  style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
                 >
                   {macro?.name || log.macroId}
                 </DialogTitle>
@@ -253,7 +253,7 @@ export function MacroDetailSheet({
                   </span>
                 )}
               </div>
-              <p className="text-sm text-[#0F0F0F]/40 dark:text-white/40 mt-2">
+              <p className="text-sm text-[#0F0F0F]/50 dark:text-white/50 mt-2">
                 {new Date(log.date + "T12:00:00").toLocaleDateString("en-US", {
                   weekday: "long",
                   month: "long",
@@ -264,7 +264,7 @@ export function MacroDetailSheet({
             </div>
             <button
               onClick={handleClose}
-              className="p-2 -mr-2 -mt-1 rounded-xl hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5 transition-colors text-[#0F0F0F]/40 dark:text-white/40 hover:text-[#0F0F0F] dark:hover:text-white"
+              className="p-2 -mr-2 -mt-1 rounded-xl hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5 transition-colors text-[#0F0F0F]/50 dark:text-white/50 hover:text-[#0F0F0F] dark:hover:text-white"
             >
               <X className="w-5 h-5" />
             </button>
@@ -278,14 +278,14 @@ export function MacroDetailSheet({
               <div className="flex items-center justify-between">
                 <h4
                   className="text-sm font-medium text-[#0F0F0F] dark:text-white"
-                  style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                  style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
                 >
                   Edit Entry
                 </h4>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={handleCancel}
-                    className="p-1.5 rounded-lg hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5 transition-colors text-[#0F0F0F]/40 dark:text-white/40"
+                    className="p-1.5 rounded-lg hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5 transition-colors text-[#0F0F0F]/50 dark:text-white/50"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -299,7 +299,7 @@ export function MacroDetailSheet({
               </div>
 
               <div>
-                <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 dark:text-white/40 mb-2">
+                <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/50 dark:text-white/50 mb-2">
                   Points Moved
                 </div>
                 <input
@@ -319,7 +319,7 @@ export function MacroDetailSheet({
               </div>
 
               <div>
-                <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 dark:text-white/40 mb-2">
+                <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/50 dark:text-white/50 mb-2">
                   Direction
                 </div>
                 <div className="grid grid-cols-3 gap-2">
@@ -349,7 +349,7 @@ export function MacroDetailSheet({
               </div>
 
               <div>
-                <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 dark:text-white/40 mb-2">
+                <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/50 dark:text-white/50 mb-2">
                   Resistance
                 </div>
                 <div className="grid grid-cols-2 gap-2">
@@ -375,7 +375,7 @@ export function MacroDetailSheet({
               </div>
 
               <div>
-                <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 dark:text-white/40 mb-2">
+                <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/50 dark:text-white/50 mb-2">
                   Liquidity Sweep
                 </div>
                 <div className="grid grid-cols-4 gap-2">
@@ -408,7 +408,7 @@ export function MacroDetailSheet({
 
               {/* TV Links */}
               <div>
-                <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 dark:text-white/40 mb-2">
+                <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/50 dark:text-white/50 mb-2">
                   Chart Links ({(editData.tvLinks || []).length})
                 </div>
                 {(editData.tvLinks || []).length > 0 && (
@@ -418,7 +418,7 @@ export function MacroDetailSheet({
                         key={idx}
                         className="flex items-center gap-2 p-2.5 rounded-lg bg-[#FAF7F2] dark:bg-[#0F0F0F] border border-[#0F0F0F]/10 dark:border-white/10"
                       >
-                        <ImageIcon className="w-3.5 h-3.5 flex-shrink-0 text-[#0F0F0F]/40 dark:text-white/40" />
+                        <ImageIcon className="w-3.5 h-3.5 flex-shrink-0 text-[#0F0F0F]/50 dark:text-white/50" />
                         <span className="flex-1 text-xs text-[#0F0F0F]/70 dark:text-white/70 truncate">
                           {url}
                         </span>
@@ -463,18 +463,18 @@ export function MacroDetailSheet({
               {/* Stats Grid */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="p-4 rounded-xl bg-white dark:bg-white/5 border border-[#0F0F0F]/10 dark:border-white/10">
-                  <div className="text-[10px] uppercase tracking-wider text-[#0F0F0F]/40 dark:text-white/40 mb-1">
+                  <div className="text-[10px] uppercase tracking-wider text-[#0F0F0F]/50 dark:text-white/50 mb-1">
                     Points Moved
                   </div>
                   <div className="text-2xl font-bold text-[#0F0F0F] dark:text-white">
                     {log.pointsMoved !== null ? `${log.pointsMoved}` : "—"}
                     {log.pointsMoved !== null && (
-                      <span className="text-sm font-normal text-[#0F0F0F]/40 dark:text-white/40 ml-1">pts</span>
+                      <span className="text-sm font-normal text-[#0F0F0F]/50 dark:text-white/50 ml-1">pts</span>
                     )}
                   </div>
                 </div>
                 <div className="p-4 rounded-xl bg-white dark:bg-white/5 border border-[#0F0F0F]/10 dark:border-white/10">
-                  <div className="text-[10px] uppercase tracking-wider text-[#0F0F0F]/40 dark:text-white/40 mb-1">
+                  <div className="text-[10px] uppercase tracking-wider text-[#0F0F0F]/50 dark:text-white/50 mb-1">
                     Resistance
                   </div>
                   <div className="flex items-center gap-2">
@@ -497,7 +497,7 @@ export function MacroDetailSheet({
 
               {log.liquiditySweep && log.liquiditySweep !== "NONE" && (
                 <div className="p-4 rounded-xl bg-white dark:bg-white/5 border border-[#0F0F0F]/10 dark:border-white/10">
-                  <div className="text-[10px] uppercase tracking-wider text-[#0F0F0F]/40 dark:text-white/40 mb-1">
+                  <div className="text-[10px] uppercase tracking-wider text-[#0F0F0F]/50 dark:text-white/50 mb-1">
                     Liquidity Sweep
                   </div>
                   <div className="text-lg font-bold text-[#0F0F0F] dark:text-white capitalize">
@@ -509,8 +509,8 @@ export function MacroDetailSheet({
               {log.note && (
                 <div className="p-4 rounded-xl bg-white dark:bg-white/5 border border-[#0F0F0F]/10 dark:border-white/10">
                   <div className="flex items-center gap-2 mb-2">
-                    <StickyNote className="w-3.5 h-3.5 text-[#0F0F0F]/40 dark:text-white/40" />
-                    <div className="text-[10px] uppercase tracking-wider text-[#0F0F0F]/40 dark:text-white/40">
+                    <StickyNote className="w-3.5 h-3.5 text-[#0F0F0F]/50 dark:text-white/50" />
+                    <div className="text-[10px] uppercase tracking-wider text-[#0F0F0F]/50 dark:text-white/50">
                       Notes
                     </div>
                   </div>
@@ -523,8 +523,8 @@ export function MacroDetailSheet({
               {log.tvLinks.length > 0 && (
                 <div>
                   <div className="flex items-center gap-2 mb-3">
-                    <ImageIcon className="w-3.5 h-3.5 text-[#0F0F0F]/40 dark:text-white/40" />
-                    <div className="text-[10px] uppercase tracking-wider text-[#0F0F0F]/40 dark:text-white/40">
+                    <ImageIcon className="w-3.5 h-3.5 text-[#0F0F0F]/50 dark:text-white/50" />
+                    <div className="text-[10px] uppercase tracking-wider text-[#0F0F0F]/50 dark:text-white/50">
                       TradingView Charts ({log.tvLinks.length})
                     </div>
                   </div>
@@ -560,7 +560,7 @@ export function MacroDetailSheet({
                 <AlertDialogHeader>
                   <AlertDialogTitle
                     className="text-[#0F0F0F] dark:text-white"
-                    style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                    style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
                   >
                     Delete macro log?
                   </AlertDialogTitle>

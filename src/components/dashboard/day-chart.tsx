@@ -44,7 +44,7 @@ export function DayChart({ logs }: DayChartProps) {
       <div className="flex items-center gap-4 mb-6">
         <h3
           className="text-lg tracking-tight"
-          style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+          style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
         >
           Occurrence by Day
         </h3>
@@ -52,7 +52,7 @@ export function DayChart({ logs }: DayChartProps) {
       </div>
 
       {!hasData ? (
-        <p className="text-[#0F0F0F]/40 text-sm py-8 text-center">
+        <p className="text-[#0F0F0F]/50 text-sm py-8 text-center">
           No days logged yet. Start tracking to see patterns.
         </p>
       ) : (
@@ -77,7 +77,7 @@ export function DayChart({ logs }: DayChartProps) {
                   <span className="absolute inset-0 flex items-center px-3 text-xs font-medium text-[#0F0F0F]/70">
                     {total > 0 ? `${occurrenceRate}%` : "—"}
                     {total > 0 && (
-                      <span className="text-[#0F0F0F]/30 ml-1">
+                      <span className="text-[#0F0F0F]/45 ml-1">
                         ({occurrences}/{total})
                       </span>
                     )}

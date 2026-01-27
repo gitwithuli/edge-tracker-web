@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { DayPnL, formatPnL, isWeekend, isToday, isFuture } from "./calendar-utils";
 
 interface CalendarDayCellProps {
@@ -10,7 +11,7 @@ interface CalendarDayCellProps {
   onClick?: () => void;
 }
 
-export function CalendarDayCell({
+export const CalendarDayCell = memo(function CalendarDayCell({
   date,
   dayData,
   isCurrentMonth,
@@ -47,15 +48,18 @@ export function CalendarDayCell({
       onClick={onClick}
       disabled={!isCurrentMonth || future}
       className={`
-        relative flex flex-col items-start justify-start text-left transition-all
-        ${isCompact ? "p-1 sm:p-1.5 min-h-[44px] sm:min-h-[52px]" : "p-2 min-h-[72px] sm:min-h-[80px]"}
+        relative flex flex-col items-start justify-start text-left transition-all w-full
+        ${isCompact
+          ? "p-0.5 sm:p-1.5 min-h-[40px] sm:min-h-[52px]"
+          : "p-1 sm:p-1.5 md:p-2 aspect-square sm:aspect-auto sm:min-h-[68px] md:min-h-[80px]"
+        }
         rounded-lg border
         ${today
           ? "border-[#C45A3B]/50 dark:border-[#C45A3B]/50"
           : "border-transparent"
         }
         ${isCurrentMonth && !future
-          ? `hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5 cursor-pointer ${getPnLColor()}`
+          ? `hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5 cursor-pointer active:scale-[0.97] ${getPnLColor()}`
           : "cursor-default"
         }
         ${!isCurrentMonth || future
@@ -69,13 +73,13 @@ export function CalendarDayCell({
       {/* Date number */}
       <span
         className={`
-          ${isCompact ? "text-[10px] sm:text-xs" : "text-xs sm:text-sm"}
+          ${isCompact ? "text-[10px] sm:text-xs" : "text-[10px] sm:text-xs md:text-sm"}
           font-medium leading-none
           ${today
             ? "text-[#C45A3B]"
             : isCurrentMonth
               ? "text-[#0F0F0F] dark:text-white"
-              : "text-[#0F0F0F]/30 dark:text-white/30"
+              : "text-[#0F0F0F]/45 dark:text-white/45"
           }
         `}
       >
@@ -84,14 +88,14 @@ export function CalendarDayCell({
 
       {/* Trade data */}
       {hasTrades && (
-        <div className={`mt-1 ${isCompact ? "space-y-0" : "space-y-0.5"} w-full`}>
+        <div className={`mt-auto pt-0.5 sm:mt-1 sm:pt-0 ${isCompact ? "space-y-0" : "space-y-0.5"} w-full min-w-0`}>
           {/* P&L */}
           <div
             className={`
-              ${isCompact ? "text-[9px] sm:text-[10px]" : "text-[10px] sm:text-xs"}
-              font-semibold leading-tight ${getPnLTextColor()}
+              ${isCompact ? "text-[9px] sm:text-[10px]" : "text-[8px] sm:text-[10px] md:text-xs"}
+              font-semibold leading-tight truncate ${getPnLTextColor()}
             `}
-            style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+            style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
           >
             {formatPnL(
               dayData.hasDollarPnL ? dayData.dollarPnL! : dayData.pointsPnL,
@@ -99,9 +103,9 @@ export function CalendarDayCell({
             )}
           </div>
 
-          {/* Trade count and win rate */}
+          {/* Trade count and win rate - hidden on very small screens in full mode */}
           {!isCompact && (
-            <div className="text-[9px] text-[#0F0F0F]/40 dark:text-white/40 leading-tight">
+            <div className="hidden sm:block text-[8px] md:text-[9px] text-[#0F0F0F]/50 dark:text-white/50 leading-tight">
               {dayData.tradeCount} trade{dayData.tradeCount !== 1 ? "s" : ""}
               <span className="mx-1">·</span>
               <span className={dayData.winRate >= 50 ? "text-[#8B9A7D]" : "text-[#C45A3B]"}>
@@ -112,7 +116,7 @@ export function CalendarDayCell({
 
           {/* Compact: just show trade count */}
           {isCompact && (
-            <div className="text-[8px] sm:text-[9px] text-[#0F0F0F]/40 dark:text-white/40 leading-tight">
+            <div className="text-[8px] sm:text-[9px] text-[#0F0F0F]/50 dark:text-white/50 leading-tight">
               {dayData.tradeCount}t
             </div>
           )}
@@ -121,8 +125,8 @@ export function CalendarDayCell({
 
       {/* Today indicator dot */}
       {today && (
-        <div className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-[#C45A3B]" />
+        <div className="absolute top-0.5 right-0.5 sm:top-1 sm:right-1 w-1.5 h-1.5 rounded-full bg-[#C45A3B]" />
       )}
     </button>
   );
-}
+});

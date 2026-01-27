@@ -226,13 +226,13 @@ export function EdgeScorecard({ edgesWithLogs }: EdgeScorecardProps) {
         <div className="flex items-center gap-4 mb-6">
           <h3
             className="text-lg tracking-tight dark:text-white"
-            style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+            style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
           >
             Edge Scorecard
           </h3>
           <div className="flex-1 h-px bg-[#0F0F0F]/10 dark:bg-white/10" />
         </div>
-        <p className="text-[#0F0F0F]/40 dark:text-white/40 text-sm py-8 text-center">
+        <p className="text-[#0F0F0F]/50 dark:text-white/50 text-sm py-8 text-center">
           No edges yet. Create your first edge to start tracking.
         </p>
       </div>
@@ -255,12 +255,12 @@ export function EdgeScorecard({ edgesWithLogs }: EdgeScorecardProps) {
           )}
           <h4
             className="text-sm font-medium text-[#0F0F0F] dark:text-white group-hover:text-[#C45A3B] transition-colors"
-            style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+            style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
           >
             {score.name}
           </h4>
         </div>
-        <div className="flex items-center gap-1 text-[#0F0F0F]/30 dark:text-white/30">
+        <div className="flex items-center gap-1 text-[#0F0F0F]/45 dark:text-white/45">
           <span className="text-xs">{score.occurrences} in {score.tradingDays}d</span>
           <ArrowRight className="w-3 h-3 group-hover:text-[#C45A3B] group-hover:translate-x-0.5 transition-all" />
         </div>
@@ -270,8 +270,8 @@ export function EdgeScorecard({ edgesWithLogs }: EdgeScorecardProps) {
         {/* Occurrence Rate */}
         <div>
           <div className="flex items-center gap-1.5 mb-1.5">
-            <Target className="w-3 h-3 text-[#0F0F0F]/30 dark:text-white/30" />
-            <span className="text-[10px] text-[#0F0F0F]/40 dark:text-white/40 uppercase tracking-wider">
+            <Target className="w-3 h-3 text-[#0F0F0F]/45 dark:text-white/45" />
+            <span className="text-[10px] text-[#0F0F0F]/50 dark:text-white/50 uppercase tracking-wider">
               Occurrence
             </span>
           </div>
@@ -284,7 +284,7 @@ export function EdgeScorecard({ edgesWithLogs }: EdgeScorecardProps) {
             </div>
             <span
               className="text-sm font-medium text-[#0F0F0F] dark:text-white min-w-[36px] text-right"
-              style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+              style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
             >
               {score.occurrenceRate}%
             </span>
@@ -294,8 +294,8 @@ export function EdgeScorecard({ edgesWithLogs }: EdgeScorecardProps) {
         {/* Win Rate */}
         <div>
           <div className="flex items-center gap-1.5 mb-1.5">
-            <TrendingUp className="w-3 h-3 text-[#0F0F0F]/30 dark:text-white/30" />
-            <span className="text-[10px] text-[#0F0F0F]/40 dark:text-white/40 uppercase tracking-wider">
+            <TrendingUp className="w-3 h-3 text-[#0F0F0F]/45 dark:text-white/45" />
+            <span className="text-[10px] text-[#0F0F0F]/50 dark:text-white/50 uppercase tracking-wider">
               Win Rate
             </span>
           </div>
@@ -310,12 +310,12 @@ export function EdgeScorecard({ edgesWithLogs }: EdgeScorecardProps) {
             </div>
             <span
               className="text-sm font-medium text-[#0F0F0F] dark:text-white min-w-[36px] text-right"
-              style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+              style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
             >
               {score.winRate}%
             </span>
           </div>
-          <p className="text-[10px] text-[#0F0F0F]/30 dark:text-white/30 mt-1">
+          <p className="text-[10px] text-[#0F0F0F]/45 dark:text-white/45 mt-1">
             <span className="text-[#8B9A7D]">{score.wins}W</span>
             {" / "}
             <span className="text-[#C45A3B]">{score.losses}L</span>
@@ -327,8 +327,8 @@ export function EdgeScorecard({ edgesWithLogs }: EdgeScorecardProps) {
           <div className="col-span-2 pt-2 border-t border-[#0F0F0F]/5 dark:border-white/10 mt-2 space-y-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5">
-                <DollarSign className="w-3 h-3 text-[#0F0F0F]/30 dark:text-white/30" />
-                <span className="text-[10px] text-[#0F0F0F]/40 dark:text-white/40 uppercase tracking-wider">
+                <DollarSign className="w-3 h-3 text-[#0F0F0F]/45 dark:text-white/45" />
+                <span className="text-[10px] text-[#0F0F0F]/50 dark:text-white/50 uppercase tracking-wider">
                   Total P&L
                 </span>
               </div>
@@ -338,7 +338,7 @@ export function EdgeScorecard({ edgesWithLogs }: EdgeScorecardProps) {
                     className={`text-sm font-medium ${
                       score.dollarPnl >= 0 ? "text-[#8B9A7D]" : "text-[#C45A3B]"
                     }`}
-                    style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                    style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
                   >
                     {formatCurrencyCompact(score.dollarPnl)}
                   </span>
@@ -347,7 +347,7 @@ export function EdgeScorecard({ edgesWithLogs }: EdgeScorecardProps) {
                     className={`text-sm font-medium ${
                       score.pnl >= 0 ? "text-[#8B9A7D]" : "text-[#C45A3B]"
                     }`}
-                    style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                    style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
                   >
                     {score.pnl >= 0 ? "+" : ""}{score.pnl.toFixed(2)} pts
                   </span>
@@ -366,7 +366,7 @@ export function EdgeScorecard({ edgesWithLogs }: EdgeScorecardProps) {
                       <span className="text-[9px] text-[#0F0F0F]/50 dark:text-white/50 uppercase tracking-wider">Long</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] text-[#0F0F0F]/40 dark:text-white/40">
+                      <span className="text-[10px] text-[#0F0F0F]/50 dark:text-white/50">
                         {score.longStats.wins}W/{score.longStats.count - score.longStats.wins}L ({score.longStats.winRate}%)
                       </span>
                       <span className={`text-xs font-medium ${score.longStats.pnl >= 0 ? "text-[#8B9A7D]" : "text-[#C45A3B]"}`}>
@@ -387,7 +387,7 @@ export function EdgeScorecard({ edgesWithLogs }: EdgeScorecardProps) {
                       <span className="text-[9px] text-[#0F0F0F]/50 dark:text-white/50 uppercase tracking-wider">Short</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] text-[#0F0F0F]/40 dark:text-white/40">
+                      <span className="text-[10px] text-[#0F0F0F]/50 dark:text-white/50">
                         {score.shortStats.wins}W/{score.shortStats.count - score.shortStats.wins}L ({score.shortStats.winRate}%)
                       </span>
                       <span className={`text-xs font-medium ${score.shortStats.pnl >= 0 ? "text-[#8B9A7D]" : "text-[#C45A3B]"}`}>
@@ -412,7 +412,7 @@ export function EdgeScorecard({ edgesWithLogs }: EdgeScorecardProps) {
       <div className="flex items-center gap-4 mb-6">
         <h3
           className="text-lg tracking-tight dark:text-white"
-          style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+          style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
         >
           Edge Scorecard
         </h3>
@@ -433,22 +433,22 @@ export function EdgeScorecard({ edgesWithLogs }: EdgeScorecardProps) {
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     {isExpanded ? (
-                      <ChevronDown className="w-4 h-4 text-[#0F0F0F]/40 dark:text-white/40" />
+                      <ChevronDown className="w-4 h-4 text-[#0F0F0F]/50 dark:text-white/50" />
                     ) : (
-                      <ChevronRight className="w-4 h-4 text-[#0F0F0F]/40 dark:text-white/40" />
+                      <ChevronRight className="w-4 h-4 text-[#0F0F0F]/50 dark:text-white/50" />
                     )}
                     <GitBranch className="w-3.5 h-3.5 text-[#C45A3B]" />
                     <h4
                       className="text-sm font-medium text-[#0F0F0F] dark:text-white group-hover:text-[#C45A3B] transition-colors"
-                      style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                      style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
                     >
                       {parent.name}
                     </h4>
-                    <span className="text-[10px] text-[#0F0F0F]/30 dark:text-white/30">
+                    <span className="text-[10px] text-[#0F0F0F]/45 dark:text-white/45">
                       {subEdges.length} sub-edge{subEdges.length !== 1 ? 's' : ''}
                     </span>
                   </div>
-                  <div className="flex items-center gap-1 text-[#0F0F0F]/30 dark:text-white/30">
+                  <div className="flex items-center gap-1 text-[#0F0F0F]/45 dark:text-white/45">
                     <span className="text-xs">{parent.occurrences} in {parent.tradingDays}d</span>
                     <ArrowRight className="w-3 h-3 group-hover:text-[#C45A3B] group-hover:translate-x-0.5 transition-all" />
                   </div>
@@ -458,8 +458,8 @@ export function EdgeScorecard({ edgesWithLogs }: EdgeScorecardProps) {
                   {/* Occurrence Rate */}
                   <div>
                     <div className="flex items-center gap-1.5 mb-1.5">
-                      <Target className="w-3 h-3 text-[#0F0F0F]/30 dark:text-white/30" />
-                      <span className="text-[10px] text-[#0F0F0F]/40 dark:text-white/40 uppercase tracking-wider">
+                      <Target className="w-3 h-3 text-[#0F0F0F]/45 dark:text-white/45" />
+                      <span className="text-[10px] text-[#0F0F0F]/50 dark:text-white/50 uppercase tracking-wider">
                         Occurrence
                       </span>
                     </div>
@@ -472,7 +472,7 @@ export function EdgeScorecard({ edgesWithLogs }: EdgeScorecardProps) {
                       </div>
                       <span
                         className="text-sm font-medium text-[#0F0F0F] dark:text-white min-w-[36px] text-right"
-                        style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                        style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
                       >
                         {parent.occurrenceRate}%
                       </span>
@@ -482,8 +482,8 @@ export function EdgeScorecard({ edgesWithLogs }: EdgeScorecardProps) {
                   {/* Win Rate */}
                   <div>
                     <div className="flex items-center gap-1.5 mb-1.5">
-                      <TrendingUp className="w-3 h-3 text-[#0F0F0F]/30 dark:text-white/30" />
-                      <span className="text-[10px] text-[#0F0F0F]/40 dark:text-white/40 uppercase tracking-wider">
+                      <TrendingUp className="w-3 h-3 text-[#0F0F0F]/45 dark:text-white/45" />
+                      <span className="text-[10px] text-[#0F0F0F]/50 dark:text-white/50 uppercase tracking-wider">
                         Win Rate
                       </span>
                     </div>
@@ -498,12 +498,12 @@ export function EdgeScorecard({ edgesWithLogs }: EdgeScorecardProps) {
                       </div>
                       <span
                         className="text-sm font-medium text-[#0F0F0F] dark:text-white min-w-[36px] text-right"
-                        style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                        style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
                       >
                         {parent.winRate}%
                       </span>
                     </div>
-                    <p className="text-[10px] text-[#0F0F0F]/30 dark:text-white/30 mt-1">
+                    <p className="text-[10px] text-[#0F0F0F]/45 dark:text-white/45 mt-1">
                       <span className="text-[#8B9A7D]">{parent.wins}W</span>
                       {" / "}
                       <span className="text-[#C45A3B]">{parent.losses}L</span>

@@ -86,7 +86,7 @@ export function ShareEdgeDialog({ edge, trigger }: ShareEdgeDialogProps) {
         <DialogHeader>
           <DialogTitle
             className="text-[#0F0F0F] dark:text-white text-xl"
-            style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+            style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
           >
             Share Edge
           </DialogTitle>
@@ -187,7 +187,7 @@ export function ShareEdgeDialog({ edge, trigger }: ShareEdgeDialogProps) {
           {/* Loading indicator */}
           {isLoading && (
             <div className="flex items-center justify-center py-4">
-              <Loader2 className="w-5 h-5 animate-spin text-[#0F0F0F]/40 dark:text-white/40" />
+              <Loader2 className="w-5 h-5 animate-spin text-[#0F0F0F]/50 dark:text-white/50" />
             </div>
           )}
         </div>

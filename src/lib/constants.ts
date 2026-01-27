@@ -54,7 +54,7 @@ export const FUTURES_SYMBOLS = {
 } as const;
 
 export type FuturesSymbol = keyof typeof FUTURES_SYMBOLS;
-export const FUTURES_SYMBOL_LIST = Object.keys(FUTURES_SYMBOLS) as FuturesSymbol[];
+export const FUTURES_SYMBOL_LIST = Object.keys(FUTURES_SYMBOLS) as [FuturesSymbol, ...FuturesSymbol[]];
 
 // FX pairs - multiplier is $ per pip per standard lot (100k units)
 export const FX_SYMBOLS = {

@@ -154,21 +154,32 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
   // Subscription: Check if user can access a feature
   canAccess: (feature: Feature) => {
     const { subscription } = get();
-    const isPaid = subscription?.tier === 'paid';
+    const tier = subscription?.tier;
 
-    // Coming soon - always false
+    // Coming soon — always false
     if (['ai_parser', 'voice_journal', 'ai_summaries'].includes(feature)) {
       return false;
     }
 
-    // Paid features - require subscription
-    return isPaid;
+    // Trial and Paid: full access
+    if (tier === 'trial' || tier === 'paid') {
+      return true;
+    }
+
+    // Free / unpaid: limited access
+    if (tier === 'free' || tier === 'unpaid') {
+      if (feature === 'forwardtest') return true;
+      // Everything else blocked for free tier
+      return false;
+    }
+
+    return false;
   },
 
-  // Subscription: Check if user has paid tier
+  // Subscription: Check if user has active (trial or paid) tier
   isPaid: () => {
     const { subscription } = get();
-    return subscription?.tier === 'paid';
+    return subscription?.tier === 'paid' || subscription?.tier === 'trial';
   },
 
   setUser: (user) => set({ user, isLoaded: true }),
@@ -309,17 +320,17 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
 
     const { data, error } = await supabase
       .from('edges')
-      .select('*')
+      .select('id, user_id, name, description, enabled_fields, symbol, parent_edge_id, is_public, public_slug, show_trades, show_screenshots, created_at, updated_at')
       .eq('user_id', user.id)
       .order('created_at', { ascending: true });
 
     if (error) {
-      const message = `Failed to fetch edges: ${error.message}`;
+      console.error('fetchEdges error:', error.message);
       set({
-        error: message,
+        error: 'Failed to fetch edges',
         loadingStates: { ...get().loadingStates, fetchingEdges: false }
       });
-      toast.error(message);
+      toast.error('Failed to fetch edges. Please try again.');
       return;
     }
 
@@ -330,8 +341,14 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
   },
 
   addEdge: async (data) => {
-    const { user } = get();
+    const { user, edges, canAccess } = get();
     if (!user) return null;
+
+    // Free tier: max 1 edge
+    if (!canAccess('unlimited_edges') && edges.length >= 1) {
+      toast.error('Free plan is limited to 1 edge. Upgrade to add more.');
+      return null;
+    }
 
     set({ loadingStates: { ...get().loadingStates, addingEdge: true }, error: null });
 
@@ -354,8 +371,9 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
 
       if (error) {
         dequeue(queueId); // Remove from queue - server error, not retryable
-        set({ error: `Failed to create edge: ${error.message}` });
-        toast.error(`Failed to create edge: ${error.message}`);
+        console.error('addEdge error:', error.message);
+        set({ error: 'Failed to create edge' });
+        toast.error('Failed to create edge. Please try again.');
         return null;
       }
 
@@ -408,8 +426,9 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
         .eq('id', edgeId);
 
       if (error) {
-        set({ edges, error: `Failed to update edge: ${error.message}` });
-        toast.error(`Failed to update edge: ${error.message}`);
+        console.error('updateEdge error:', error.message);
+        set({ edges, error: 'Failed to update edge' });
+        toast.error('Failed to update edge. Please try again.');
         return;
       }
 
@@ -443,12 +462,13 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
       const { error } = await supabase.from('edges').delete().eq('id', edgeId);
 
       if (error) {
+        console.error('deleteEdge error:', error.message);
         set({
           edges: [...get().edges, ...deletedEdges],
           logs: [...get().logs, ...deletedLogs],
-          error: `Failed to delete edge: ${error.message}`,
+          error: 'Failed to delete edge',
         });
-        toast.error(`Failed to delete edge: ${error.message}`);
+        toast.error('Failed to delete edge. Please try again.');
         return;
       }
 
@@ -490,8 +510,9 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
         .single();
 
       if (error) {
-        set({ error: `Failed to update sharing: ${error.message}` });
-        toast.error(`Failed to update sharing: ${error.message}`);
+        console.error('updateEdgeSharing error:', error.message);
+        set({ error: 'Failed to update sharing' });
+        toast.error('Failed to update sharing. Please try again.');
         return null;
       }
 
@@ -517,24 +538,33 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
   // === LOG CRUD ===
 
   fetchLogs: async () => {
-    const { user } = get();
+    const { user, canAccess } = get();
     if (!user) return;
 
     set({ loadingStates: { ...get().loadingStates, fetchingLogs: true }, error: null });
 
-    const { data, error } = await supabase
+    let query = supabase
       .from('logs')
-      .select('*')
+      .select('id, user_id, edge_id, result, outcome, log_type, day_of_week, duration_minutes, note, tv_links, date, entry_price, exit_price, stop_loss, entry_time, exit_time, daily_open, daily_high, daily_low, daily_close, ny_open, position_size, direction, symbol, created_at')
       .eq('user_id', user.id)
       .order('date', { ascending: false });
 
+    // Free tier: only fetch last 7 days of logs
+    if (!canAccess('backtest')) {
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      query = query.gte('date', sevenDaysAgo.toISOString().split('T')[0]);
+    }
+
+    const { data, error } = await query;
+
     if (error) {
-      const message = `Failed to fetch logs: ${error.message}`;
+      console.error('fetchLogs error:', error.message);
       set({
-        error: message,
+        error: 'Failed to fetch logs',
         loadingStates: { ...get().loadingStates, fetchingLogs: false }
       });
-      toast.error(message);
+      toast.error('Failed to fetch logs. Please try again.');
       return;
     }
 
@@ -627,8 +657,9 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
 
       if (error) {
         dequeue(queueId); // Server error - not retryable
-        set({ logs: logs.filter(l => l.id !== tempId), error: `Failed to add log: ${error.message}` });
-        toast.error(`Failed to add log: ${error.message}`);
+        console.error('addLog error:', error.message);
+        set({ logs: logs.filter(l => l.id !== tempId), error: 'Failed to add log' });
+        toast.error('Failed to add log. Please try again.');
         return;
       }
 
@@ -669,11 +700,12 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
       const { error } = await supabase.from('logs').delete().eq('id', logId);
 
       if (error) {
+        console.error('deleteLog error:', error.message);
         set({
           logs: deletedLog ? [...get().logs, deletedLog] : logs,
-          error: `Failed to delete log: ${error.message}`,
+          error: 'Failed to delete log',
         });
-        toast.error(`Failed to delete log: ${error.message}`);
+        toast.error('Failed to delete log. Please try again.');
         return;
       }
 
@@ -777,8 +809,9 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
 
       if (error) {
         dequeue(queueId); // Server error - not retryable
-        set({ logs, error: `Failed to update log: ${error.message}` });
-        toast.error(`Failed to update log: ${error.message}`);
+        console.error('updateLog error:', error.message);
+        set({ logs, error: 'Failed to update log' });
+        toast.error('Failed to update log. Please try again.');
         return;
       }
 
@@ -842,7 +875,8 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
       });
 
       if (error) {
-        toast.error(`Failed to start MFA enrollment: ${error.message}`);
+        console.error('MFA enrollment error:', error.message);
+        toast.error('Failed to start MFA enrollment. Please try again.');
         set({ loadingStates: { ...get().loadingStates, enrollingMfa: false } });
         return null;
       }
@@ -870,7 +904,8 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
         await supabase.auth.mfa.challenge({ factorId });
 
       if (challengeError) {
-        toast.error(`MFA challenge failed: ${challengeError.message}`);
+        console.error('MFA challenge error:', challengeError.message);
+        toast.error('MFA verification failed. Please try again.');
         set({ loadingStates: { ...get().loadingStates, verifyingMfa: false } });
         return false;
       }
@@ -923,7 +958,8 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
         await supabase.auth.mfa.challenge({ factorId: verifiedFactor.id });
 
       if (challengeError) {
-        toast.error(`MFA challenge failed: ${challengeError.message}`);
+        console.error('MFA challenge error:', challengeError.message);
+        toast.error('MFA challenge failed. Please try again.');
         set({ loadingStates: { ...get().loadingStates, challengingMfa: false } });
         return false;
       }
@@ -959,16 +995,24 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
     try {
       const { data, error } = await supabase
         .from('user_subscriptions')
-        .select('*')
+        .select('id, user_id, subscription_tier, stripe_customer_id, stripe_subscription_id, current_period_start, current_period_end, cancel_at_period_end, trial_started_at, trial_ends_at, payment_provider, payment_id, payment_status, created_at, updated_at')
         .eq('user_id', user.id)
         .single();
 
       if (error) {
-        // If no subscription record exists, create one with 'unpaid' tier
+        // If no subscription record exists, create one with trial tier
         if (error.code === 'PGRST116') {
+          const trialEnds = new Date();
+          trialEnds.setDate(trialEnds.getDate() + 7);
+
           const { data: newSub, error: insertError } = await supabase
             .from('user_subscriptions')
-            .insert({ user_id: user.id, subscription_tier: 'unpaid' })
+            .insert({
+              user_id: user.id,
+              subscription_tier: 'trial',
+              trial_started_at: new Date().toISOString(),
+              trial_ends_at: trialEnds.toISOString(),
+            })
             .select()
             .single();
 
@@ -985,8 +1029,23 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
         return;
       }
 
+      let subscription = mapDbToSubscription(data);
+
+      // Check if trial has expired → auto-downgrade to 'free'
+      if (subscription.tier === 'trial' && subscription.trialEndsAt) {
+        const now = new Date();
+        const trialEnd = new Date(subscription.trialEndsAt);
+        if (now > trialEnd) {
+          await supabase
+            .from('user_subscriptions')
+            .update({ subscription_tier: 'free' })
+            .eq('user_id', user.id);
+          subscription = { ...subscription, tier: 'free' };
+        }
+      }
+
       set({
-        subscription: mapDbToSubscription(data),
+        subscription,
         loadingStates: { ...get().loadingStates, fetchingSubscription: false }
       });
     } catch (err) {

@@ -52,7 +52,7 @@ export function CountdownTimer({ targetTime }: CountdownTimerProps) {
 
   if (isPast) {
     return (
-      <span className="inline-flex items-center gap-1 text-[11px] text-[#0F0F0F]/30 dark:text-white/30">
+      <span className="inline-flex items-center gap-1 text-[11px] text-[#0F0F0F]/45 dark:text-white/45">
         <CheckCircle className="w-3 h-3" />
         Passed
       </span>

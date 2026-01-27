@@ -62,7 +62,11 @@ export async function POST() {
           getAll() {
             return cookieStore.getAll();
           },
-          setAll() {},
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+            });
+          },
         },
       }
     );
@@ -76,7 +80,7 @@ export async function POST() {
     // Check if user already has an active subscription
     const { data: existingSub } = await supabaseAdmin
       .from('user_subscriptions')
-      .select('*')
+      .select('subscription_tier, stripe_customer_id')
       .eq('user_id', user.id)
       .single();
 

@@ -3,16 +3,18 @@
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useEdgeStore } from "@/hooks/use-edge-store";
-import { LogOut, Plus, Settings, Play, Rewind, ArrowLeft, Loader2 } from "lucide-react";
+import { LogOut, Plus, Settings, Play, Rewind, ArrowLeft, Loader2, Lock } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { GrainOverlay } from "@/components/grain-overlay";
 import { CalendarPnL } from "@/components/calendar-pnl";
 import { LogDialog } from "@/components/log-dialog";
+import { TrialBanner } from "@/components/trial-banner";
+import Image from "next/image";
 import Link from "next/link";
 import type { LogType } from "@/lib/types";
 
 export default function CalendarPage() {
-  const { logs, edges, isLoaded, logout, user, addLog, deleteLog, updateLog, getEdgesWithLogs } = useEdgeStore();
+  const { logs, edges, isLoaded, logout, user, addLog, deleteLog, updateLog, getEdgesWithLogs, canAccess } = useEdgeStore();
   const [mounted, setMounted] = useState(false);
   const [activeView, setActiveView] = useState<LogType>("FRONTTEST");
   const router = useRouter();
@@ -38,7 +40,7 @@ export default function CalendarPage() {
   if (!isLoaded) {
     return (
       <div className="min-h-screen bg-[#FAF7F2] dark:bg-[#0F0F0F] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#0F0F0F]/40 dark:text-white/40" />
+        <Loader2 className="w-8 h-8 animate-spin text-[#0F0F0F]/50 dark:text-white/50" />
       </div>
     );
   }
@@ -46,7 +48,7 @@ export default function CalendarPage() {
   if (!user) {
     return (
       <div className="min-h-screen bg-[#FAF7F2] dark:bg-[#0F0F0F] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#0F0F0F]/40 dark:text-white/40" />
+        <Loader2 className="w-8 h-8 animate-spin text-[#0F0F0F]/50 dark:text-white/50" />
       </div>
     );
   }
@@ -55,34 +57,6 @@ export default function CalendarPage() {
 
   return (
     <>
-      <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap');
-
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-
-        @keyframes fadeSlideUp {
-          from {
-            opacity: 0;
-            transform: translateY(12px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        .animate-fade-in {
-          animation: fadeIn 0.6s ease-out forwards;
-        }
-
-        .animate-slide-up {
-          animation: fadeSlideUp 0.6s ease-out forwards;
-        }
-      `}</style>
-
       <GrainOverlay />
 
       <div className="min-h-screen bg-[#FAF7F2] dark:bg-[#0F0F0F] text-[#0F0F0F] dark:text-white selection:bg-[#C45A3B]/20 transition-colors duration-300">
@@ -93,12 +67,12 @@ export default function CalendarPage() {
               href="/dashboard"
               className={`flex items-center gap-1.5 sm:gap-2 opacity-0 ${mounted ? 'animate-fade-in' : ''}`}
             >
-              <img src="/logo-icon-transparent.png" alt="Edge of ICT" className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 xl:w-14 xl:h-14 2xl:w-16 2xl:h-16" />
+              <Image src="/logo-icon-transparent.png" alt="Edge of ICT" width={64} height={64} className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 xl:w-14 xl:h-14 2xl:w-16 2xl:h-16" />
               <span
                 className="hidden sm:inline text-xs md:text-sm tracking-[0.08em] font-medium"
-                style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
               >
-                EDGE <span className="text-[#0F0F0F]/40 dark:text-white/40 text-[10px] md:text-xs">OF</span> ICT
+                EDGE <span className="text-[#0F0F0F]/50 dark:text-white/50 text-[10px] md:text-xs">OF</span> ICT
               </span>
             </Link>
 
@@ -125,7 +99,7 @@ export default function CalendarPage() {
 
               <Link
                 href="/settings/edges"
-                className="p-2 rounded-full text-[#0F0F0F]/40 hover:text-[#0F0F0F] hover:bg-[#0F0F0F]/5 transition-all duration-300 dark:text-white/40 dark:hover:text-white dark:hover:bg-white/10"
+                className="p-2 rounded-full text-[#0F0F0F]/50 hover:text-[#0F0F0F] hover:bg-[#0F0F0F]/5 transition-colors duration-300 dark:text-white/50 dark:hover:text-white dark:hover:bg-white/10"
                 aria-label="Edge Settings"
               >
                 <Settings className="w-4 h-4" aria-hidden="true" />
@@ -133,7 +107,7 @@ export default function CalendarPage() {
 
               <button
                 onClick={logout}
-                className="inline-flex items-center gap-2 p-2 rounded-full text-[#0F0F0F]/40 dark:text-white/40 hover:text-[#0F0F0F] dark:hover:text-white hover:bg-[#0F0F0F]/5 dark:hover:bg-white/10 transition-all duration-300"
+                className="inline-flex items-center gap-2 p-2 rounded-full text-[#0F0F0F]/50 dark:text-white/50 hover:text-[#0F0F0F] dark:hover:text-white hover:bg-[#0F0F0F]/5 dark:hover:bg-white/10 transition-colors duration-300"
                 aria-label="Sign Out"
               >
                 <LogOut className="w-4 h-4" aria-hidden="true" />
@@ -141,6 +115,8 @@ export default function CalendarPage() {
             </div>
           </div>
         </header>
+
+        <TrialBanner />
 
         <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
           {/* Page header with back button */}
@@ -152,14 +128,14 @@ export default function CalendarPage() {
               <div>
                 <Link
                   href="/dashboard"
-                  className="inline-flex items-center gap-2 text-[#0F0F0F]/40 dark:text-white/40 hover:text-[#0F0F0F] dark:hover:text-white text-sm mb-3 transition-colors"
+                  className="inline-flex items-center gap-2 text-[#0F0F0F]/50 dark:text-white/50 hover:text-[#0F0F0F] dark:hover:text-white text-sm mb-3 transition-colors"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   Back to Dashboard
                 </Link>
                 <h1
                   className="text-2xl sm:text-3xl lg:text-4xl tracking-tight"
-                  style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                  style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
                 >
                   Calendar <span className="italic text-[#0F0F0F]/60 dark:text-white/60">P&L</span>
                 </h1>
@@ -179,18 +155,29 @@ export default function CalendarPage() {
                   <span className="hidden sm:inline">Forwardtest</span>
                   <span className="sm:hidden">Forward</span>
                 </button>
-                <button
-                  onClick={() => setActiveView("BACKTEST")}
-                  className={`flex items-center gap-1 sm:gap-2 px-2.5 sm:px-5 py-1.5 sm:py-2.5 rounded-full text-[11px] sm:text-sm font-medium transition-all duration-300 ${
-                    activeView === "BACKTEST"
-                      ? "bg-[#0F0F0F] dark:bg-white text-[#FAF7F2] dark:text-[#0F0F0F] shadow-sm"
-                      : "text-[#0F0F0F]/50 dark:text-white/50 hover:text-[#0F0F0F] dark:hover:text-white"
-                  }`}
-                >
-                  <Rewind className="w-3 h-3 sm:w-4 sm:h-4" />
-                  <span className="hidden sm:inline">Backtest</span>
-                  <span className="sm:hidden">Back</span>
-                </button>
+                {canAccess('backtest') ? (
+                  <button
+                    onClick={() => setActiveView("BACKTEST")}
+                    className={`flex items-center gap-1 sm:gap-2 px-2.5 sm:px-5 py-1.5 sm:py-2.5 rounded-full text-[11px] sm:text-sm font-medium transition-all duration-300 ${
+                      activeView === "BACKTEST"
+                        ? "bg-[#0F0F0F] dark:bg-white text-[#FAF7F2] dark:text-[#0F0F0F] shadow-sm"
+                        : "text-[#0F0F0F]/50 dark:text-white/50 hover:text-[#0F0F0F] dark:hover:text-white"
+                    }`}
+                  >
+                    <Rewind className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <span className="hidden sm:inline">Backtest</span>
+                    <span className="sm:hidden">Back</span>
+                  </button>
+                ) : (
+                  <Link
+                    href="/pricing"
+                    className="flex items-center gap-1 sm:gap-2 px-2.5 sm:px-5 py-1.5 sm:py-2.5 rounded-full text-[11px] sm:text-sm font-medium text-[#0F0F0F]/45 dark:text-white/45 hover:text-[#C45A3B] dark:hover:text-[#C45A3B] transition-colors duration-300"
+                  >
+                    <Lock className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <span className="hidden sm:inline">Backtest</span>
+                    <span className="sm:hidden">Back</span>
+                  </Link>
+                )}
               </div>
             </div>
           </div>
@@ -215,8 +202,8 @@ export default function CalendarPage() {
 
         {/* Footer */}
         <footer className="border-t border-[#0F0F0F]/5 dark:border-white/5 py-4 sm:py-6 mt-8 sm:mt-12">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-[#0F0F0F]/30 dark:text-white/30">
-            <span className="flex items-center gap-2 tracking-[0.15em] uppercase"><img src="/logo-icon-transparent.png" alt="" className="w-4 h-4 sm:w-5 sm:h-5" />Edge of ICT</span>
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-[#0F0F0F]/45 dark:text-white/45">
+            <span className="flex items-center gap-2 tracking-[0.15em] uppercase"><Image src="/logo-icon-transparent.png" alt="" width={20} height={20} className="w-4 h-4 sm:w-5 sm:h-5" />Edge of ICT</span>
             <span>Built for ICT traders</span>
           </div>
         </footer>

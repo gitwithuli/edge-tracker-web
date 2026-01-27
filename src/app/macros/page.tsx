@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo } from "react";
 import { useRouter } from "next/navigation";
 import { useMacroTime } from "@/hooks/use-macro-time";
 import { useMacroStore, MacroLog, MacroLogInput, MacroDirection, DisplacementQuality, LiquiditySweep } from "@/hooks/use-macro-store";
@@ -11,7 +11,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { getTVImageUrl } from "@/lib/utils";
 
-function MacroCard({
+const MacroCard = memo(function MacroCard({
   macro,
   status,
   minutesUntil,
@@ -93,9 +93,9 @@ function MacroCard({
           <h3
             className={cn(
               "text-base sm:text-lg font-medium",
-              status === 'passed' && !hasLog ? "text-[#0F0F0F]/40 dark:text-white/40" : "text-[#0F0F0F] dark:text-white"
+              status === 'passed' && !hasLog ? "text-[#0F0F0F]/50 dark:text-white/50" : "text-[#0F0F0F] dark:text-white"
             )}
-            style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+            style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
           >
             {macro.name}
           </h3>
@@ -103,7 +103,7 @@ function MacroCard({
 
         <div className={cn(
           "text-right flex-shrink-0",
-          status === 'active' ? "text-[#C45A3B]" : "text-[#0F0F0F]/40 dark:text-white/40"
+          status === 'active' ? "text-[#C45A3B]" : "text-[#0F0F0F]/50 dark:text-white/50"
         )}>
           <div className="text-[10px] sm:text-xs uppercase tracking-wider mb-0.5 sm:mb-1">
             {status === 'active' ? 'Remaining' : status === 'upcoming' ? 'Starts in' : 'Ended'}
@@ -133,7 +133,7 @@ function MacroCard({
         )}>
           {/* Points Moved */}
           <div>
-            <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 dark:text-white/40 mb-2">
+            <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/50 dark:text-white/50 mb-2">
               Points Moved
             </div>
             <div className="flex gap-2">
@@ -148,7 +148,7 @@ function MacroCard({
                 placeholder="e.g. 15"
                 className="flex-1 h-10 px-3 text-sm bg-white dark:bg-white/5 border border-[#0F0F0F]/10 dark:border-white/10 rounded-xl focus:outline-none focus:border-[#C45A3B] placeholder:text-[#0F0F0F]/30 dark:placeholder:text-white/30 dark:text-white"
               />
-              <span className="h-10 px-3 flex items-center text-sm text-[#0F0F0F]/40 dark:text-white/40 bg-[#0F0F0F]/5 dark:bg-white/5 rounded-xl">
+              <span className="h-10 px-3 flex items-center text-sm text-[#0F0F0F]/50 dark:text-white/50 bg-[#0F0F0F]/5 dark:bg-white/5 rounded-xl">
                 pts
               </span>
             </div>
@@ -156,7 +156,7 @@ function MacroCard({
 
           {/* Direction */}
           <div>
-            <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 dark:text-white/40 mb-2">
+            <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/50 dark:text-white/50 mb-2">
               Direction
             </div>
             <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
@@ -198,7 +198,7 @@ function MacroCard({
 
           {/* Displacement Quality */}
           <div>
-            <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 dark:text-white/40 mb-2">
+            <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/50 dark:text-white/50 mb-2">
               Displacement Quality
             </div>
             <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
@@ -229,7 +229,7 @@ function MacroCard({
 
           {/* Liquidity Sweep */}
           <div>
-            <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 dark:text-white/40 mb-2">
+            <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/50 dark:text-white/50 mb-2">
               Liquidity Sweep
             </div>
             <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
@@ -282,7 +282,7 @@ function MacroCard({
 
           {/* TradingView Screenshots */}
           <div>
-            <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 dark:text-white/40 mb-2 flex items-center gap-1.5">
+            <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/50 dark:text-white/50 mb-2 flex items-center gap-1.5">
               <LinkIcon className="w-3 h-3" /> Screenshots
             </div>
 
@@ -307,7 +307,7 @@ function MacroCard({
                           <span className="text-xs text-[#0F0F0F]/60 dark:text-white/60 truncate flex-1">
                             Chart {idx + 1}
                           </span>
-                          <ExternalLink className="w-3 h-3 text-[#0F0F0F]/40 dark:text-white/40" />
+                          <ExternalLink className="w-3 h-3 text-[#0F0F0F]/50 dark:text-white/50" />
                         </a>
                       ) : (
                         <a
@@ -321,7 +321,7 @@ function MacroCard({
                       )}
                       <button
                         onClick={() => onRemoveTvLink(idx)}
-                        className="p-1.5 rounded-lg text-[#0F0F0F]/30 dark:text-white/30 hover:text-[#C45A3B] hover:bg-[#C45A3B]/10 transition-colors opacity-0 group-hover:opacity-100"
+                        className="p-1.5 rounded-lg text-[#0F0F0F]/45 dark:text-white/45 hover:text-[#C45A3B] hover:bg-[#C45A3B]/10 transition-colors opacity-0 group-hover:opacity-100"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -364,7 +364,7 @@ function MacroCard({
             ) : (
               <button
                 onClick={() => setShowLinkInput(true)}
-                className="w-full h-9 rounded-lg border border-dashed border-[#0F0F0F]/20 dark:border-white/20 text-[#0F0F0F]/40 dark:text-white/40 hover:border-[#0F0F0F]/40 dark:hover:border-white/40 hover:text-[#0F0F0F]/60 dark:hover:text-white/60 transition-colors flex items-center justify-center gap-1.5 text-sm"
+                className="w-full h-9 rounded-lg border border-dashed border-[#0F0F0F]/20 dark:border-white/20 text-[#0F0F0F]/50 dark:text-white/50 hover:border-[#0F0F0F]/40 dark:hover:border-white/40 hover:text-[#0F0F0F]/60 dark:hover:text-white/60 transition-colors flex items-center justify-center gap-1.5 text-sm"
               >
                 <Plus className="w-3.5 h-3.5" /> Add Screenshot
               </button>
@@ -374,11 +374,11 @@ function MacroCard({
       )}
     </div>
   );
-}
+});
 
 export default function MacrosPage() {
   const router = useRouter();
-  const { user, isLoaded } = useEdgeStore();
+  const { user, isLoaded, canAccess } = useEdgeStore();
   const { logs, isLoaded: macrosLoaded, fetchLogs, logMacro, getLogForMacroToday, getTodaysLogs, addTvLink, removeTvLink, showAsiaMacros, setShowAsiaMacros, showLondonMacros, setShowLondonMacros, showNYMacros, setShowNYMacros } = useMacroStore();
   const [showSettings, setShowSettings] = useState(false);
 
@@ -420,6 +420,13 @@ export default function MacrosPage() {
     }
   }, [isLoaded, user, router]);
 
+  // Redirect free users to pricing
+  useEffect(() => {
+    if (isLoaded && user && !canAccess('macros')) {
+      router.push("/pricing");
+    }
+  }, [isLoaded, user, canAccess, router]);
+
   useEffect(() => {
     if (isLoaded && user && !macrosLoaded) {
       fetchLogs();
@@ -429,7 +436,7 @@ export default function MacrosPage() {
   if (!isLoaded || !user || !mounted) {
     return (
       <div className="min-h-screen bg-[#FAF7F2] dark:bg-[#0F0F0F] flex items-center justify-center">
-        <div className="animate-pulse text-[#0F0F0F]/40 dark:text-white/40">Loading...</div>
+        <div className="animate-pulse text-[#0F0F0F]/50 dark:text-white/50">Loading...</div>
       </div>
     );
   }
@@ -471,12 +478,12 @@ export default function MacrosPage() {
               <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 text-[#0F0F0F]/60 dark:text-white/60" />
             </button>
             <div>
-              <div className="text-[10px] sm:text-xs tracking-[0.2em] uppercase text-[#0F0F0F]/40 dark:text-white/40 mb-0.5">
+              <div className="text-[10px] sm:text-xs tracking-[0.2em] uppercase text-[#0F0F0F]/50 dark:text-white/50 mb-0.5">
                 Macro Tracker
               </div>
               <h1
                 className="text-base sm:text-xl font-medium"
-                style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
               >
                 Time Windows
               </h1>
@@ -519,7 +526,7 @@ export default function MacrosPage() {
                       }}
                       className="flex items-center gap-2 w-full px-3 py-2 text-sm font-medium rounded-lg hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5 transition-colors"
                     >
-                      <Download className="w-4 h-4 text-[#0F0F0F]/40 dark:text-white/40" />
+                      <Download className="w-4 h-4 text-[#0F0F0F]/50 dark:text-white/50" />
                       Export Logs
                     </button>
                   </div>
@@ -528,7 +535,7 @@ export default function MacrosPage() {
             </div>
 
             <div className="text-right">
-              <div className="text-[10px] sm:text-xs tracking-wider uppercase text-[#0F0F0F]/40 dark:text-white/40 mb-0.5 sm:mb-1">
+              <div className="text-[10px] sm:text-xs tracking-wider uppercase text-[#0F0F0F]/50 dark:text-white/50 mb-0.5 sm:mb-1">
                 <span className="hidden sm:inline">{isTradingHours ? 'Market Open' : 'Market Closed'} • </span>ET
               </div>
               <div
@@ -589,7 +596,7 @@ export default function MacrosPage() {
               </div>
               <h2
                 className="text-2xl sm:text-3xl font-medium text-[#0F0F0F] dark:text-white mb-3"
-                style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
               >
                 Markets are closed
               </h2>
@@ -597,8 +604,8 @@ export default function MacrosPage() {
                 Backtest, journal, review your week, and enjoy your life.
               </p>
               <p
-                className="text-[#0F0F0F]/40 dark:text-white/40 text-sm"
-                style={{ fontFamily: "'Libre Baskerville', Georgia, serif", fontStyle: 'italic' }}
+                className="text-[#0F0F0F]/50 dark:text-white/50 text-sm"
+                style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif", fontStyle: 'italic' }}
               >
                 See you on {nextTradingDay}.
               </p>
@@ -609,7 +616,7 @@ export default function MacrosPage() {
         {/* Today's Summary */}
         {!isWeekend && loggedCount > 0 && (
           <div className="mb-6 sm:mb-8 p-3 sm:p-4 rounded-2xl bg-white/50 dark:bg-white/[0.03] border border-[#0F0F0F]/10 dark:border-white/10">
-            <div className="text-xs tracking-[0.15em] uppercase text-[#0F0F0F]/40 dark:text-white/40 mb-2">Today's Summary</div>
+            <div className="text-xs tracking-[0.15em] uppercase text-[#0F0F0F]/50 dark:text-white/50 mb-2">Today's Summary</div>
             <div className="flex flex-wrap items-center gap-4 sm:gap-6">
               <div className="flex items-center gap-2">
                 <span className="text-2xl font-bold text-[#0F0F0F] dark:text-white">{loggedCount}</span>
@@ -617,7 +624,7 @@ export default function MacrosPage() {
               </div>
               {avgPoints !== null && (
                 <div className="flex items-center gap-1.5 text-[#0F0F0F] dark:text-white">
-                  <Activity className="w-4 h-4 text-[#0F0F0F]/40 dark:text-white/40" />
+                  <Activity className="w-4 h-4 text-[#0F0F0F]/50 dark:text-white/50" />
                   <span className="font-medium">{avgPoints} pts avg</span>
                 </div>
               )}
@@ -666,7 +673,7 @@ export default function MacrosPage() {
         {/* Next Up - Only show countdown when within 60 minutes */}
         {!isWeekend && nextMacro && minutesToNextMacro <= 60 && (
           <div className="mb-8">
-            <div className="text-xs tracking-[0.15em] uppercase text-[#0F0F0F]/40 dark:text-white/40 mb-3 flex items-center gap-2">
+            <div className="text-xs tracking-[0.15em] uppercase text-[#0F0F0F]/50 dark:text-white/50 mb-3 flex items-center gap-2">
               <Timer className="w-3.5 h-3.5" />
               Next Macro
             </div>
@@ -692,7 +699,7 @@ export default function MacrosPage() {
           );
           return laterMacros.length > 0 && !isWeekend && (
             <div className="mb-8">
-              <div className="text-xs tracking-[0.15em] uppercase text-[#0F0F0F]/40 dark:text-white/40 mb-3">
+              <div className="text-xs tracking-[0.15em] uppercase text-[#0F0F0F]/50 dark:text-white/50 mb-3">
                 Later Today ({laterMacros.length})
               </div>
               <div className="space-y-2">
@@ -704,7 +711,7 @@ export default function MacrosPage() {
                     <span className="text-sm font-medium text-[#0F0F0F]/70 dark:text-white/70">
                       {macro.name}
                     </span>
-                    <span className="text-xs text-[#0F0F0F]/40 dark:text-white/40">
+                    <span className="text-xs text-[#0F0F0F]/50 dark:text-white/50">
                       {formatMacroTime(macro.startHour, macro.startMinute)}
                     </span>
                   </div>
@@ -717,7 +724,7 @@ export default function MacrosPage() {
         {/* Passed Macros */}
         {!isWeekend && passedMacros.length > 0 && (
           <div>
-            <div className="text-xs tracking-[0.15em] uppercase text-[#0F0F0F]/40 dark:text-white/40 mb-3">
+            <div className="text-xs tracking-[0.15em] uppercase text-[#0F0F0F]/50 dark:text-white/50 mb-3">
               Completed Today ({passedMacros.length})
             </div>
             <div className="space-y-3">
@@ -741,7 +748,7 @@ export default function MacrosPage() {
         {/* Weekend - Faded Read-Only View of All Macros */}
         {isWeekend && macroStatuses.length > 0 && (
           <div className="opacity-40 pointer-events-none select-none">
-            <div className="text-xs tracking-[0.15em] uppercase text-[#0F0F0F]/40 dark:text-white/40 mb-3">
+            <div className="text-xs tracking-[0.15em] uppercase text-[#0F0F0F]/50 dark:text-white/50 mb-3">
               Last Week's Macros (Read Only)
             </div>
             <div className="space-y-3">
@@ -753,14 +760,14 @@ export default function MacrosPage() {
                   <div className="flex items-start justify-between">
                     <div>
                       <h3
-                        className="text-base sm:text-lg font-medium text-[#0F0F0F]/40 dark:text-white/40"
-                        style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                        className="text-base sm:text-lg font-medium text-[#0F0F0F]/50 dark:text-white/50"
+                        style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
                       >
                         {macro.name}
                       </h3>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 text-xs sm:text-sm text-[#0F0F0F]/30 dark:text-white/30 mt-2">
+                  <div className="flex items-center gap-2 text-xs sm:text-sm text-[#0F0F0F]/45 dark:text-white/45 mt-2">
                     <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                     <span>
                       {formatMacroTime(macro.startHour, macro.startMinute)} — {formatMacroTime(macro.endHour, macro.endMinute)}
@@ -776,15 +783,15 @@ export default function MacrosPage() {
         {!isWeekend && macroStatuses.length === 0 && (
           <div className="text-center py-16">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#0F0F0F]/5 dark:bg-white/5 flex items-center justify-center">
-              <Clock className="w-6 h-6 text-[#0F0F0F]/30 dark:text-white/30" />
+              <Clock className="w-6 h-6 text-[#0F0F0F]/45 dark:text-white/45" />
             </div>
             <h3
               className="text-lg font-medium text-[#0F0F0F]/60 dark:text-white/60 mb-2"
-              style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+              style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
             >
               No sessions selected
             </h3>
-            <p className="text-[#0F0F0F]/40 dark:text-white/40 text-sm">
+            <p className="text-[#0F0F0F]/50 dark:text-white/50 text-sm">
               Select a session to log your macros
             </p>
           </div>

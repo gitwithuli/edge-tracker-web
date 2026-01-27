@@ -88,14 +88,14 @@ export function CalendarPnL({
   const showSidebar = showWeeklySummary && !isCompact;
 
   return (
-    <div className="p-6 sm:p-8 rounded-2xl bg-white dark:bg-white/[0.03] border border-[#0F0F0F]/5 dark:border-white/10">
+    <div className="p-3 sm:p-6 md:p-8 rounded-2xl bg-white dark:bg-white/[0.03] border border-[#0F0F0F]/5 dark:border-white/10">
       {/* Header with title */}
-      <div className="flex items-center gap-4 mb-6">
-        <div className="flex items-center gap-2">
-          <Calendar className="w-4 h-4 text-[#0F0F0F]/40 dark:text-white/40" />
+      <div className="flex items-center gap-2 sm:gap-4 mb-4 sm:mb-6">
+        <div className="flex items-center gap-2 min-w-0">
+          <Calendar className="w-4 h-4 text-[#0F0F0F]/50 dark:text-white/50 shrink-0" />
           <h3
-            className="text-lg tracking-tight dark:text-white"
-            style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+            className="text-base sm:text-lg tracking-tight dark:text-white truncate"
+            style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
           >
             {title || "Calendar P&L"}
           </h3>
@@ -112,7 +112,7 @@ export function CalendarPnL({
             title={title}
             trigger={
               <button
-                className="p-2 rounded-lg hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5 transition-colors text-[#0F0F0F]/40 dark:text-white/40 hover:text-[#0F0F0F] dark:hover:text-white"
+                className="p-2.5 sm:p-2 rounded-lg hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5 transition-colors text-[#0F0F0F]/50 dark:text-white/50 hover:text-[#0F0F0F] dark:hover:text-white"
                 title="Share calendar"
               >
                 <Share2 className="w-4 h-4" />
@@ -124,7 +124,7 @@ export function CalendarPnL({
           {showExpandLink && (
             <Link
               href="/dashboard/calendar"
-              className="p-2 rounded-lg hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5 transition-colors text-[#0F0F0F]/40 dark:text-white/40 hover:text-[#0F0F0F] dark:hover:text-white"
+              className="p-2.5 sm:p-2 rounded-lg hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5 transition-colors text-[#0F0F0F]/50 dark:text-white/50 hover:text-[#0F0F0F] dark:hover:text-white"
               title="Full calendar view"
             >
               <Expand className="w-4 h-4" />
@@ -134,9 +134,9 @@ export function CalendarPnL({
       </div>
 
       {/* Calendar content */}
-      <div className={showSidebar ? "flex gap-6" : ""}>
+      <div className={showSidebar ? "flex flex-col lg:flex-row gap-4 sm:gap-6" : ""}>
         {/* Main calendar area */}
-        <div className={showSidebar ? "flex-1" : ""}>
+        <div className={showSidebar ? "flex-1 min-w-0" : ""}>
           <CalendarHeader
             year={currentYear}
             month={currentMonth}
@@ -156,11 +156,18 @@ export function CalendarPnL({
           />
         </div>
 
-        {/* Weekly summary sidebar */}
+        {/* Weekly summary - horizontal scroll on mobile/tablet, vertical sidebar on desktop */}
         {showSidebar && (
-          <div className="w-48 shrink-0 hidden lg:block">
-            <CalendarWeekSummary weeks={monthStats.weeks} month={currentMonth} />
-          </div>
+          <>
+            {/* Desktop: vertical sidebar */}
+            <div className="w-48 shrink-0 hidden lg:block">
+              <CalendarWeekSummary weeks={monthStats.weeks} month={currentMonth} />
+            </div>
+            {/* Mobile/Tablet: horizontal scroll row */}
+            <div className="lg:hidden -mx-3 sm:-mx-6 md:-mx-8 px-3 sm:px-6 md:px-8 overflow-x-auto">
+              <CalendarWeekSummary weeks={monthStats.weeks} month={currentMonth} horizontal />
+            </div>
+          </>
         )}
       </div>
 

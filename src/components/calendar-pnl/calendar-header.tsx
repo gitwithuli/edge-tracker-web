@@ -37,70 +37,70 @@ export function CalendarHeader({
   const pnlColor = pnl >= 0 ? "text-[#8B9A7D]" : "text-[#C45A3B]";
 
   return (
-    <div className={`flex items-center justify-between ${isCompact ? "mb-3" : "mb-4"}`}>
+    <div className={`flex flex-col gap-2 sm:gap-0 sm:flex-row sm:items-center sm:justify-between ${isCompact ? "mb-3" : "mb-4"}`}>
       {/* Month/Year and navigation */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1 sm:gap-2">
         <button
           onClick={onPrevMonth}
-          className="p-1.5 rounded-lg hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5 transition-colors text-[#0F0F0F]/60 dark:text-white/60 hover:text-[#0F0F0F] dark:hover:text-white"
+          className="p-2.5 sm:p-1.5 rounded-lg hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5 transition-colors text-[#0F0F0F]/60 dark:text-white/60 hover:text-[#0F0F0F] dark:hover:text-white"
           aria-label="Previous month"
         >
-          <ChevronLeft className={isCompact ? "w-4 h-4" : "w-5 h-5"} />
+          <ChevronLeft className={isCompact ? "w-4 h-4" : "w-4 h-4 sm:w-5 sm:h-5"} />
         </button>
 
         <h3
           className={`
-            ${isCompact ? "text-sm sm:text-base" : "text-base sm:text-lg"}
-            font-medium text-[#0F0F0F] dark:text-white tracking-tight min-w-[140px] text-center
+            ${isCompact ? "text-sm sm:text-base" : "text-sm sm:text-base md:text-lg"}
+            font-medium text-[#0F0F0F] dark:text-white tracking-tight min-w-[110px] sm:min-w-[140px] text-center
           `}
-          style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+          style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
         >
           {monthName} {year}
         </h3>
 
         <button
           onClick={onNextMonth}
-          className="p-1.5 rounded-lg hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5 transition-colors text-[#0F0F0F]/60 dark:text-white/60 hover:text-[#0F0F0F] dark:hover:text-white"
+          className="p-2.5 sm:p-1.5 rounded-lg hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5 transition-colors text-[#0F0F0F]/60 dark:text-white/60 hover:text-[#0F0F0F] dark:hover:text-white"
           aria-label="Next month"
         >
-          <ChevronRight className={isCompact ? "w-4 h-4" : "w-5 h-5"} />
+          <ChevronRight className={isCompact ? "w-4 h-4" : "w-4 h-4 sm:w-5 sm:h-5"} />
         </button>
 
         {!isCurrentMonth && (
           <button
             onClick={onToday}
             className={`
-              ml-2 flex items-center gap-1.5 px-2.5 py-1 rounded-full
+              ml-1 sm:ml-2 flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-2.5 py-2 sm:py-1 rounded-full
               bg-[#0F0F0F]/5 dark:bg-white/5
               text-[#0F0F0F]/60 dark:text-white/60
               hover:bg-[#0F0F0F]/10 dark:hover:bg-white/10
               hover:text-[#0F0F0F] dark:hover:text-white
               transition-colors
-              ${isCompact ? "text-[10px]" : "text-xs"}
+              ${isCompact ? "text-[10px]" : "text-[10px] sm:text-xs"}
             `}
           >
-            <Calendar className={isCompact ? "w-3 h-3" : "w-3.5 h-3.5"} />
+            <Calendar className={isCompact ? "w-3 h-3" : "w-3 h-3 sm:w-3.5 sm:h-3.5"} />
             Today
           </button>
         )}
       </div>
 
       {/* Monthly stats */}
-      <div className={`flex items-center gap-3 ${isCompact ? "text-[10px] sm:text-xs" : "text-xs sm:text-sm"}`}>
+      <div className={`flex items-center gap-2 sm:gap-3 ${isCompact ? "text-[10px] sm:text-xs" : "text-[10px] sm:text-xs md:text-sm"}`}>
         {monthStats.totalTrades > 0 ? (
           <>
             {/* P&L */}
             {pnlFormatted && (
               <span
                 className={`font-semibold ${pnlColor}`}
-                style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
               >
                 {pnlFormatted}
               </span>
             )}
 
             {/* Trading days */}
-            <span className="text-[#0F0F0F]/40 dark:text-white/40">
+            <span className="text-[#0F0F0F]/50 dark:text-white/50">
               {monthStats.tradingDays}d / {monthStats.totalTrades}t
             </span>
 
@@ -110,7 +110,7 @@ export function CalendarHeader({
             </span>
           </>
         ) : (
-          <span className="text-[#0F0F0F]/30 dark:text-white/30">No trades</span>
+          <span className="text-[#0F0F0F]/45 dark:text-white/45">No trades</span>
         )}
       </div>
     </div>

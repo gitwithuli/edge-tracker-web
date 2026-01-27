@@ -112,7 +112,6 @@ export interface LogsRow {
   day_of_week: DayOfWeek;
   duration_minutes: number;
   note: string;
-  tv_link: string | null;  // Legacy - use tv_links
   tv_links: string[];
   date: string;
   entry_price: number | null;
@@ -141,7 +140,6 @@ export interface LogsInsert {
   day_of_week: DayOfWeek;
   duration_minutes: number;
   note?: string;
-  tv_link?: string | null;
   tv_links?: string[];
   date?: string;
   entry_price?: number | null;
@@ -167,7 +165,6 @@ export interface LogsUpdate {
   day_of_week?: DayOfWeek;
   duration_minutes?: number;
   note?: string;
-  tv_link?: string | null;
   tv_links?: string[];
   date?: string;
   entry_price?: number | null;
@@ -235,7 +232,7 @@ export interface MacroLogsUpdate {
 // USER SUBSCRIPTIONS TABLE
 // ============================================
 
-export type SubscriptionTier = 'unpaid' | 'paid';
+export type SubscriptionTier = 'trial' | 'free' | 'paid' | 'unpaid';
 
 export interface UserSubscriptionsRow {
   id: string;
@@ -246,6 +243,11 @@ export interface UserSubscriptionsRow {
   current_period_start: string | null;
   current_period_end: string | null;
   cancel_at_period_end: boolean;
+  trial_started_at: string | null;
+  trial_ends_at: string | null;
+  payment_provider: string | null;
+  payment_id: string | null;
+  payment_status: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -259,6 +261,11 @@ export interface UserSubscriptionsInsert {
   current_period_start?: string | null;
   current_period_end?: string | null;
   cancel_at_period_end?: boolean;
+  trial_started_at?: string | null;
+  trial_ends_at?: string | null;
+  payment_provider?: string | null;
+  payment_id?: string | null;
+  payment_status?: string | null;
 }
 
 export interface UserSubscriptionsUpdate {
@@ -268,6 +275,11 @@ export interface UserSubscriptionsUpdate {
   current_period_start?: string | null;
   current_period_end?: string | null;
   cancel_at_period_end?: boolean;
+  trial_started_at?: string | null;
+  trial_ends_at?: string | null;
+  payment_provider?: string | null;
+  payment_id?: string | null;
+  payment_status?: string | null;
   updated_at?: string;
 }
 
@@ -304,13 +316,7 @@ export function mapEdgeFromDb(row: EdgesRow): Edge {
  * Map database row to TradeLog type
  */
 export function mapLogFromDb(row: LogsRow): TradeLog {
-  // Handle tvLinks - use array, fallback to legacy tv_link
-  let tvLinks: string[] = [];
-  if (Array.isArray(row.tv_links) && row.tv_links.length > 0) {
-    tvLinks = row.tv_links;
-  } else if (row.tv_link && row.tv_link !== '') {
-    tvLinks = [row.tv_link];
-  }
+  const tvLinks: string[] = Array.isArray(row.tv_links) ? row.tv_links : [];
 
   return {
     id: row.id,
@@ -352,5 +358,10 @@ export function mapSubscriptionFromDb(row: UserSubscriptionsRow): UserSubscripti
     currentPeriodStart: row.current_period_start,
     currentPeriodEnd: row.current_period_end,
     cancelAtPeriodEnd: row.cancel_at_period_end || false,
+    trialStartedAt: row.trial_started_at,
+    trialEndsAt: row.trial_ends_at,
+    paymentProvider: row.payment_provider,
+    paymentId: row.payment_id,
+    paymentStatus: row.payment_status,
   };
 }

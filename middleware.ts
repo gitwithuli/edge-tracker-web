@@ -113,12 +113,16 @@ export async function middleware(request: NextRequest) {
       .single();
 
     if (subError) {
-      console.error('[Middleware] Subscription check error');
+      console.error('[Middleware] Subscription check error:', subError.code);
     }
 
-    // If no subscription or unpaid, redirect to pricing
-    if (!subscription || subscription.subscription_tier !== 'paid') {
-      // User not subscribed, redirect to pricing
+    // Allow trial, free, and paid users to access dashboard
+    // On DB error, default to 'free' (fail-closed: grant limited access, not full)
+    const tier = subError ? 'free' : subscription?.subscription_tier;
+    const hasAccess = tier === 'paid' || tier === 'trial' || tier === 'free';
+
+    if (!hasAccess) {
+      // Legacy unpaid user or no subscription — redirect to pricing
       const url = request.nextUrl.clone();
       url.pathname = '/pricing';
       const redirectResponse = NextResponse.redirect(url);
@@ -127,7 +131,6 @@ export async function middleware(request: NextRequest) {
       });
       return redirectResponse;
     }
-    console.log('[Middleware] User is paid, allowing access');
   }
 
   return supabaseResponse;

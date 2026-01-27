@@ -185,13 +185,13 @@ function MacroEntryCard({
     return (
       <div className="p-4 rounded-xl bg-white dark:bg-white/5 border-2 border-[#C45A3B]/30">
         <div className="flex items-center justify-between mb-4">
-          <h4 className="font-medium text-[#0F0F0F] dark:text-white" style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}>
+          <h4 className="font-medium text-[#0F0F0F] dark:text-white" style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}>
             {macro?.name || log.macroId}
           </h4>
           <div className="flex items-center gap-2">
             <button
               onClick={handleCancel}
-              className="p-1.5 rounded-lg hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5 transition-colors text-[#0F0F0F]/40 dark:text-white/40"
+              className="p-1.5 rounded-lg hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5 transition-colors text-[#0F0F0F]/50 dark:text-white/50"
             >
               <X className="w-4 h-4" />
             </button>
@@ -207,7 +207,7 @@ function MacroEntryCard({
         <div className="space-y-4">
           {/* Points */}
           <div>
-            <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 dark:text-white/40 mb-2">Points Moved</div>
+            <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/50 dark:text-white/50 mb-2">Points Moved</div>
             <input
               type="number"
               value={editData.pointsMoved ?? ''}
@@ -219,7 +219,7 @@ function MacroEntryCard({
 
           {/* Direction */}
           <div>
-            <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 dark:text-white/40 mb-2">Direction</div>
+            <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/50 dark:text-white/50 mb-2">Direction</div>
             <div className="grid grid-cols-3 gap-2">
               {(['BULLISH', 'BEARISH', 'CONSOLIDATION'] as MacroDirection[]).map(dir => (
                 <button
@@ -242,7 +242,7 @@ function MacroEntryCard({
 
           {/* Displacement */}
           <div>
-            <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 dark:text-white/40 mb-2">Resistance</div>
+            <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/50 dark:text-white/50 mb-2">Resistance</div>
             <div className="grid grid-cols-2 gap-2">
               {(['CLEAN', 'CHOPPY'] as DisplacementQuality[]).map(qual => (
                 <button
@@ -263,7 +263,7 @@ function MacroEntryCard({
 
           {/* Liquidity */}
           <div>
-            <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 dark:text-white/40 mb-2">Liquidity Sweep</div>
+            <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/50 dark:text-white/50 mb-2">Liquidity Sweep</div>
             <div className="grid grid-cols-4 gap-2">
               {(['HIGHS', 'LOWS', 'BOTH', 'NONE'] as LiquiditySweep[]).map(liq => (
                 <button
@@ -287,7 +287,7 @@ function MacroEntryCard({
 
           {/* TradingView Links */}
           <div>
-            <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 dark:text-white/40 mb-2">
+            <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/50 dark:text-white/50 mb-2">
               Chart Links ({editData.tvLinks.length})
             </div>
 
@@ -298,14 +298,14 @@ function MacroEntryCard({
                     key={index}
                     className="flex items-center gap-2 p-2 bg-[#FAF7F2] dark:bg-[#0F0F0F] rounded-lg border border-[#0F0F0F]/10 dark:border-white/10"
                   >
-                    <ExternalLink className="w-3.5 h-3.5 text-[#0F0F0F]/40 dark:text-white/40 flex-shrink-0" />
+                    <ExternalLink className="w-3.5 h-3.5 text-[#0F0F0F]/50 dark:text-white/50 flex-shrink-0" />
                     <span className="text-xs text-[#0F0F0F]/70 dark:text-white/70 truncate flex-1">
                       {link.replace(/^https?:\/\/(www\.)?/, '')}
                     </span>
                     <button
                       type="button"
                       onClick={() => handleRemoveTvLink(index)}
-                      className="p-1 rounded hover:bg-[#C45A3B]/10 text-[#0F0F0F]/30 dark:text-white/30 hover:text-[#C45A3B] transition-colors flex-shrink-0"
+                      className="p-1 rounded hover:bg-[#C45A3B]/10 text-[#0F0F0F]/45 dark:text-white/45 hover:text-[#C45A3B] transition-colors flex-shrink-0"
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
@@ -375,12 +375,12 @@ function MacroEntryCard({
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-[10px] font-medium tracking-[0.12em] uppercase text-[#0F0F0F]/30 dark:text-white/30">
+              <span className="text-[10px] font-medium tracking-[0.12em] uppercase text-[#0F0F0F]/45 dark:text-white/45">
                 {macro ? categoryLabels[macro.category] : 'Macro'}
               </span>
               {log.direction && (
                 <>
-                  <span className="text-[#0F0F0F]/20 dark:text-white/20">·</span>
+                  <span className="text-[#0F0F0F]/50 dark:text-white/50">·</span>
                   <span className={cn(
                     "text-[10px] font-semibold tracking-wide uppercase",
                     log.direction === 'BULLISH' && "text-[#8B9A7D]",
@@ -394,7 +394,7 @@ function MacroEntryCard({
             </div>
             <h4
               className="text-[17px] font-medium text-[#0F0F0F] dark:text-white leading-tight truncate"
-              style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+              style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
             >
               {macro?.name || log.macroId}
             </h4>
@@ -404,7 +404,7 @@ function MacroEntryCard({
           <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-all duration-200 translate-x-2 group-hover:translate-x-0">
             <button
               onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
-              className="p-2 rounded-xl hover:bg-[#0F0F0F]/[0.04] dark:hover:bg-white/[0.04] transition-colors text-[#0F0F0F]/30 dark:text-white/30 hover:text-[#0F0F0F]/70 dark:hover:text-white/70"
+              className="p-2 rounded-xl hover:bg-[#0F0F0F]/[0.04] dark:hover:bg-white/[0.04] transition-colors text-[#0F0F0F]/45 dark:text-white/45 hover:text-[#0F0F0F]/70 dark:hover:text-white/70"
             >
               <Pencil className="w-3.5 h-3.5" />
             </button>
@@ -412,14 +412,14 @@ function MacroEntryCard({
               <AlertDialogTrigger asChild>
                 <button
                   onClick={(e) => e.stopPropagation()}
-                  className="p-2 rounded-xl hover:bg-[#C45A3B]/[0.08] transition-colors text-[#0F0F0F]/30 dark:text-white/30 hover:text-[#C45A3B]"
+                  className="p-2 rounded-xl hover:bg-[#C45A3B]/[0.08] transition-colors text-[#0F0F0F]/45 dark:text-white/45 hover:text-[#C45A3B]"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </AlertDialogTrigger>
               <AlertDialogContent className="bg-[#FAF7F2] dark:bg-[#0F0F0F] border-[#0F0F0F]/10 dark:border-white/10">
                 <AlertDialogHeader>
-                  <AlertDialogTitle className="text-[#0F0F0F] dark:text-white" style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}>
+                  <AlertDialogTitle className="text-[#0F0F0F] dark:text-white" style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}>
                     Delete macro log?
                   </AlertDialogTitle>
                   <AlertDialogDescription className="text-[#0F0F0F]/60 dark:text-white/60">
@@ -450,7 +450,7 @@ function MacroEntryCard({
                 <span className="text-xl font-semibold text-[#0F0F0F] dark:text-white tabular-nums">
                   {log.pointsMoved}
                 </span>
-                <span className="text-[11px] font-medium text-[#0F0F0F]/40 dark:text-white/40 uppercase tracking-wide">
+                <span className="text-[11px] font-medium text-[#0F0F0F]/50 dark:text-white/50 uppercase tracking-wide">
                   pts
                 </span>
               </div>
@@ -492,11 +492,11 @@ function MacroEntryCard({
                     key={i}
                     className="w-5 h-5 rounded-md bg-[#0F0F0F]/[0.04] dark:bg-white/[0.04] border border-[#0F0F0F]/[0.06] dark:border-white/[0.06] flex items-center justify-center"
                   >
-                    <ExternalLink className="w-2.5 h-2.5 text-[#0F0F0F]/30 dark:text-white/30" />
+                    <ExternalLink className="w-2.5 h-2.5 text-[#0F0F0F]/45 dark:text-white/45" />
                   </div>
                 ))}
               </div>
-              <span className="text-[12px] text-[#0F0F0F]/40 dark:text-white/40">
+              <span className="text-[12px] text-[#0F0F0F]/50 dark:text-white/50">
                 {log.tvLinks.length} chart{log.tvLinks.length > 1 ? 's' : ''}
               </span>
             </div>
@@ -563,7 +563,7 @@ function AddEntryForm({
         <div className="flex items-center gap-2">
           <button
             onClick={onCancel}
-            className="p-1.5 rounded-lg hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5 transition-colors text-[#0F0F0F]/40 dark:text-white/40"
+            className="p-1.5 rounded-lg hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5 transition-colors text-[#0F0F0F]/50 dark:text-white/50"
           >
             <X className="w-4 h-4" />
           </button>
@@ -574,7 +574,7 @@ function AddEntryForm({
               "p-1.5 rounded-lg transition-colors",
               selectedMacro
                 ? "bg-[#8B9A7D] text-white hover:bg-[#8B9A7D]/80"
-                : "bg-[#0F0F0F]/10 dark:bg-white/10 text-[#0F0F0F]/30 dark:text-white/30 cursor-not-allowed"
+                : "bg-[#0F0F0F]/10 dark:bg-white/10 text-[#0F0F0F]/45 dark:text-white/45 cursor-not-allowed"
             )}
           >
             <Check className="w-4 h-4" />
@@ -586,7 +586,7 @@ function AddEntryForm({
         {/* Macro Select - Required */}
         <div>
           <div className="flex items-center gap-1.5 mb-2">
-            <span className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 dark:text-white/40">Macro Window</span>
+            <span className="text-xs uppercase tracking-wider text-[#0F0F0F]/50 dark:text-white/50">Macro Window</span>
             <span className="text-[10px] font-medium text-[#C45A3B]">Required</span>
           </div>
           {availableMacros.length > 0 ? (
@@ -614,9 +614,9 @@ function AddEntryForm({
               </SelectContent>
             </Select>
           ) : macroList.length === 0 ? (
-            <div className="text-sm text-[#0F0F0F]/40 dark:text-white/40 italic">No macro sessions selected in filters</div>
+            <div className="text-sm text-[#0F0F0F]/50 dark:text-white/50 italic">No macro sessions selected in filters</div>
           ) : (
-            <div className="text-sm text-[#0F0F0F]/40 dark:text-white/40 italic">All macros already logged for this day</div>
+            <div className="text-sm text-[#0F0F0F]/50 dark:text-white/50 italic">All macros already logged for this day</div>
           )}
         </div>
 
@@ -624,7 +624,7 @@ function AddEntryForm({
           <>
             {/* Points */}
             <div>
-              <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 dark:text-white/40 mb-2">Points Moved</div>
+              <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/50 dark:text-white/50 mb-2">Points Moved</div>
               <input
                 type="number"
                 value={formData.pointsMoved ?? ''}
@@ -636,7 +636,7 @@ function AddEntryForm({
 
             {/* Direction */}
             <div>
-              <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 dark:text-white/40 mb-2">Direction</div>
+              <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/50 dark:text-white/50 mb-2">Direction</div>
               <div className="grid grid-cols-3 gap-2">
                 {(['BULLISH', 'BEARISH', 'CONSOLIDATION'] as MacroDirection[]).map(dir => (
                   <button
@@ -659,7 +659,7 @@ function AddEntryForm({
 
             {/* Displacement */}
             <div>
-              <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 dark:text-white/40 mb-2">Resistance</div>
+              <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/50 dark:text-white/50 mb-2">Resistance</div>
               <div className="grid grid-cols-2 gap-2">
                 {(['CLEAN', 'CHOPPY'] as DisplacementQuality[]).map(qual => (
                   <button
@@ -680,7 +680,7 @@ function AddEntryForm({
 
             {/* Liquidity */}
             <div>
-              <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 dark:text-white/40 mb-2">Liquidity Sweep</div>
+              <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/50 dark:text-white/50 mb-2">Liquidity Sweep</div>
               <div className="grid grid-cols-4 gap-2">
                 {(['HIGHS', 'LOWS', 'BOTH', 'NONE'] as LiquiditySweep[]).map(liq => (
                   <button
@@ -704,7 +704,7 @@ function AddEntryForm({
 
             {/* TradingView Links */}
             <div>
-              <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/40 dark:text-white/40 mb-2">
+              <div className="text-xs uppercase tracking-wider text-[#0F0F0F]/50 dark:text-white/50 mb-2">
                 Chart Links ({(formData.tvLinks || []).length})
               </div>
 
@@ -715,14 +715,14 @@ function AddEntryForm({
                       key={index}
                       className="flex items-center gap-2 p-2 bg-white dark:bg-white/5 rounded-lg border border-[#0F0F0F]/10 dark:border-white/10"
                     >
-                      <ExternalLink className="w-3.5 h-3.5 text-[#0F0F0F]/40 dark:text-white/40 flex-shrink-0" />
+                      <ExternalLink className="w-3.5 h-3.5 text-[#0F0F0F]/50 dark:text-white/50 flex-shrink-0" />
                       <span className="text-xs text-[#0F0F0F]/70 dark:text-white/70 truncate flex-1">
                         {link.replace(/^https?:\/\/(www\.)?/, '')}
                       </span>
                       <button
                         type="button"
                         onClick={() => handleRemoveTvLink(index)}
-                        className="p-1 rounded hover:bg-[#C45A3B]/10 text-[#0F0F0F]/30 dark:text-white/30 hover:text-[#C45A3B] transition-colors flex-shrink-0"
+                        className="p-1 rounded hover:bg-[#C45A3B]/10 text-[#0F0F0F]/45 dark:text-white/45 hover:text-[#C45A3B] transition-colors flex-shrink-0"
                       >
                         <X className="w-3.5 h-3.5" />
                       </button>
@@ -764,7 +764,7 @@ function AddEntryForm({
 
 export default function MacroStatsPage() {
   const router = useRouter();
-  const { user, isLoaded } = useEdgeStore();
+  const { user, isLoaded, canAccess } = useEdgeStore();
   const { logs, isLoaded: macrosLoaded, fetchLogs, updateLog, deleteLog, logMacroForDate, showAsiaMacros, showLondonMacros, showNYMacros, setShowAsiaMacros, setShowLondonMacros, setShowNYMacros } = useMacroStore();
   const [mounted, setMounted] = useState(false);
   const [isAddingEntry, setIsAddingEntry] = useState(false);
@@ -798,6 +798,13 @@ export default function MacroStatsPage() {
       router.push("/login");
     }
   }, [isLoaded, user, router]);
+
+  // Redirect free users to pricing
+  useEffect(() => {
+    if (isLoaded && user && !canAccess('macros')) {
+      router.push("/pricing");
+    }
+  }, [isLoaded, user, canAccess, router]);
 
   useEffect(() => {
     if (isLoaded && user && !macrosLoaded) {
@@ -921,7 +928,7 @@ export default function MacroStatsPage() {
   if (!isLoaded || !user || !mounted) {
     return (
       <div className="min-h-screen bg-[#FAF7F2] dark:bg-[#0F0F0F] flex items-center justify-center">
-        <div className="animate-pulse text-[#0F0F0F]/40 dark:text-white/40">Loading...</div>
+        <div className="animate-pulse text-[#0F0F0F]/50 dark:text-white/50">Loading...</div>
       </div>
     );
   }
@@ -955,12 +962,12 @@ export default function MacroStatsPage() {
               <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 text-[#0F0F0F]/60 dark:text-white/60" />
             </button>
             <div>
-              <div className="text-[10px] sm:text-xs tracking-[0.2em] uppercase text-[#0F0F0F]/40 dark:text-white/40 mb-0.5">
+              <div className="text-[10px] sm:text-xs tracking-[0.2em] uppercase text-[#0F0F0F]/50 dark:text-white/50 mb-0.5">
                 Macro Tracker
               </div>
               <h1
                 className="text-base sm:text-xl font-medium"
-                style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
               >
                 Statistics
               </h1>
@@ -972,7 +979,7 @@ export default function MacroStatsPage() {
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {/* Session Toggles */}
         <div className="flex flex-wrap items-center gap-3 mb-6 sm:mb-8">
-          <span className="text-xs text-[#0F0F0F]/40 dark:text-white/40 uppercase tracking-wider">Sessions:</span>
+          <span className="text-xs text-[#0F0F0F]/50 dark:text-white/50 uppercase tracking-wider">Sessions:</span>
           <button
             onClick={() => setShowAsiaMacros(!showAsiaMacros)}
             className={cn(
@@ -1011,38 +1018,38 @@ export default function MacroStatsPage() {
         {/* Stats Overview */}
         <section className="mb-8 sm:mb-10">
           <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
-            <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#0F0F0F]/40 dark:text-white/40" />
-            <span className="text-[10px] sm:text-xs tracking-[0.2em] uppercase text-[#0F0F0F]/40 dark:text-white/40">Overview</span>
+            <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#0F0F0F]/50 dark:text-white/50" />
+            <span className="text-[10px] sm:text-xs tracking-[0.2em] uppercase text-[#0F0F0F]/50 dark:text-white/50">Overview</span>
             <div className="flex-1 h-px bg-[#0F0F0F]/10 dark:bg-white/10" />
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
             <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white dark:bg-white/5 border border-[#0F0F0F]/10 dark:border-white/10">
-              <div className="text-[10px] sm:text-xs text-[#0F0F0F]/40 dark:text-white/40 uppercase tracking-wider mb-1">Total Logged</div>
+              <div className="text-[10px] sm:text-xs text-[#0F0F0F]/50 dark:text-white/50 uppercase tracking-wider mb-1">Total Logged</div>
               <div className="text-2xl sm:text-3xl font-bold text-[#0F0F0F] dark:text-white">{stats.totalLogs}</div>
             </div>
             <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white dark:bg-white/5 border border-[#0F0F0F]/10 dark:border-white/10">
-              <div className="text-[10px] sm:text-xs text-[#0F0F0F]/40 dark:text-white/40 uppercase tracking-wider mb-1">Avg Points</div>
+              <div className="text-[10px] sm:text-xs text-[#0F0F0F]/50 dark:text-white/50 uppercase tracking-wider mb-1">Avg Points</div>
               <div className="text-2xl sm:text-3xl font-bold text-[#0F0F0F] dark:text-white">{stats.avgPoints}</div>
             </div>
             <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white dark:bg-white/5 border border-[#0F0F0F]/10 dark:border-white/10">
-              <div className="text-[10px] sm:text-xs text-[#0F0F0F]/40 dark:text-white/40 uppercase tracking-wider mb-1">Best Macro</div>
+              <div className="text-[10px] sm:text-xs text-[#0F0F0F]/50 dark:text-white/50 uppercase tracking-wider mb-1">Best Macro</div>
               <div className="text-base sm:text-xl font-bold text-[#0F0F0F] dark:text-white truncate">{stats.bestMacro.name || '—'}</div>
               {stats.bestMacro.avg > 0 && (
-                <div className="text-[10px] sm:text-xs text-[#0F0F0F]/40 dark:text-white/40">{stats.bestMacro.avg} pts avg</div>
+                <div className="text-[10px] sm:text-xs text-[#0F0F0F]/50 dark:text-white/50">{stats.bestMacro.avg} pts avg</div>
               )}
             </div>
             <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white dark:bg-white/5 border border-[#0F0F0F]/10 dark:border-white/10">
-              <div className="text-[10px] sm:text-xs text-[#0F0F0F]/40 dark:text-white/40 uppercase tracking-wider mb-1">Best Day</div>
+              <div className="text-[10px] sm:text-xs text-[#0F0F0F]/50 dark:text-white/50 uppercase tracking-wider mb-1">Best Day</div>
               <div className="text-base sm:text-xl font-bold text-[#0F0F0F] dark:text-white">{stats.bestDay || '—'}</div>
-              <div className="text-[10px] sm:text-xs text-[#0F0F0F]/40 dark:text-white/40">Most directional</div>
+              <div className="text-[10px] sm:text-xs text-[#0F0F0F]/50 dark:text-white/50">Most directional</div>
             </div>
           </div>
 
           {/* Direction & Resistance Breakdown */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 mt-3 sm:mt-4">
             <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white dark:bg-white/5 border border-[#0F0F0F]/10 dark:border-white/10">
-              <div className="text-[10px] sm:text-xs text-[#0F0F0F]/40 dark:text-white/40 uppercase tracking-wider mb-2 sm:mb-3">Direction Breakdown</div>
+              <div className="text-[10px] sm:text-xs text-[#0F0F0F]/50 dark:text-white/50 uppercase tracking-wider mb-2 sm:mb-3">Direction Breakdown</div>
               <div className="space-y-2">
                 <div className="flex items-center gap-2 sm:gap-3">
                   <div className="flex items-center gap-1 sm:gap-1.5 text-[#8B9A7D] w-16 sm:w-24">
@@ -1087,7 +1094,7 @@ export default function MacroStatsPage() {
             </div>
 
             <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white dark:bg-white/5 border border-[#0F0F0F]/10 dark:border-white/10">
-              <div className="text-[10px] sm:text-xs text-[#0F0F0F]/40 dark:text-white/40 uppercase tracking-wider mb-2 sm:mb-3">Resistance Breakdown</div>
+              <div className="text-[10px] sm:text-xs text-[#0F0F0F]/50 dark:text-white/50 uppercase tracking-wider mb-2 sm:mb-3">Resistance Breakdown</div>
               <div className="space-y-2">
                 <div className="flex items-center gap-2 sm:gap-3">
                   <div className="flex items-center gap-1 sm:gap-1.5 text-[#8B9A7D] w-16 sm:w-24">
@@ -1123,15 +1130,15 @@ export default function MacroStatsPage() {
         {/* Calendar Section */}
         <section>
           <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
-            <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#0F0F0F]/40 dark:text-white/40" />
-            <span className="text-[10px] sm:text-xs tracking-[0.2em] uppercase text-[#0F0F0F]/40 dark:text-white/40">Calendar</span>
+            <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#0F0F0F]/50 dark:text-white/50" />
+            <span className="text-[10px] sm:text-xs tracking-[0.2em] uppercase text-[#0F0F0F]/50 dark:text-white/50">Calendar</span>
             <div className="flex-1 h-px bg-[#0F0F0F]/10 dark:bg-white/10" />
           </div>
 
           <div className="rounded-xl sm:rounded-2xl bg-white dark:bg-white/5 border border-[#0F0F0F]/10 dark:border-white/10 overflow-hidden">
             {/* Calendar Header */}
             <div className="flex items-center justify-between px-3 sm:px-4 py-2 sm:py-3 border-b border-[#0F0F0F]/10 dark:border-white/10">
-              <h3 className="text-sm sm:text-base font-medium" style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}>
+              <h3 className="text-sm sm:text-base font-medium" style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}>
                 {MONTHS[currentMonth]} {currentYear}
               </h3>
               <div className="flex items-center gap-1 sm:gap-2">
@@ -1161,7 +1168,7 @@ export default function MacroStatsPage() {
               {/* Day headers */}
               <div className="grid grid-cols-7 mb-0.5 sm:mb-1">
                 {DAYS_OF_WEEK.map(day => (
-                  <div key={day} className="text-center text-[10px] sm:text-xs text-[#0F0F0F]/40 dark:text-white/40 font-medium py-1 sm:py-2">
+                  <div key={day} className="text-center text-[10px] sm:text-xs text-[#0F0F0F]/50 dark:text-white/50 font-medium py-1 sm:py-2">
                     {day.slice(0, 1)}
                     <span className="hidden sm:inline">{day.slice(1)}</span>
                   </div>
@@ -1181,8 +1188,8 @@ export default function MacroStatsPage() {
                       key={idx}
                       onClick={() => handleDateClick(dateKey)}
                       className={cn(
-                        "relative aspect-square p-0.5 sm:p-1 rounded-lg sm:rounded-xl transition-all flex flex-col items-center justify-start",
-                        isCurrentMonth ? "text-[#0F0F0F] dark:text-white" : "text-[#0F0F0F]/30 dark:text-white/30",
+                        "relative aspect-square p-0.5 sm:p-1 rounded-lg sm:rounded-xl transition-colors flex flex-col items-center justify-start",
+                        isCurrentMonth ? "text-[#0F0F0F] dark:text-white" : "text-[#0F0F0F]/45 dark:text-white/45",
                         isSelected && dateDialogOpen && "bg-[#0F0F0F] dark:bg-white text-white dark:text-[#0F0F0F]",
                         !isSelected && isTodayDate && "bg-[#C45A3B]/10",
                         !(isSelected && dateDialogOpen) && "hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5"
@@ -1240,12 +1247,12 @@ export default function MacroStatsPage() {
               <div className="p-5 sm:p-6 pb-4 border-b border-[#0F0F0F]/[0.06] dark:border-white/[0.06]">
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <div className="text-[10px] tracking-[0.2em] uppercase text-[#0F0F0F]/40 dark:text-white/40 mb-1">
+                    <div className="text-[10px] tracking-[0.2em] uppercase text-[#0F0F0F]/50 dark:text-white/50 mb-1">
                       Macro Journal
                     </div>
                     <DialogTitle
                       className="text-2xl sm:text-3xl font-normal text-[#0F0F0F] dark:text-white"
-                      style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                      style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
                     >
                       {new Date(selectedDate + 'T12:00:00').toLocaleDateString('en-US', {
                         weekday: 'long',
@@ -1253,13 +1260,13 @@ export default function MacroStatsPage() {
                         day: 'numeric',
                       })}
                     </DialogTitle>
-                    <div className="text-sm text-[#0F0F0F]/40 dark:text-white/40 mt-1">
+                    <div className="text-sm text-[#0F0F0F]/50 dark:text-white/50 mt-1">
                       {new Date(selectedDate + 'T12:00:00').getFullYear()}
                     </div>
                   </div>
                   <button
                     onClick={handleCloseDialog}
-                    className="p-2 -mr-2 -mt-1 rounded-xl hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5 transition-colors text-[#0F0F0F]/40 dark:text-white/40 hover:text-[#0F0F0F] dark:hover:text-white"
+                    className="p-2 -mr-2 -mt-1 rounded-xl hover:bg-[#0F0F0F]/5 dark:hover:bg-white/5 transition-colors text-[#0F0F0F]/50 dark:text-white/50 hover:text-[#0F0F0F] dark:hover:text-white"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -1299,7 +1306,7 @@ export default function MacroStatsPage() {
 
                   if (isFutureDate) {
                     return (
-                      <div className="w-full mb-4 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-dashed border-[#0F0F0F]/5 dark:border-white/5 text-[#0F0F0F]/30 dark:text-white/30">
+                      <div className="w-full mb-4 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-dashed border-[#0F0F0F]/5 dark:border-white/5 text-[#0F0F0F]/45 dark:text-white/45">
                         <Calendar className="w-4 h-4" />
                         <span className="text-sm">Cannot log entries for future dates</span>
                       </div>
@@ -1310,7 +1317,7 @@ export default function MacroStatsPage() {
                     return (
                       <button
                         onClick={() => setIsAddingEntry(true)}
-                        className="w-full mb-4 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-dashed border-[#0F0F0F]/10 dark:border-white/10 hover:border-[#C45A3B]/40 hover:bg-[#C45A3B]/[0.02] text-[#0F0F0F]/40 dark:text-white/40 hover:text-[#C45A3B] transition-all group"
+                        className="w-full mb-4 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-dashed border-[#0F0F0F]/10 dark:border-white/10 hover:border-[#C45A3B]/40 hover:bg-[#C45A3B]/[0.02] text-[#0F0F0F]/50 dark:text-white/50 hover:text-[#C45A3B] transition-colors group"
                       >
                         <Plus className="w-4 h-4 group-hover:scale-110 transition-transform" />
                         <span className="text-sm font-medium">Add Macro Entry</span>
@@ -1356,7 +1363,7 @@ export default function MacroStatsPage() {
                     ))}
                   </div>
                 ) : !isAddingEntry ? (
-                  <div className="text-center py-12 text-[#0F0F0F]/40 dark:text-white/40">
+                  <div className="text-center py-12 text-[#0F0F0F]/50 dark:text-white/50">
                     <Calendar className="w-12 h-12 mx-auto mb-3 opacity-30" />
                     <p className="text-base mb-1">No entries yet</p>
                     <p className="text-sm opacity-60">Add your first macro log for this day</p>

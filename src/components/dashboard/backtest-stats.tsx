@@ -115,7 +115,7 @@ export function BacktestStats({ logs, edgesWithLogs }: BacktestStatsProps) {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <DateRangeFilter value={dateRange} onChange={setDateRange} />
         {filteredLogs.length !== logs.length && (
-          <span className="text-xs text-[#0F0F0F]/40 dark:text-white/40">
+          <span className="text-xs text-[#0F0F0F]/50 dark:text-white/50">
             Showing {filteredLogs.length} of {logs.length} entries
           </span>
         )}
@@ -125,8 +125,8 @@ export function BacktestStats({ logs, edgesWithLogs }: BacktestStatsProps) {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="bg-white/50 dark:bg-white/[0.03] border border-[#0F0F0F]/5 dark:border-white/10 rounded-2xl p-4">
           <div className="flex items-center gap-2 mb-2">
-            <Calendar className="w-4 h-4 text-[#0F0F0F]/30 dark:text-white/30" />
-            <span className="text-[10px] tracking-[0.15em] uppercase text-[#0F0F0F]/40 dark:text-white/40">Date Range</span>
+            <Calendar className="w-4 h-4 text-[#0F0F0F]/45 dark:text-white/45" />
+            <span className="text-[10px] tracking-[0.15em] uppercase text-[#0F0F0F]/50 dark:text-white/50">Date Range</span>
           </div>
           <p className="text-sm font-medium text-[#0F0F0F] dark:text-white">{formatDateRange()}</p>
         </div>
@@ -134,35 +134,35 @@ export function BacktestStats({ logs, edgesWithLogs }: BacktestStatsProps) {
         <div className="bg-white/50 dark:bg-white/[0.03] border border-[#0F0F0F]/5 dark:border-white/10 rounded-2xl p-4">
           <div className="flex items-center gap-2 mb-2">
             <TrendingUp className="w-4 h-4 text-[#8B9A7D]" />
-            <span className="text-[10px] tracking-[0.15em] uppercase text-[#0F0F0F]/40 dark:text-white/40">Occurrence Rate</span>
+            <span className="text-[10px] tracking-[0.15em] uppercase text-[#0F0F0F]/50 dark:text-white/50">Occurrence Rate</span>
           </div>
           <p className="text-2xl font-medium text-[#0F0F0F] dark:text-white">{stats.occurrenceRate}%</p>
-          <p className="text-xs text-[#0F0F0F]/40 dark:text-white/40">{stats.totalOccurred} of {stats.totalLogs} days</p>
+          <p className="text-xs text-[#0F0F0F]/50 dark:text-white/50">{stats.totalOccurred} of {stats.totalLogs} days</p>
         </div>
 
         <div className="bg-white/50 dark:bg-white/[0.03] border border-[#0F0F0F]/5 dark:border-white/10 rounded-2xl p-4">
           <div className="flex items-center gap-2 mb-2">
-            <Clock className="w-4 h-4 text-[#0F0F0F]/30 dark:text-white/30" />
-            <span className="text-[10px] tracking-[0.15em] uppercase text-[#0F0F0F]/40 dark:text-white/40">Avg Duration</span>
+            <Clock className="w-4 h-4 text-[#0F0F0F]/45 dark:text-white/45" />
+            <span className="text-[10px] tracking-[0.15em] uppercase text-[#0F0F0F]/50 dark:text-white/50">Avg Duration</span>
           </div>
           <p className="text-2xl font-medium text-[#0F0F0F] dark:text-white">{stats.avgDuration}m</p>
-          <p className="text-xs text-[#0F0F0F]/40 dark:text-white/40">per occurrence</p>
+          <p className="text-xs text-[#0F0F0F]/50 dark:text-white/50">per occurrence</p>
         </div>
 
         <div className="bg-white/50 dark:bg-white/[0.03] border border-[#0F0F0F]/5 dark:border-white/10 rounded-2xl p-4">
           <div className="flex items-center gap-2 mb-2">
             <Target className="w-4 h-4 text-[#C45A3B]" />
-            <span className="text-[10px] tracking-[0.15em] uppercase text-[#0F0F0F]/40 dark:text-white/40">Best Day</span>
+            <span className="text-[10px] tracking-[0.15em] uppercase text-[#0F0F0F]/50 dark:text-white/50">Best Day</span>
           </div>
           {stats.bestDay ? (
             <>
               <p className="text-lg font-medium text-[#0F0F0F] dark:text-white">{stats.bestDay.day}</p>
-              <p className="text-xs text-[#0F0F0F]/40 dark:text-white/40">
+              <p className="text-xs text-[#0F0F0F]/50 dark:text-white/50">
                 {Math.round((stats.bestDay.occurred / stats.bestDay.total) * 100)}% ({stats.bestDay.occurred}/{stats.bestDay.total})
               </p>
             </>
           ) : (
-            <p className="text-sm text-[#0F0F0F]/40 dark:text-white/40">Need more data</p>
+            <p className="text-sm text-[#0F0F0F]/50 dark:text-white/50">Need more data</p>
           )}
         </div>
       </div>
@@ -171,7 +171,7 @@ export function BacktestStats({ logs, edgesWithLogs }: BacktestStatsProps) {
       <div className="bg-white/50 dark:bg-white/[0.03] border border-[#0F0F0F]/5 dark:border-white/10 rounded-2xl p-6">
         <h3
           className="text-sm font-medium text-[#0F0F0F] dark:text-white mb-6"
-          style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+          style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
         >
           Occurrence by Day
         </h3>
@@ -199,7 +199,7 @@ export function BacktestStats({ logs, edgesWithLogs }: BacktestStatsProps) {
                     </span>
                   )}
                 </div>
-                <span className="w-16 text-xs text-[#0F0F0F]/40 dark:text-white/40 text-right">
+                <span className="w-16 text-xs text-[#0F0F0F]/50 dark:text-white/50 text-right">
                   {data.occurred}/{data.total}
                 </span>
               </div>
@@ -213,7 +213,7 @@ export function BacktestStats({ logs, edgesWithLogs }: BacktestStatsProps) {
         <div className="bg-white/50 dark:bg-white/[0.03] border border-[#0F0F0F]/5 dark:border-white/10 rounded-2xl p-6">
           <h3
             className="text-sm font-medium text-[#0F0F0F] dark:text-white mb-6"
-            style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+            style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
           >
             Occurrence by Edge
           </h3>
@@ -247,7 +247,7 @@ export function BacktestStats({ logs, edgesWithLogs }: BacktestStatsProps) {
                         </span>
                       )}
                     </div>
-                    <span className="w-16 text-xs text-[#0F0F0F]/40 dark:text-white/40 text-right">
+                    <span className="w-16 text-xs text-[#0F0F0F]/50 dark:text-white/50 text-right">
                       {data.occurred}/{data.total}
                     </span>
                   </div>

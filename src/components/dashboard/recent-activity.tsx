@@ -66,7 +66,7 @@ export function RecentActivity({ logs, edgesWithLogs, limit = 5 }: RecentActivit
       <div className="flex items-center gap-4 mb-6">
         <h3
           className="text-lg tracking-tight dark:text-white"
-          style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+          style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
         >
           Recent Activity
         </h3>
@@ -74,7 +74,7 @@ export function RecentActivity({ logs, edgesWithLogs, limit = 5 }: RecentActivit
       </div>
 
       {recentLogs.length === 0 ? (
-        <p className="text-[#0F0F0F]/40 dark:text-white/40 text-sm py-8 text-center">
+        <p className="text-[#0F0F0F]/50 dark:text-white/50 text-sm py-8 text-center">
           No activity yet. Log your first day to see it here.
         </p>
       ) : (
@@ -99,7 +99,7 @@ export function RecentActivity({ logs, edgesWithLogs, limit = 5 }: RecentActivit
                   </div>
                 ) : (
                   <div className="w-8 h-8 rounded-full flex-shrink-0 bg-[#0F0F0F]/5 dark:bg-white/5 flex items-center justify-center">
-                    <X className="w-4 h-4 text-[#0F0F0F]/30 dark:text-white/30" />
+                    <X className="w-4 h-4 text-[#0F0F0F]/45 dark:text-white/45" />
                   </div>
                 )}
 
@@ -107,7 +107,7 @@ export function RecentActivity({ logs, edgesWithLogs, limit = 5 }: RecentActivit
                   <div className="flex items-center justify-between gap-2">
                     <span
                       className="font-normal text-sm text-[#0F0F0F] dark:text-white truncate"
-                      style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+                      style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
                     >
                       {log.edgeName}
                     </span>
@@ -125,7 +125,7 @@ export function RecentActivity({ logs, edgesWithLogs, limit = 5 }: RecentActivit
 
                   {/* Row 2: Meta info */}
                   <div className="flex items-center justify-between mt-1">
-                    <div className="flex items-center gap-1.5 text-[11px] text-[#0F0F0F]/40 dark:text-white/40">
+                    <div className="flex items-center gap-1.5 text-[11px] text-[#0F0F0F]/50 dark:text-white/50">
                       <span>{log.dayOfWeek.slice(0, 3)}</span>
                       <span>•</span>
                       <span>{formatDate(log.date)}</span>
@@ -147,7 +147,7 @@ export function RecentActivity({ logs, edgesWithLogs, limit = 5 }: RecentActivit
                             e.preventDefault();
                             window.open(log.firstTvLink!, '_blank');
                           }}
-                          className="text-[10px] text-[#0F0F0F]/30 dark:text-white/30 hover:text-[#C45A3B] bg-[#0F0F0F]/5 dark:bg-white/5 px-1.5 py-0.5 rounded transition-colors flex items-center gap-1"
+                          className="text-[10px] text-[#0F0F0F]/45 dark:text-white/45 hover:text-[#C45A3B] bg-[#0F0F0F]/5 dark:bg-white/5 px-1.5 py-0.5 rounded transition-colors flex items-center gap-1"
                         >
                           <ExternalLink className="w-2.5 h-2.5" />
                           {log.tvLinksCount > 1 ? log.tvLinksCount : ''}

@@ -3,7 +3,7 @@ export type { TradeLog, TradeLogInput, Edge, EdgeInput, EdgeWithLogs } from "./s
 export type { ResultType, TradingDay, LogType, OutcomeType, DirectionType } from "./constants";
 
 // Subscription types
-export type SubscriptionTier = 'unpaid' | 'paid';
+export type SubscriptionTier = 'trial' | 'free' | 'paid' | 'unpaid';
 
 export interface UserSubscription {
   id: string;
@@ -14,6 +14,11 @@ export interface UserSubscription {
   currentPeriodStart: string | null;
   currentPeriodEnd: string | null;
   cancelAtPeriodEnd: boolean;
+  trialStartedAt: string | null;
+  trialEndsAt: string | null;
+  paymentProvider: string | null;
+  paymentId: string | null;
+  paymentStatus: string | null;
 }
 
 // Feature access types
@@ -22,6 +27,7 @@ export type Feature =
   | 'backtest'
   | 'macros'
   | 'unlimited_edges'
+  | 'data_export'
   | 'ai_parser'
   | 'voice_journal'
   | 'ai_summaries';

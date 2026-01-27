@@ -106,15 +106,15 @@ export function StatsCards({ logs, edgesWithLogs }: StatsCardsProps) {
         >
           <p
             className="text-3xl sm:text-4xl tracking-tight text-[#0F0F0F] dark:text-white"
-            style={{ fontFamily: "'Libre Baskerville', Georgia, serif" }}
+            style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
           >
             {item.value}
           </p>
-          <p className="text-xs tracking-wider uppercase text-[#0F0F0F]/40 dark:text-white/40 mt-2">
+          <p className="text-xs tracking-wider uppercase text-[#0F0F0F]/50 dark:text-white/50 mt-2">
             {item.label}
           </p>
           {item.sublabel && (
-            <p className={`text-xs mt-2 ${item.accent ? 'text-[#8B9A7D]' : 'text-[#0F0F0F]/30 dark:text-white/30'}`}>
+            <p className={`text-xs mt-2 ${item.accent ? 'text-[#8B9A7D]' : 'text-[#0F0F0F]/45 dark:text-white/45'}`}>
               {item.sublabel}
             </p>
           )}

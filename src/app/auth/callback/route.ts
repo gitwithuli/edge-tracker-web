@@ -62,14 +62,15 @@ export async function GET(request: NextRequest) {
         .eq('user_id', user.id)
         .single();
 
-      console.log('[Auth Callback] User authenticated, tier:', subscription?.subscription_tier || 'none');
+      const tier = subscription?.subscription_tier;
+      console.log('[Auth Callback] User authenticated, tier:', tier || 'none');
 
-      // If user is paid, go to dashboard
-      if (subscription?.subscription_tier === 'paid') {
+      // Trial, free, and paid users go to dashboard
+      if (tier === 'paid' || tier === 'trial' || tier === 'free') {
         return NextResponse.redirect(new URL('/dashboard', requestUrl.origin));
       }
 
-      // Otherwise go to pricing
+      // Legacy unpaid or no subscription — go to pricing
       return NextResponse.redirect(new URL('/pricing', requestUrl.origin));
     }
 
