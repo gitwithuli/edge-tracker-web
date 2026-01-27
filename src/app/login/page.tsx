@@ -7,7 +7,7 @@ import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { useEdgeStore } from "@/hooks/use-edge-store";
 import Link from "next/link";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { GrainOverlay } from "@/components/grain-overlay";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -46,18 +46,14 @@ export default function LoginPage() {
 
   useEffect(() => {
     setMounted(true);
+  }, []);
+
+  // Redirect to dashboard if already logged in (non-blocking)
+  useEffect(() => {
     if (isLoaded && user) {
       router.push("/dashboard");
     }
   }, [isLoaded, user, router]);
-
-  if (!isLoaded) {
-    return (
-      <div className="min-h-screen bg-[#0F0F0F] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#FAF7F2]/40" />
-      </div>
-    );
-  }
 
   return (
     <>
