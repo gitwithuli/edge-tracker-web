@@ -71,8 +71,9 @@ export async function POST(request: Request) {
       payment_provider: 'nowpayments',
     };
 
-    // On confirmed/finished: upgrade to paid
-    if (payment_status === 'finished' || payment_status === 'confirmed') {
+    // On confirmed/finished/partially_paid: upgrade to paid
+    // partially_paid covers cases where network fees cause slight underpayment
+    if (payment_status === 'finished' || payment_status === 'confirmed' || payment_status === 'partially_paid') {
       const now = new Date();
       const periodEnd = new Date(now);
       periodEnd.setDate(periodEnd.getDate() + 30);
