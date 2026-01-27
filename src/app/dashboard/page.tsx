@@ -383,7 +383,11 @@ export default function DashboardPage() {
         <footer className="border-t border-[#0F0F0F]/5 dark:border-white/5 py-4 sm:py-6 mt-8 sm:mt-12">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-[#0F0F0F]/45 dark:text-white/45">
             <span className="flex items-center gap-2 tracking-[0.15em] uppercase"><Image src="/logo-icon-transparent.png" alt="" width={20} height={20} className="w-4 h-4 sm:w-5 sm:h-5" />Edge of ICT</span>
-            <span>Built for ICT traders</span>
+            <div className="flex items-center gap-3">
+              <Link href="/about" className="hover:text-[#0F0F0F] dark:hover:text-white transition-colors duration-300">About & Contact</Link>
+              <span className="hidden sm:inline">·</span>
+              <span className="hidden sm:inline">Built for ICT traders</span>
+            </div>
           </div>
         </footer>
       </div>

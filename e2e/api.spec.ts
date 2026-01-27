@@ -19,15 +19,12 @@ test.describe('API Endpoints', () => {
   });
 
   test('should have working webhook endpoint structure', async ({ request }) => {
-    // Stripe webhook should exist but reject invalid requests
-    const response = await request.post('/api/webhooks/stripe', {
+    // NOWPayments webhook should exist but reject invalid requests
+    const response = await request.post('/api/webhooks/nowpayments', {
       data: {},
-      headers: {
-        'stripe-signature': 'invalid',
-      },
     });
 
-    // Should return 400 for invalid signature, not 500
+    // Should return 400+ for invalid request, not 500
     expect(response.status()).toBeGreaterThanOrEqual(400);
     expect(response.status()).toBeLessThan(500);
   });

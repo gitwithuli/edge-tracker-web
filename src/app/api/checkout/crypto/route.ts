@@ -1,16 +1,10 @@
 import { createServerClient } from '@supabase/ssr';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
-const NOWPAYMENTS_API_KEY = process.env.NOWPAYMENTS_API_KEY!;
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://edgeofict.com';
 const PRICE_AMOUNT = parseFloat(process.env.CHECKOUT_PRICE_AMOUNT || '14.50');
-
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 export async function POST() {
   try {
@@ -37,6 +31,12 @@ export async function POST() {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const supabaseAdmin = getSupabaseAdmin();
+    const NOWPAYMENTS_API_KEY = process.env.NOWPAYMENTS_API_KEY;
+    if (!NOWPAYMENTS_API_KEY) {
+      return NextResponse.json({ error: 'Payment not configured' }, { status: 503 });
     }
 
     // 2. Check if already paid

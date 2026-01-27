@@ -150,8 +150,6 @@ describe('mapSubscriptionFromDb', () => {
     id: 'sub-1',
     user_id: 'user-1',
     subscription_tier: 'trial',
-    stripe_customer_id: null,
-    stripe_subscription_id: null,
     current_period_start: null,
     current_period_end: null,
     cancel_at_period_end: false,
@@ -172,7 +170,6 @@ describe('mapSubscriptionFromDb', () => {
     expect(sub.tier).toBe('trial');
     expect(sub.trialStartedAt).toBe('2025-01-01T00:00:00Z');
     expect(sub.trialEndsAt).toBe('2025-01-08T00:00:00Z');
-    expect(sub.stripeCustomerId).toBeNull();
     expect(sub.cancelAtPeriodEnd).toBe(false);
   });
 

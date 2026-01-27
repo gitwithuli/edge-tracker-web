@@ -238,8 +238,6 @@ export interface UserSubscriptionsRow {
   id: string;
   user_id: string;
   subscription_tier: SubscriptionTier;
-  stripe_customer_id: string | null;
-  stripe_subscription_id: string | null;
   current_period_start: string | null;
   current_period_end: string | null;
   cancel_at_period_end: boolean;
@@ -256,8 +254,6 @@ export interface UserSubscriptionsInsert {
   id?: string;
   user_id: string;
   subscription_tier?: SubscriptionTier;
-  stripe_customer_id?: string | null;
-  stripe_subscription_id?: string | null;
   current_period_start?: string | null;
   current_period_end?: string | null;
   cancel_at_period_end?: boolean;
@@ -270,8 +266,6 @@ export interface UserSubscriptionsInsert {
 
 export interface UserSubscriptionsUpdate {
   subscription_tier?: SubscriptionTier;
-  stripe_customer_id?: string | null;
-  stripe_subscription_id?: string | null;
   current_period_start?: string | null;
   current_period_end?: string | null;
   cancel_at_period_end?: boolean;
@@ -353,8 +347,6 @@ export function mapSubscriptionFromDb(row: UserSubscriptionsRow): UserSubscripti
     id: row.id,
     userId: row.user_id,
     tier: row.subscription_tier,
-    stripeCustomerId: row.stripe_customer_id,
-    stripeSubscriptionId: row.stripe_subscription_id,
     currentPeriodStart: row.current_period_start,
     currentPeriodEnd: row.current_period_end,
     cancelAtPeriodEnd: row.cancel_at_period_end || false,

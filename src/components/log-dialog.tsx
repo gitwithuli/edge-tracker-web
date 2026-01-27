@@ -118,7 +118,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, parentEdgeI
   useEffect(() => {
     if (date) {
       const dateObj = new Date(date + 'T12:00:00');
-      const dayNames: TradingDay[] = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] as TradingDay[];
+      const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
       const dayName = dayNames[dateObj.getDay()];
       if (TRADING_DAYS.includes(dayName as TradingDay)) {
         setDay(dayName as TradingDay);

@@ -2,12 +2,6 @@ import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse, type NextRequest } from 'next/server';
 
-// Admin client for subscription checks (bypasses RLS)
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
 // Routes that don't require authentication at all
 const publicRoutes = [
   '/',
@@ -16,6 +10,15 @@ const publicRoutes = [
   '/about',
   '/auth/callback',
   '/auth/callback/client',
+];
+
+// API routes that are public (webhooks, cron jobs, contact form)
+const publicApiRoutes = [
+  '/api/contact',
+  '/api/webhooks/nowpayments',
+  '/api/calendar',
+  '/api/cron/check-subscriptions',
+  '/api/backup/auto',
 ];
 
 // Routes that should redirect to dashboard if already logged in AND paid
@@ -29,11 +32,10 @@ const freeAuthenticatedRoutes = [
 ];
 
 function isPublicRoute(pathname: string): boolean {
-  // Exact match or starts with /share/ (public edge pages) or /api/
   return (
     publicRoutes.includes(pathname) ||
     pathname.startsWith('/share/') ||
-    pathname.startsWith('/api/')
+    publicApiRoutes.some(route => pathname === route || pathname.startsWith(route + '/'))
   );
 }
 
@@ -104,8 +106,12 @@ export async function middleware(request: NextRequest) {
   // If user is logged in but route requires subscription, check subscription
   if (user && !isPublicRoute(pathname) && !isFreeAuthenticatedRoute(pathname)) {
     // Subscription check for protected route
+    // Inline admin client for Edge Runtime compatibility (can't use shared singleton)
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
 
-    // Use admin client to bypass RLS
     const { data: subscription, error: subError } = await supabaseAdmin
       .from('user_subscriptions')
       .select('subscription_tier')

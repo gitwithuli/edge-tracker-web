@@ -1,6 +1,6 @@
 # Edge Tracker Web
 
-A trading edge journaling and analysis platform built with Next.js 16, Supabase, and Stripe.
+A trading edge journaling and analysis platform built with Next.js 16 and Supabase.
 
 ## Features
 
@@ -17,7 +17,7 @@ A trading edge journaling and analysis platform built with Next.js 16, Supabase,
 - **Language**: TypeScript
 - **Database**: Supabase (PostgreSQL)
 - **Auth**: Supabase Auth
-- **Payments**: Stripe
+- **Payments**: NOWPayments (crypto)
 - **Styling**: Tailwind CSS v4
 - **UI Components**: Radix UI
 - **State Management**: Zustand
@@ -31,7 +31,6 @@ A trading edge journaling and analysis platform built with Next.js 16, Supabase,
 - Node.js 20+
 - npm
 - Supabase account
-- Stripe account (for payments)
 
 ### Installation
 
@@ -118,9 +117,8 @@ Required:
 - `NEXT_PUBLIC_SUPABASE_URL` - Supabase project URL
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Supabase anonymous key
 - `NEXT_PUBLIC_APP_URL` - Application URL
-- `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` - Stripe publishable key
-- `STRIPE_SECRET_KEY` - Stripe secret key
-- `STRIPE_WEBHOOK_SECRET` - Stripe webhook signing secret
+- `NOWPAYMENTS_API_KEY` - NOWPayments API key (for crypto payments)
+- `NOWPAYMENTS_IPN_SECRET` - NOWPayments IPN webhook secret
 
 ## Deployment
 

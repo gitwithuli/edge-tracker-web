@@ -142,16 +142,18 @@ export function RecentActivity({ logs, edgesWithLogs, limit = 5 }: RecentActivit
 
                     <div className="flex items-center gap-2">
                       {log.firstTvLink && (
-                        <span
+                        <button
+                          type="button"
                           onClick={(e) => {
                             e.preventDefault();
                             window.open(log.firstTvLink!, '_blank');
                           }}
                           className="text-[10px] text-[#0F0F0F]/45 dark:text-white/45 hover:text-[#C45A3B] bg-[#0F0F0F]/5 dark:bg-white/5 px-1.5 py-0.5 rounded transition-colors flex items-center gap-1"
+                          aria-label="Open TradingView screenshot"
                         >
                           <ExternalLink className="w-2.5 h-2.5" />
                           {log.tvLinksCount > 1 ? log.tvLinksCount : ''}
-                        </span>
+                        </button>
                       )}
                     </div>
                   </div>

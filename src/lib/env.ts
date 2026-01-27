@@ -25,7 +25,6 @@ const serverEnvSchema = z.object({
     .optional(),
   NOWPAYMENTS_API_KEY: z.string().min(1).optional(),
   NOWPAYMENTS_IPN_SECRET: z.string().min(1).optional(),
-  FRESH_START_CODE: z.string().min(1).optional(),
 });
 
 type ClientEnv = z.infer<typeof clientEnvSchema>;
@@ -53,7 +52,6 @@ function validateEnv(): ClientEnv {
       CRON_SECRET: process.env.CRON_SECRET,
       NOWPAYMENTS_API_KEY: process.env.NOWPAYMENTS_API_KEY,
       NOWPAYMENTS_IPN_SECRET: process.env.NOWPAYMENTS_IPN_SECRET,
-      FRESH_START_CODE: process.env.FRESH_START_CODE,
     });
 
     if (!serverResult.success) {

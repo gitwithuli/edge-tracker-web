@@ -1,13 +1,6 @@
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
-
-const IPN_SECRET = process.env.NOWPAYMENTS_IPN_SECRET!;
-
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 function sortObject(obj: Record<string, unknown>): Record<string, unknown> {
   return Object.keys(obj)
@@ -20,17 +13,29 @@ function sortObject(obj: Record<string, unknown>): Record<string, unknown> {
     }, {});
 }
 
-function verifySignature(body: Record<string, unknown>, signature: string): boolean {
-  const hmac = crypto.createHmac('sha512', IPN_SECRET);
+function verifySignature(body: Record<string, unknown>, signature: string, secret: string): boolean {
+  const hmac = crypto.createHmac('sha512', secret);
   hmac.update(JSON.stringify(sortObject(body)));
   const expectedSignature = hmac.digest('hex');
-  return crypto.timingSafeEqual(
-    Buffer.from(signature),
-    Buffer.from(expectedSignature)
-  );
+
+  const sigBuf = Buffer.from(signature);
+  const expectedBuf = Buffer.from(expectedSignature);
+
+  // timingSafeEqual requires equal-length buffers
+  if (sigBuf.length !== expectedBuf.length) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(sigBuf, expectedBuf);
 }
 
 export async function POST(request: Request) {
+  const ipnSecret = process.env.NOWPAYMENTS_IPN_SECRET;
+  if (!ipnSecret) {
+    console.error('[NOWPayments Webhook] NOWPAYMENTS_IPN_SECRET not configured');
+    return NextResponse.json({ error: 'Webhook not configured' }, { status: 503 });
+  }
+
   try {
     const body = await request.json();
     const signature = request.headers.get('x-nowpayments-sig');
@@ -41,7 +46,7 @@ export async function POST(request: Request) {
     }
 
     // Verify IPN signature
-    if (!verifySignature(body, signature)) {
+    if (!verifySignature(body, signature, ipnSecret)) {
       console.error('[NOWPayments Webhook] Invalid signature');
       return NextResponse.json({ error: 'Invalid signature' }, { status: 403 });
     }
@@ -57,6 +62,7 @@ export async function POST(request: Request) {
     }
 
     const userId = order_id.replace('edgetracker_', '');
+    const supabaseAdmin = getSupabaseAdmin();
 
     // Update payment status on all status changes
     const updateData: Record<string, unknown> = {

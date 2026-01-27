@@ -35,7 +35,7 @@ export default function CalendarPage() {
     return logs.filter(log => (log.logType || 'FRONTTEST') === activeView);
   }, [logs, activeView]);
 
-  const edgesWithLogs = getEdgesWithLogs();
+  const edgesWithLogs = useMemo(() => getEdgesWithLogs(), [edges, logs]);
 
   // Redirect to login if not authenticated
   useEffect(() => {

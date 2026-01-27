@@ -11,19 +11,19 @@ interface ThemeContextValue {
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
+function getInitialTheme(): Theme {
+  if (typeof window === "undefined") return "light";
+  // Read from the class set by the inline script in layout.tsx <head>
+  // This avoids FOUC since the inline script already applied the correct class
+  if (document.documentElement.classList.contains("dark")) return "dark";
+  return "light";
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>("light");
+  const [theme, setTheme] = useState<Theme>(getInitialTheme);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem("theme") as Theme | null;
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-
-    if (stored) {
-      setTheme(stored);
-    } else if (prefersDark) {
-      setTheme("dark");
-    }
     setMounted(true);
   }, []);
 

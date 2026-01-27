@@ -1,12 +1,7 @@
 import { createServerClient } from '@supabase/ssr';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
-
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
@@ -56,7 +51,7 @@ export async function GET(request: NextRequest) {
 
     if (user) {
       // Check subscription using admin client (bypasses RLS)
-      const { data: subscription } = await supabaseAdmin
+      const { data: subscription } = await getSupabaseAdmin()
         .from('user_subscriptions')
         .select('subscription_tier')
         .eq('user_id', user.id)

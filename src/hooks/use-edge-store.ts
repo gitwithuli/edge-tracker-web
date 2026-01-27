@@ -105,6 +105,41 @@ const mapDbToEdge = mapEdgeFromDb;
 const mapDbToLog = mapLogFromDb;
 const mapDbToSubscription = mapSubscriptionFromDb;
 
+// Shared helper to map TradeLogInput to DB column format (avoids duplication across addLog, updateLog, processPendingOperations)
+function mapLogToDbRow(logData: TradeLogInput, defaults?: { edgeId?: string; originalLog?: TradeLog }) {
+  const orig = defaults?.originalLog;
+  const outcome = logData.result === 'OCCURRED' ? (logData.outcome || null) : null;
+  const tvLinks = logData.tvLinks || orig?.tvLinks || [];
+  const logType = logData.logType || orig?.logType || 'FRONTTEST';
+  const date = logData.date || orig?.date || new Date().toISOString().split('T')[0];
+  const edgeId = defaults?.edgeId || orig?.edgeId;
+
+  return {
+    ...(edgeId ? { edge_id: edgeId } : {}),
+    result: logData.result,
+    outcome,
+    log_type: logType,
+    day_of_week: logData.dayOfWeek,
+    duration_minutes: logData.durationMinutes,
+    note: logData.note || '',
+    tv_links: tvLinks,
+    date,
+    entry_price: logData.entryPrice ?? orig?.entryPrice ?? null,
+    exit_price: logData.exitPrice ?? orig?.exitPrice ?? null,
+    stop_loss: logData.stopLoss ?? orig?.stopLoss ?? null,
+    entry_time: logData.entryTime ?? orig?.entryTime ?? null,
+    exit_time: logData.exitTime ?? orig?.exitTime ?? null,
+    daily_open: logData.dailyOpen ?? orig?.dailyOpen ?? null,
+    daily_high: logData.dailyHigh ?? orig?.dailyHigh ?? null,
+    daily_low: logData.dailyLow ?? orig?.dailyLow ?? null,
+    daily_close: logData.dailyClose ?? orig?.dailyClose ?? null,
+    ny_open: logData.nyOpen ?? orig?.nyOpen ?? null,
+    position_size: logData.positionSize ?? orig?.positionSize ?? null,
+    direction: logData.direction ?? orig?.direction ?? null,
+    symbol: logData.symbol ?? orig?.symbol ?? null,
+  };
+}
+
 // Track auth initialization state outside the store to prevent multiple initializations
 let authInitialized = false;
 let authSubscription: { unsubscribe: () => void } | null = null;
@@ -226,12 +261,12 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
 
       if (user) {
         set({ user, isLoaded: true });
-        // Parallelize independent fetches for better performance
+        // Fetch subscription first — fetchLogs depends on tier for history filtering
+        await get().fetchSubscription();
         await Promise.all([
           get().fetchEdges(),
           get().fetchLogs(),
           get().checkMfaStatus(),
-          get().fetchSubscription(),
         ]);
       } else {
         set({ isLoaded: true });
@@ -245,12 +280,12 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
       const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
         if (event === 'SIGNED_IN' && session) {
           set({ user: session.user });
-          // Parallelize independent fetches for better performance
+          // Fetch subscription first — fetchLogs depends on tier for history filtering
+          await get().fetchSubscription();
           await Promise.all([
             get().fetchEdges(),
             get().fetchLogs(),
             get().checkMfaStatus(),
-            get().fetchSubscription(),
           ]);
         } else if (event === 'SIGNED_OUT') {
           set({ user: null, logs: [], edges: [], mfaEnabled: false, subscription: null });
@@ -627,28 +662,7 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
         .from('logs')
         .insert([{
           user_id: user.id,
-          edge_id: edgeId,
-          result: logData.result,
-          outcome,
-          log_type: logType,
-          day_of_week: logData.dayOfWeek,
-          duration_minutes: logData.durationMinutes,
-          note: logData.note || '',
-          tv_links: tvLinks,
-          date: logDate,
-          entry_price: logData.entryPrice ?? null,
-          exit_price: logData.exitPrice ?? null,
-          stop_loss: logData.stopLoss ?? null,
-          entry_time: logData.entryTime ?? null,
-          exit_time: logData.exitTime ?? null,
-          daily_open: logData.dailyOpen ?? null,
-          daily_high: logData.dailyHigh ?? null,
-          daily_low: logData.dailyLow ?? null,
-          daily_close: logData.dailyClose ?? null,
-          ny_open: logData.nyOpen ?? null,
-          position_size: logData.positionSize ?? null,
-          direction: logData.direction ?? null,
-          symbol: logData.symbol ?? null,
+          ...mapLogToDbRow(logData, { edgeId }),
         }])
         .select()
         .single();
@@ -770,37 +784,15 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
     // Optimistic update
     set({ logs: logs.map(l => l.id === logId ? updatedLog : l) });
 
-    // Create abort controller for timeout
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+    // Timeout warning for long-running operations
+    const timeoutId = setTimeout(() => {
+      console.warn('[updateLog] Operation taking longer than 30s');
+    }, 30000);
 
     try {
       const { data, error } = await supabase
         .from('logs')
-        .update({
-          edge_id: targetEdgeId,
-          result: logData.result,
-          outcome,
-          log_type: logData.logType || originalLog.logType,
-          day_of_week: logData.dayOfWeek,
-          duration_minutes: logData.durationMinutes,
-          note: logData.note || '',
-          tv_links: tvLinks,
-          date: logData.date || originalLog.date,
-          entry_price: logData.entryPrice ?? originalLog.entryPrice ?? null,
-          exit_price: logData.exitPrice ?? originalLog.exitPrice ?? null,
-          stop_loss: logData.stopLoss ?? originalLog.stopLoss ?? null,
-          entry_time: logData.entryTime ?? originalLog.entryTime ?? null,
-          exit_time: logData.exitTime ?? originalLog.exitTime ?? null,
-          daily_open: logData.dailyOpen ?? originalLog.dailyOpen ?? null,
-          daily_high: logData.dailyHigh ?? originalLog.dailyHigh ?? null,
-          daily_low: logData.dailyLow ?? originalLog.dailyLow ?? null,
-          daily_close: logData.dailyClose ?? originalLog.dailyClose ?? null,
-          ny_open: logData.nyOpen ?? originalLog.nyOpen ?? null,
-          position_size: logData.positionSize ?? originalLog.positionSize ?? null,
-          direction: logData.direction ?? originalLog.direction ?? null,
-          symbol: logData.symbol ?? originalLog.symbol ?? null,
-        })
+        .update(mapLogToDbRow(logData, { edgeId: targetEdgeId, originalLog }))
         .eq('id', logId)
         .select()
         .single();
@@ -995,7 +987,7 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
     try {
       const { data, error } = await supabase
         .from('user_subscriptions')
-        .select('id, user_id, subscription_tier, stripe_customer_id, stripe_subscription_id, current_period_start, current_period_end, cancel_at_period_end, trial_started_at, trial_ends_at, payment_provider, payment_id, payment_status, created_at, updated_at')
+        .select('id, user_id, subscription_tier, current_period_start, current_period_end, cancel_at_period_end, trial_started_at, trial_ends_at, payment_provider, payment_id, payment_status, created_at, updated_at')
         .eq('user_id', user.id)
         .single();
 
@@ -1093,31 +1085,12 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
 
           case 'addLog': {
             const { edgeId, logData } = op.payload as { edgeId: string; logData: TradeLogInput };
-            const logType = logData.logType || 'FRONTTEST';
-            const outcome = logData.result === 'OCCURRED' ? (logData.outcome || null) : null;
-            const tvLinks = logData.tvLinks || [];
-            const logDate = logData.date || new Date().toISOString().split('T')[0];
 
             const { data, error } = await supabase
               .from('logs')
               .insert([{
                 user_id: user.id,
-                edge_id: edgeId,
-                result: logData.result,
-                outcome,
-                log_type: logType,
-                day_of_week: logData.dayOfWeek,
-                duration_minutes: logData.durationMinutes,
-                note: logData.note || '',
-                tv_links: tvLinks,
-                date: logDate,
-                entry_price: logData.entryPrice ?? null,
-                exit_price: logData.exitPrice ?? null,
-                stop_loss: logData.stopLoss ?? null,
-                entry_time: logData.entryTime ?? null,
-                exit_time: logData.exitTime ?? null,
-                direction: logData.direction ?? null,
-                symbol: logData.symbol ?? null,
+                ...mapLogToDbRow(logData, { edgeId }),
               }])
               .select()
               .single();
@@ -1139,36 +1112,11 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
               newEdgeId?: string;
               originalLog: TradeLog;
             };
-            const outcome = logData.result === 'OCCURRED' ? (logData.outcome || null) : null;
-            const tvLinks = logData.tvLinks || originalLog.tvLinks || [];
             const targetEdgeId = newEdgeId || originalLog.edgeId;
 
             const { data, error } = await supabase
               .from('logs')
-              .update({
-                edge_id: targetEdgeId,
-                result: logData.result,
-                outcome,
-                log_type: logData.logType || originalLog.logType,
-                day_of_week: logData.dayOfWeek,
-                duration_minutes: logData.durationMinutes,
-                note: logData.note || '',
-                tv_links: tvLinks,
-                date: logData.date || originalLog.date,
-                entry_price: logData.entryPrice ?? originalLog.entryPrice ?? null,
-                exit_price: logData.exitPrice ?? originalLog.exitPrice ?? null,
-                stop_loss: logData.stopLoss ?? originalLog.stopLoss ?? null,
-                entry_time: logData.entryTime ?? originalLog.entryTime ?? null,
-                exit_time: logData.exitTime ?? originalLog.exitTime ?? null,
-                daily_open: logData.dailyOpen ?? originalLog.dailyOpen ?? null,
-                daily_high: logData.dailyHigh ?? originalLog.dailyHigh ?? null,
-                daily_low: logData.dailyLow ?? originalLog.dailyLow ?? null,
-                daily_close: logData.dailyClose ?? originalLog.dailyClose ?? null,
-                ny_open: logData.nyOpen ?? originalLog.nyOpen ?? null,
-                position_size: logData.positionSize ?? originalLog.positionSize ?? null,
-                direction: logData.direction ?? originalLog.direction ?? null,
-                symbol: logData.symbol ?? originalLog.symbol ?? null,
-              })
+              .update(mapLogToDbRow(logData, { edgeId: targetEdgeId, originalLog }))
               .eq('id', logId)
               .select()
               .single();

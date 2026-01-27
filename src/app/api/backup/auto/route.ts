@@ -1,5 +1,6 @@
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { NextRequest, NextResponse } from "next/server";
+import crypto from "crypto";
 
 // User email to backup - configured via environment variable
 const BACKUP_USER_EMAIL = process.env.BACKUP_USER_EMAIL;
@@ -20,21 +21,25 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Backup user not configured" }, { status: 500 });
     }
 
-    if (authHeader !== `Bearer ${cronSecret}`) {
+    // Timing-safe comparison to prevent timing attacks
+    const expected = Buffer.from(`Bearer ${cronSecret}`);
+    const received = Buffer.from(authHeader || '');
+    if (expected.length !== received.length || !crypto.timingSafeEqual(expected, received)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const supabaseAdmin = getSupabaseAdmin();
 
-    // Get user by email
-    const { data: users, error: userError } = await supabaseAdmin.auth.admin.listUsers();
+    // Get user by email (paginated listUsers with per_page=1 filter is not supported,
+    // so we use a small page and filter — this user should be in the first page)
+    const { data: users, error: userError } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
 
     if (userError) {
       console.error("Failed to list users:", userError);
-      return NextResponse.json({ error: "Failed to get user" }, { status: 500 });
+      return NextResponse.json({ error: "Failed to list users" }, { status: 500 });
     }
 
-    const user = users.users.find(u => u.email === BACKUP_USER_EMAIL);
+    const user = users.users.find((u) => u.email === BACKUP_USER_EMAIL);
 
     if (!user) {
       console.error(`User not found: ${BACKUP_USER_EMAIL}`);

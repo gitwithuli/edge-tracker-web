@@ -9,8 +9,6 @@ export interface UserSubscription {
   id: string;
   userId: string;
   tier: SubscriptionTier;
-  stripeCustomerId: string | null;
-  stripeSubscriptionId: string | null;
   currentPeriodStart: string | null;
   currentPeriodEnd: string | null;
   cancelAtPeriodEnd: boolean;
