@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import { useEdgeStore } from "@/hooks/use-edge-store";
 import { GrainOverlay } from "@/components/grain-overlay";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Check, Clock, ArrowLeft, Loader2, Lock, Wallet } from "lucide-react";
+import { Check, Clock, ArrowLeft, Loader2, Lock, Wallet, CheckCircle } from "lucide-react";
 import Link from "next/link";
+import { toast } from "sonner";
 
 const PAID_FEATURES = [
   { name: "Forwardtest Tracking", included: true },
@@ -85,7 +86,12 @@ export default function PricingPage() {
       const { url, error } = await response.json();
 
       if (error) {
-        console.error('Checkout error:', error);
+        if (error === 'Already subscribed') {
+          toast.success('You already have an active subscription!');
+          router.push('/dashboard');
+        } else {
+          toast.error(error);
+        }
         setLoading(false);
         return;
       }
@@ -109,6 +115,7 @@ export default function PricingPage() {
 
   const isOnTrial = subscription?.tier === 'trial';
   const isOnFree = subscription?.tier === 'free' || subscription?.tier === 'unpaid';
+  const isAlreadyPaid = subscription?.tier === 'paid';
 
   return (
     <>
@@ -213,7 +220,15 @@ export default function PricingPage() {
               </div>
 
               {/* CTA */}
-              {user ? (
+              {isAlreadyPaid ? (
+                <Link
+                  href="/dashboard"
+                  className="w-full bg-[#8B9A7D] text-white py-3 rounded-full font-medium hover:bg-[#8B9A7D]/90 transition-colors duration-300 flex items-center justify-center gap-2"
+                >
+                  <CheckCircle className="w-4 h-4" />
+                  You&apos;re subscribed — Go to Dashboard
+                </Link>
+              ) : user ? (
                 <button
                   onClick={handleCryptoCheckout}
                   disabled={loading}
