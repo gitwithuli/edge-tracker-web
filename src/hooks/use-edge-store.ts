@@ -300,14 +300,12 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
     }
     authInitialized = false;
 
-    try {
-      await supabase.auth.signOut();
-    } catch (err) {
-      console.error('Sign out error:', err);
-      // Continue with logout even if signOut fails - clear local state
-    }
+    // Clear local state and redirect immediately — don't wait for network
     set({ user: null, logs: [], edges: [], error: null, mfaEnabled: false, subscription: null });
     window.location.href = '/';
+
+    // Revoke server session in the background
+    supabase.auth.signOut().catch(() => {});
   },
 
   // === EDGE CRUD ===
