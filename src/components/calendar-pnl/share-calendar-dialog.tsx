@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import Image from "next/image";
 import { Download, Twitter, Copy, Check } from "lucide-react";
 import { toPng } from "html-to-image";
+import { toast } from "sonner";
 import type { TradeLog } from "@/lib/types";
 import {
   calculateMonthPnL,
@@ -67,6 +68,7 @@ export function ShareCalendarDialog({ logs, year, month, title, trigger }: Share
       return dataUrlToBlob(dataUrl);
     } catch (error) {
       console.error("Error generating image:", error);
+      toast.error("Failed to generate image. Please try again.");
       return null;
     }
   };
@@ -98,6 +100,7 @@ export function ShareCalendarDialog({ logs, year, month, title, trigger }: Share
         setTimeout(() => setCopied(false), 2000);
       } catch (error) {
         console.error("Failed to copy image:", error);
+        toast.error("Failed to copy image. Try downloading instead.");
       }
     }
   };
@@ -334,26 +337,28 @@ export function ShareCalendarDialog({ logs, year, month, title, trigger }: Share
             <button
               onClick={handleDownload}
               disabled={downloading}
-              className="flex-1 flex items-center justify-center gap-1.5 sm:gap-2 bg-[#0F0F0F] dark:bg-white text-[#FAF7F2] dark:text-[#0F0F0F] py-2.5 sm:py-3 rounded-full text-xs sm:text-sm font-medium hover:bg-[#C45A3B] dark:hover:bg-[#C45A3B] dark:hover:text-white transition-colors disabled:opacity-50"
+              className="flex-1 flex items-center justify-center gap-1.5 sm:gap-2 bg-[#0F0F0F] dark:bg-white text-[#FAF7F2] dark:text-[#0F0F0F] py-2.5 sm:py-3 rounded-full text-xs sm:text-sm font-medium hover:bg-[#C45A3B] dark:hover:bg-[#C45A3B] dark:hover:text-white transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C45A3B] focus-visible:ring-offset-2"
             >
-              <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" aria-hidden="true" />
               {downloading ? "..." : "Download"}
             </button>
 
             <button
               onClick={handleCopyImage}
-              className="flex items-center justify-center gap-2 bg-[#0F0F0F]/10 dark:bg-white/10 text-[#0F0F0F] dark:text-white px-3 sm:px-4 py-2.5 sm:py-3 rounded-full text-sm font-medium hover:bg-[#0F0F0F]/20 dark:hover:bg-white/20 transition-colors"
+              className="flex items-center justify-center gap-2 bg-[#0F0F0F]/10 dark:bg-white/10 text-[#0F0F0F] dark:text-white px-3 sm:px-4 py-2.5 sm:py-3 rounded-full text-sm font-medium hover:bg-[#0F0F0F]/20 dark:hover:bg-white/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C45A3B] focus-visible:ring-offset-2"
               title="Copy image"
+              aria-label="Copy image to clipboard"
             >
-              {copied ? <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#8B9A7D]" /> : <Copy className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
+              {copied ? <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#8B9A7D]" aria-hidden="true" /> : <Copy className="w-3.5 h-3.5 sm:w-4 sm:h-4" aria-hidden="true" />}
             </button>
 
             <button
               onClick={handleShareX}
-              className="flex items-center justify-center gap-2 bg-[#0F0F0F]/10 dark:bg-white/10 text-[#0F0F0F] dark:text-white px-3 sm:px-4 py-2.5 sm:py-3 rounded-full text-sm font-medium hover:bg-[#0F0F0F]/20 dark:hover:bg-white/20 transition-colors"
+              className="flex items-center justify-center gap-2 bg-[#0F0F0F]/10 dark:bg-white/10 text-[#0F0F0F] dark:text-white px-3 sm:px-4 py-2.5 sm:py-3 rounded-full text-sm font-medium hover:bg-[#0F0F0F]/20 dark:hover:bg-white/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C45A3B] focus-visible:ring-offset-2"
               title="Share on X"
+              aria-label="Share on X (Twitter)"
             >
-              <Twitter className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <Twitter className="w-3.5 h-3.5 sm:w-4 sm:h-4" aria-hidden="true" />
             </button>
           </div>
 

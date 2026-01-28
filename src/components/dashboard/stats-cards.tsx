@@ -114,7 +114,7 @@ export function StatsCards({ logs, edgesWithLogs }: StatsCardsProps) {
             {item.label}
           </p>
           {item.sublabel && (
-            <p className={`text-xs mt-2 ${item.accent ? 'text-[#8B9A7D]' : 'text-[#0F0F0F]/45 dark:text-white/45'}`}>
+            <p className={`text-xs mt-2 ${item.accent ? 'text-[#8B9A7D]' : 'text-[#0F0F0F]/50 dark:text-white/50'}`}>
               {item.sublabel}
             </p>
           )}

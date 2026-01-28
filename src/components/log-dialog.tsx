@@ -377,22 +377,24 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, parentEdgeI
           {/* Log Type Toggle */}
           <div className="space-y-2">
             <Label className="text-[#0F0F0F]/50 text-xs uppercase tracking-[0.15em]">Log Type</Label>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-2" role="group" aria-label="Log type selection">
               <button
                 type="button"
-                className={`h-12 flex items-center justify-center gap-2 rounded-xl border transition-colors duration-300 ${
+                aria-pressed={logType === "FRONTTEST"}
+                className={`h-12 flex items-center justify-center gap-2 rounded-xl border transition-colors duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C45A3B] focus-visible:ring-offset-2 ${
                   logType === "FRONTTEST"
                     ? "bg-[#0F0F0F] text-[#FAF7F2] border-[#0F0F0F]"
                     : "bg-transparent border-[#0F0F0F]/10 text-[#0F0F0F]/50 hover:border-[#0F0F0F]/30"
                 }`}
                 onClick={() => setLogType("FRONTTEST")}
               >
-                <Play className="w-4 h-4" />
+                <Play className="w-4 h-4" aria-hidden="true" />
                 <span className="text-sm font-medium">Live</span>
               </button>
               <button
                 type="button"
-                className={`h-12 flex items-center justify-center gap-2 rounded-xl border transition-colors duration-300 ${
+                aria-pressed={logType === "BACKTEST"}
+                className={`h-12 flex items-center justify-center gap-2 rounded-xl border transition-colors duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C45A3B] focus-visible:ring-offset-2 ${
                   logType === "BACKTEST"
                     ? "bg-[#0F0F0F] text-[#FAF7F2] border-[#0F0F0F]"
                     : "bg-transparent border-[#0F0F0F]/10 text-[#0F0F0F]/50 hover:border-[#0F0F0F]/30"
@@ -402,7 +404,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, parentEdgeI
                   setResult("OCCURRED");
                 }}
               >
-                <Rewind className="w-4 h-4" />
+                <Rewind className="w-4 h-4" aria-hidden="true" />
                 <span className="text-sm font-medium">Backtest</span>
               </button>
             </div>
@@ -412,22 +414,24 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, parentEdgeI
           {!isBacktest && (
             <div className="space-y-2">
               <Label className="text-[#0F0F0F]/50 text-xs uppercase tracking-[0.15em]">Did the setup appear?</Label>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-2" role="group" aria-label="Setup occurrence">
                 <button
                   type="button"
-                  className={`h-14 flex flex-col items-center justify-center gap-1 rounded-xl border transition-colors duration-300 ${
+                  aria-pressed={result === "OCCURRED"}
+                  className={`h-14 flex flex-col items-center justify-center gap-1 rounded-xl border transition-colors duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C45A3B] focus-visible:ring-offset-2 ${
                     result === "OCCURRED"
                       ? "bg-[#8B9A7D] text-white border-[#8B9A7D]"
                       : "bg-transparent border-[#0F0F0F]/10 text-[#0F0F0F]/50 hover:border-[#0F0F0F]/30"
                   }`}
                   onClick={() => setResult("OCCURRED")}
                 >
-                  <Check className="w-5 h-5" />
+                  <Check className="w-5 h-5" aria-hidden="true" />
                   <span className="text-xs font-medium">Yes, it appeared</span>
                 </button>
                 <button
                   type="button"
-                  className={`h-14 flex flex-col items-center justify-center gap-1 rounded-xl border transition-colors duration-300 ${
+                  aria-pressed={result === "NO_SETUP"}
+                  className={`h-14 flex flex-col items-center justify-center gap-1 rounded-xl border transition-colors duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C45A3B] focus-visible:ring-offset-2 ${
                     result === "NO_SETUP"
                       ? "bg-[#C45A3B] text-white border-[#C45A3B]"
                       : "bg-transparent border-[#0F0F0F]/10 text-[#0F0F0F]/50 hover:border-[#0F0F0F]/30"
@@ -437,7 +441,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, parentEdgeI
                     setOutcome(null);
                   }}
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-5 h-5" aria-hidden="true" />
                   <span className="text-xs font-medium">No setup</span>
                 </button>
               </div>
@@ -450,10 +454,11 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, parentEdgeI
               <Label className={`text-xs uppercase tracking-[0.15em] ${showOutcomeError && !outcome ? "text-[#C45A3B]" : "text-[#0F0F0F]/50"}`}>
                 {hasPriceTracking ? "Did it hit TP or SL?" : "Trade outcome"} {showOutcomeError && !outcome && <span className="normal-case tracking-normal">— required</span>}
               </Label>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-2" role="group" aria-label="Trade outcome">
                 <button
                   type="button"
-                  className={`h-14 flex flex-col items-center justify-center gap-1 rounded-xl border transition-colors duration-300 ${
+                  aria-pressed={outcome === "WIN"}
+                  className={`h-14 flex flex-col items-center justify-center gap-1 rounded-xl border transition-colors duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C45A3B] focus-visible:ring-offset-2 ${
                     outcome === "WIN"
                       ? "bg-[#8B9A7D] text-white border-[#8B9A7D]"
                       : showOutcomeError && !outcome
@@ -462,12 +467,13 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, parentEdgeI
                   }`}
                   onClick={() => { setOutcome("WIN"); setShowOutcomeError(false); }}
                 >
-                  <TrendingUp className="w-5 h-5" />
+                  <TrendingUp className="w-5 h-5" aria-hidden="true" />
                   <span className="text-xs font-medium">{hasPriceTracking ? "Hit TP" : "Win"}</span>
                 </button>
                 <button
                   type="button"
-                  className={`h-14 flex flex-col items-center justify-center gap-1 rounded-xl border transition-colors duration-300 ${
+                  aria-pressed={outcome === "LOSS"}
+                  className={`h-14 flex flex-col items-center justify-center gap-1 rounded-xl border transition-colors duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C45A3B] focus-visible:ring-offset-2 ${
                     outcome === "LOSS"
                       ? "bg-[#C45A3B] text-white border-[#C45A3B]"
                       : showOutcomeError && !outcome
@@ -476,7 +482,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, parentEdgeI
                   }`}
                   onClick={() => { setOutcome("LOSS"); setShowOutcomeError(false); }}
                 >
-                  <TrendingDown className="w-5 h-5" />
+                  <TrendingDown className="w-5 h-5" aria-hidden="true" />
                   <span className="text-xs font-medium">{hasPriceTracking ? "Hit SL" : "Loss"}</span>
                 </button>
               </div>

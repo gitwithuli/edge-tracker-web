@@ -164,17 +164,18 @@ export function EdgeGrid({ edgesWithLogs, onAddLog, onDeleteLog, onUpdateLog, de
             <h4
               className="text-lg font-normal tracking-tight text-[#0F0F0F] dark:text-white group-hover:text-[#C45A3B] transition-colors"
               style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
+              title={edge.name}
             >
               {edge.name}
             </h4>
             {edge.description && (
-              <p className="text-xs text-[#0F0F0F]/50 dark:text-white/50 mt-1 line-clamp-1">
+              <p className="text-xs text-[#0F0F0F]/50 dark:text-white/50 mt-1 line-clamp-1" title={edge.description}>
                 {edge.description}
               </p>
             )}
           </div>
           <div className="flex items-center gap-1">
-            <span className="text-xs text-[#0F0F0F]/45 dark:text-white/45 uppercase tracking-wider">
+            <span className="text-xs text-[#0F0F0F]/50 dark:text-white/50 uppercase tracking-wider">
               {totalLogs} day{totalLogs !== 1 ? "s" : ""}
             </span>
             <ArrowRight className="w-4 h-4 text-[#0F0F0F]/50 dark:text-white/50 group-hover:text-[#C45A3B] group-hover:translate-x-0.5 transition-all" />
