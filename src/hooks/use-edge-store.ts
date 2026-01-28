@@ -114,8 +114,14 @@ const mapDbToSubscription = mapSubscriptionFromDb;
  */
 const OPERATION_TIMEOUT_MS = 15000;
 function withTimeout<T>(promiseLike: PromiseLike<T>, timeoutMs: number = OPERATION_TIMEOUT_MS): Promise<T> {
+  // Force the PromiseLike to start executing by wrapping in a new Promise
+  // that explicitly calls .then() on it
+  const executionPromise = new Promise<T>((resolve, reject) => {
+    promiseLike.then(resolve, reject);
+  });
+
   return Promise.race([
-    Promise.resolve(promiseLike),
+    executionPromise,
     new Promise<T>((_, reject) =>
       setTimeout(() => reject(new Error('Operation timed out')), timeoutMs)
     )
@@ -675,20 +681,26 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
     set({ logs: [optimisticLog, ...logs] });
 
     try {
-      // Force immediate execution by converting to a real Promise
+      console.log('[addLog] Starting insert for edge:', edgeId);
+      const insertData = {
+        user_id: user.id,
+        ...mapLogToDbRow(logData, { edgeId }),
+      };
+      console.log('[addLog] Insert data:', JSON.stringify(insertData));
+
+      // Build the query
       const query = supabase
         .from('logs')
-        .insert([{
-          user_id: user.id,
-          ...mapLogToDbRow(logData, { edgeId }),
-        }])
+        .insert([insertData])
         .select()
         .single();
 
-      // Execute the query and wrap result in Promise
-      const { data, error } = await withTimeout(
-        query.then(res => res)
-      );
+      console.log('[addLog] Query created, executing with timeout...');
+
+      // Execute with timeout wrapper
+      const { data, error } = await withTimeout(query, OPERATION_TIMEOUT_MS);
+
+      console.log('[addLog] Query completed. Error:', error, 'Data:', data ? 'present' : 'null');
 
       if (error) {
         dequeue(queueId); // Server error - not retryable
