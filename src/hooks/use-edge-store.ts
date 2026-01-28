@@ -675,15 +675,19 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
     set({ logs: [optimisticLog, ...logs] });
 
     try {
+      // Force immediate execution by converting to a real Promise
+      const query = supabase
+        .from('logs')
+        .insert([{
+          user_id: user.id,
+          ...mapLogToDbRow(logData, { edgeId }),
+        }])
+        .select()
+        .single();
+
+      // Execute the query and wrap result in Promise
       const { data, error } = await withTimeout(
-        supabase
-          .from('logs')
-          .insert([{
-            user_id: user.id,
-            ...mapLogToDbRow(logData, { edgeId }),
-          }])
-          .select()
-          .single()
+        query.then(res => res)
       );
 
       if (error) {
