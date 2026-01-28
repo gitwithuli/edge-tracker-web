@@ -98,7 +98,7 @@ export default function AboutPage() {
               className={`text-[#C45A3B] text-[10px] sm:text-xs tracking-[0.3em] uppercase font-medium mb-4 opacity-0 ${mounted ? 'animate-slide-up' : ''}`}
               style={{ animationDelay: "0.2s" }}
             >
-              About Edge Tracker
+              About Edge of ICT
             </p>
             <h1
               className={`text-3xl sm:text-4xl lg:text-5xl text-[#0F0F0F] dark:text-white leading-[1.2] mb-6 opacity-0 ${mounted ? 'animate-slide-up' : ''}`}
@@ -111,7 +111,7 @@ export default function AboutPage() {
               className={`text-[#0F0F0F]/60 dark:text-white/60 text-base sm:text-lg max-w-2xl leading-relaxed opacity-0 ${mounted ? 'animate-slide-up' : ''}`}
               style={{ animationDelay: "0.4s" }}
             >
-              Edge Tracker is a focused trading journal designed to help you document,
+              Edge of ICT is a focused trading journal designed to help you document,
               analyze, and refine your trading strategies. No clutter, no distractions —
               just the tools you need to track what works and cut what doesn&apos;t.
             </p>
@@ -140,7 +140,7 @@ export default function AboutPage() {
                     the ones that cost you.
                   </p>
                   <p>
-                    Edge Tracker helps you see the bigger picture while keeping track of
+                    Edge of ICT helps you see the bigger picture while keeping track of
                     every detail that matters. Because in trading, the edge is in the details.
                   </p>
                 </div>

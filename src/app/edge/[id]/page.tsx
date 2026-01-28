@@ -345,13 +345,13 @@ export default function EdgeDetailPage() {
                 )}
               </div>
               {/* Action Buttons */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-shrink-0">
                 {/* Share Card Button */}
                 <ShareCardDialog
                   edge={edge}
                   stats={stats}
                   trigger={
-                    <button className="flex items-center gap-2 text-xs text-[#0F0F0F]/50 dark:text-white/50 hover:text-[#C45A3B] transition-colors border border-[#0F0F0F]/10 dark:border-white/10 hover:border-[#C45A3B]/30 px-3 py-1.5 rounded-full">
+                    <button className="flex items-center gap-1.5 sm:gap-2 text-xs text-[#0F0F0F]/50 dark:text-white/50 hover:text-[#C45A3B] transition-colors border border-[#0F0F0F]/10 dark:border-white/10 hover:border-[#C45A3B]/30 px-2.5 sm:px-3 py-1.5 rounded-full whitespace-nowrap">
                       <Share2 className="w-3 h-3" />
                       Share
                     </button>
@@ -362,9 +362,10 @@ export default function EdgeDetailPage() {
                   <EdgeFormDialog
                     defaultParentEdgeId={edge.id}
                     trigger={
-                      <button className="flex items-center gap-2 text-xs text-[#0F0F0F]/50 dark:text-white/50 hover:text-[#C45A3B] transition-colors border border-[#0F0F0F]/10 dark:border-white/10 hover:border-[#C45A3B]/30 px-3 py-1.5 rounded-full">
+                      <button className="flex items-center gap-1.5 sm:gap-2 text-xs text-[#0F0F0F]/50 dark:text-white/50 hover:text-[#C45A3B] transition-colors border border-[#0F0F0F]/10 dark:border-white/10 hover:border-[#C45A3B]/30 px-2.5 sm:px-3 py-1.5 rounded-full whitespace-nowrap">
                         <Plus className="w-3 h-3" />
-                        Add Sub-Edge
+                        <span className="hidden sm:inline">Add Sub-Edge</span>
+                        <span className="sm:hidden">Sub-Edge</span>
                       </button>
                     }
                   />

@@ -91,17 +91,17 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const stats = calculateStats(data.logs);
 
   return {
-    title: `${data.edge.name} - Edge Tracker`,
+    title: `${data.edge.name} - Edge of ICT`,
     description: `Win rate: ${stats.winRate}% | ${stats.totalTrades} trades tracked`,
     openGraph: {
-      title: `${data.edge.name} - Edge Tracker`,
+      title: `${data.edge.name} - Edge of ICT`,
       description: `Win rate: ${stats.winRate}% | ${stats.totalTrades} trades`,
       images: [`/api/og/edge/${slug}`],
       type: 'website',
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${data.edge.name} - Edge Tracker`,
+      title: `${data.edge.name} - Edge of ICT`,
       description: `Win rate: ${stats.winRate}% | ${stats.totalTrades} trades`,
       images: [`/api/og/edge/${slug}`],
     },

@@ -9,7 +9,7 @@ export function SharePageHeader() {
     <header className="border-b border-[#0F0F0F]/5 dark:border-white/5">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
         <Link href="/" className="flex items-center gap-2">
-          <Image src="/logo-icon-transparent.png" alt="Edge Tracker" width={32} height={32} className="w-8 h-8" />
+          <Image src="/logo-icon-transparent.png" alt="Edge of ICT" width={32} height={32} className="w-8 h-8" />
           <span
             className="text-sm tracking-[0.08em] font-medium"
             style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}

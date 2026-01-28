@@ -1,6 +1,6 @@
-# Edge Tracker Web
+# Edge of ICT
 
-A trading edge journaling and analysis platform built with Next.js 16 and Supabase.
+A trading edge journaling and analysis platform for ICT traders, built with Next.js 16 and Supabase.
 
 ## Features
 

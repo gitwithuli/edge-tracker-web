@@ -7,8 +7,8 @@ test.describe('Landing Page', () => {
     // Check that the page loads with the brand name
     await expect(page.locator('body')).toBeVisible();
 
-    // Check for Edge Tracker branding
-    await expect(page.getByText(/Edge Tracker/i).first()).toBeVisible();
+    // Check for Edge of ICT branding
+    await expect(page.getByText(/Edge of ICT|EDGE.*OF.*ICT/i).first()).toBeVisible();
   });
 
   test('should have sign in button', async ({ page }) => {

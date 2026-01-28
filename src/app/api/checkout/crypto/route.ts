@@ -67,7 +67,7 @@ export async function POST() {
         price_amount: PRICE_AMOUNT,
         price_currency: 'usd',
         order_id: `edgetracker_${user.id}`,
-        order_description: 'Edge Tracker Pro - Monthly',
+        order_description: 'Edge of ICT Pro - Monthly',
         ipn_callback_url: `${APP_URL}/api/webhooks/nowpayments`,
         success_url: `${APP_URL}/dashboard?upgraded=true`,
         cancel_url: `${APP_URL}/pricing`,

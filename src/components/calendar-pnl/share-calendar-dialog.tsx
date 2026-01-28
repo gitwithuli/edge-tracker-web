@@ -149,19 +149,19 @@ export function ShareCalendarDialog({ logs, year, month, title, trigger }: Share
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="bg-[#FAF7F2] dark:bg-[#1a1a1a] border-[#0F0F0F]/10 dark:border-white/10 max-w-lg p-0 overflow-hidden max-h-[90vh] sm:max-h-[85vh]">
-        <DialogHeader className="p-4 sm:p-6 pb-0">
+      <DialogContent className="bg-[#FAF7F2] dark:bg-[#1a1a1a] border-[#0F0F0F]/10 dark:border-white/10 max-w-[95vw] sm:max-w-md p-0 overflow-hidden max-h-[90vh] sm:max-h-[85vh]">
+        <DialogHeader className="p-3 sm:p-6 pb-0">
           <DialogTitle
-            className="text-lg sm:text-xl text-[#0F0F0F] dark:text-white"
+            className="text-base sm:text-xl text-[#0F0F0F] dark:text-white"
             style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
           >
             Share Calendar
           </DialogTitle>
         </DialogHeader>
 
-        <div className="p-4 sm:p-6 overflow-y-auto">
+        <div className="p-3 sm:p-6 overflow-y-auto">
           {/* Card Preview */}
-          <div className="mb-6 rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10">
+          <div className="mb-4 sm:mb-6 rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10">
             <div
               ref={cardRef}
               className="relative overflow-hidden"
@@ -170,9 +170,9 @@ export function ShareCalendarDialog({ logs, year, month, title, trigger }: Share
                 background: "linear-gradient(145deg, #0F0F0F 0%, #1a1816 50%, #0F0F0F 100%)",
               }}
             >
-              {/* Decorative Elements */}
+              {/* Decorative Elements - smaller on mobile */}
               <div
-                className="absolute top-0 right-0 w-64 h-64 rounded-full opacity-20"
+                className="absolute top-0 right-0 w-32 sm:w-64 h-32 sm:h-64 rounded-full opacity-20"
                 style={{
                   background: "radial-gradient(circle, #C45A3B 0%, transparent 70%)",
                   filter: "blur(40px)",
@@ -180,7 +180,7 @@ export function ShareCalendarDialog({ logs, year, month, title, trigger }: Share
                 }}
               />
               <div
-                className="absolute bottom-0 left-0 w-48 h-48 rounded-full opacity-15"
+                className="absolute bottom-0 left-0 w-24 sm:w-48 h-24 sm:h-48 rounded-full opacity-15"
                 style={{
                   background: "radial-gradient(circle, #8B9A7D 0%, transparent 70%)",
                   filter: "blur(30px)",
@@ -188,47 +188,47 @@ export function ShareCalendarDialog({ logs, year, month, title, trigger }: Share
                 }}
               />
 
-              {/* Content */}
-              <div className="relative z-10 p-8">
+              {/* Content - responsive padding */}
+              <div className="relative z-10 p-4 sm:p-8">
                 {/* Header */}
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#C45A3B]/20 to-[#8B9A7D]/20 flex items-center justify-center backdrop-blur-sm border border-white/10">
-                      <Image src="/logo-icon-transparent.png" alt="" width={20} height={20} className="w-5 h-5" />
+                <div className="flex items-center justify-between mb-4 sm:mb-6">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br from-[#C45A3B]/20 to-[#8B9A7D]/20 flex items-center justify-center backdrop-blur-sm border border-white/10">
+                      <Image src="/logo-icon-transparent.png" alt="" width={20} height={20} className="w-4 h-4 sm:w-5 sm:h-5" />
                     </div>
-                    <span className="text-[10px] tracking-[0.2em] uppercase text-[#FAF7F2]/40">
+                    <span className="text-[8px] sm:text-[10px] tracking-[0.15em] sm:tracking-[0.2em] uppercase text-[#FAF7F2]/40">
                       Edge of ICT
                     </span>
                   </div>
-                  <div className="px-3 py-1 rounded-full bg-[#C45A3B]/10 border border-[#C45A3B]/20">
-                    <span className="text-[10px] tracking-[0.15em] uppercase text-[#C45A3B] font-medium">
+                  <div className="px-2 sm:px-3 py-0.5 sm:py-1 rounded-full bg-[#C45A3B]/10 border border-[#C45A3B]/20">
+                    <span className="text-[8px] sm:text-[10px] tracking-[0.1em] sm:tracking-[0.15em] uppercase text-[#C45A3B] font-medium">
                       Calendar P&L
                     </span>
                   </div>
                 </div>
 
                 {/* Month/Year */}
-                <div className="mb-6">
+                <div className="mb-4 sm:mb-6">
                   <h2
-                    className="text-3xl text-[#FAF7F2] tracking-tight leading-tight"
+                    className="text-xl sm:text-3xl text-[#FAF7F2] tracking-tight leading-tight"
                     style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
                   >
                     {monthName} {year}
                   </h2>
                   {title && (
-                    <p className="text-sm text-[#FAF7F2]/30 mt-2">{title}</p>
+                    <p className="text-xs sm:text-sm text-[#FAF7F2]/30 mt-1 sm:mt-2">{title}</p>
                   )}
                 </div>
 
                 {/* Main Stats */}
                 {monthStats.totalTrades > 0 ? (
-                  <div className="grid grid-cols-3 gap-4 mb-6">
-                    <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5">
-                      <span className="text-[10px] tracking-[0.2em] uppercase text-[#FAF7F2]/40 block mb-1">
+                  <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-4 sm:mb-6">
+                    <div className="p-2 sm:p-4 rounded-lg sm:rounded-xl bg-white/[0.02] border border-white/5">
+                      <span className="text-[8px] sm:text-[10px] tracking-[0.15em] sm:tracking-[0.2em] uppercase text-[#FAF7F2]/40 block mb-0.5 sm:mb-1">
                         P&L
                       </span>
                       <div
-                        className={`text-2xl font-light ${
+                        className={`text-base sm:text-2xl font-light ${
                           (monthStats.hasDollarPnL ? monthStats.dollarPnL! : monthStats.pointsPnL) >= 0
                             ? "text-[#8B9A7D]"
                             : "text-[#C45A3B]"
@@ -241,12 +241,12 @@ export function ShareCalendarDialog({ logs, year, month, title, trigger }: Share
                         )}
                       </div>
                     </div>
-                    <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5">
-                      <span className="text-[10px] tracking-[0.2em] uppercase text-[#FAF7F2]/40 block mb-1">
+                    <div className="p-2 sm:p-4 rounded-lg sm:rounded-xl bg-white/[0.02] border border-white/5">
+                      <span className="text-[8px] sm:text-[10px] tracking-[0.15em] sm:tracking-[0.2em] uppercase text-[#FAF7F2]/40 block mb-0.5 sm:mb-1">
                         Win Rate
                       </span>
                       <div
-                        className={`text-2xl font-light ${
+                        className={`text-base sm:text-2xl font-light ${
                           monthStats.winRate >= 50 ? "text-[#8B9A7D]" : "text-[#C45A3B]"
                         }`}
                         style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
@@ -254,12 +254,12 @@ export function ShareCalendarDialog({ logs, year, month, title, trigger }: Share
                         {monthStats.winRate}%
                       </div>
                     </div>
-                    <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5">
-                      <span className="text-[10px] tracking-[0.2em] uppercase text-[#FAF7F2]/40 block mb-1">
+                    <div className="p-2 sm:p-4 rounded-lg sm:rounded-xl bg-white/[0.02] border border-white/5">
+                      <span className="text-[8px] sm:text-[10px] tracking-[0.15em] sm:tracking-[0.2em] uppercase text-[#FAF7F2]/40 block mb-0.5 sm:mb-1">
                         Trades
                       </span>
                       <div
-                        className="text-2xl font-light text-[#FAF7F2]"
+                        className="text-base sm:text-2xl font-light text-[#FAF7F2]"
                         style={{ fontFamily: "var(--font-libre-baskerville), Georgia, serif" }}
                       >
                         {monthStats.totalTrades}
@@ -267,19 +267,19 @@ export function ShareCalendarDialog({ logs, year, month, title, trigger }: Share
                     </div>
                   </div>
                 ) : (
-                  <div className="mb-6 p-4 rounded-xl bg-white/[0.02] border border-white/5">
-                    <span className="text-sm text-[#FAF7F2]/40">No trades this month</span>
+                  <div className="mb-4 sm:mb-6 p-3 sm:p-4 rounded-lg sm:rounded-xl bg-white/[0.02] border border-white/5">
+                    <span className="text-xs sm:text-sm text-[#FAF7F2]/40">No trades this month</span>
                   </div>
                 )}
 
                 {/* Mini Calendar Grid */}
-                <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5">
+                <div className="p-2 sm:p-4 rounded-lg sm:rounded-xl bg-white/[0.02] border border-white/5">
                   {/* Weekday headers */}
-                  <div className="grid grid-cols-7 mb-2">
+                  <div className="grid grid-cols-7 mb-1 sm:mb-2">
                     {WEEKDAY_HEADERS.map((day, idx) => (
                       <div
                         key={idx}
-                        className="text-center text-[9px] text-[#FAF7F2]/30 uppercase"
+                        className="text-center text-[7px] sm:text-[9px] text-[#FAF7F2]/30 uppercase"
                       >
                         {day}
                       </div>
@@ -287,7 +287,7 @@ export function ShareCalendarDialog({ logs, year, month, title, trigger }: Share
                   </div>
 
                   {/* Calendar grid */}
-                  <div className="grid grid-cols-7 gap-1">
+                  <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
                     {gridDays.map(({ date, isCurrentMonth }) => {
                       const dayNumber = parseInt(date.split("-")[2], 10);
                       const dayData = daysByDate.get(date);
@@ -298,7 +298,7 @@ export function ShareCalendarDialog({ logs, year, month, title, trigger }: Share
                         <div
                           key={date}
                           className={`
-                            aspect-square flex items-center justify-center text-[9px] rounded
+                            aspect-square flex items-center justify-center text-[7px] sm:text-[9px] rounded
                             ${isCurrentMonth
                               ? hasTrade
                                 ? getDayPnLColor(date, isCurrentMonth)
@@ -317,11 +317,11 @@ export function ShareCalendarDialog({ logs, year, month, title, trigger }: Share
                 </div>
 
                 {/* Footer */}
-                <div className="flex items-center justify-between mt-6 pt-6 border-t border-white/5">
-                  <span className="text-[10px] text-[#FAF7F2]/20 tracking-wider">
+                <div className="flex items-center justify-between mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-white/5">
+                  <span className="text-[8px] sm:text-[10px] text-[#FAF7F2]/20 tracking-wider">
                     edgeofict.com
                   </span>
-                  <span className="text-[10px] text-[#FAF7F2]/20">
+                  <span className="text-[8px] sm:text-[10px] text-[#FAF7F2]/20">
                     Built for ICT traders
                   </span>
                 </div>
@@ -330,37 +330,37 @@ export function ShareCalendarDialog({ logs, year, month, title, trigger }: Share
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-3">
+          <div className="flex gap-2 sm:gap-3">
             <button
               onClick={handleDownload}
               disabled={downloading}
-              className="flex-1 flex items-center justify-center gap-2 bg-[#0F0F0F] dark:bg-white text-[#FAF7F2] dark:text-[#0F0F0F] py-3 rounded-full text-sm font-medium hover:bg-[#C45A3B] dark:hover:bg-[#C45A3B] dark:hover:text-white transition-colors disabled:opacity-50"
+              className="flex-1 flex items-center justify-center gap-1.5 sm:gap-2 bg-[#0F0F0F] dark:bg-white text-[#FAF7F2] dark:text-[#0F0F0F] py-2.5 sm:py-3 rounded-full text-xs sm:text-sm font-medium hover:bg-[#C45A3B] dark:hover:bg-[#C45A3B] dark:hover:text-white transition-colors disabled:opacity-50"
             >
-              <Download className="w-4 h-4" />
-              {downloading ? "Generating..." : "Download"}
+              <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              {downloading ? "..." : "Download"}
             </button>
 
             <button
               onClick={handleCopyImage}
-              className="flex items-center justify-center gap-2 bg-[#0F0F0F]/10 dark:bg-white/10 text-[#0F0F0F] dark:text-white px-4 py-3 rounded-full text-sm font-medium hover:bg-[#0F0F0F]/20 dark:hover:bg-white/20 transition-colors"
+              className="flex items-center justify-center gap-2 bg-[#0F0F0F]/10 dark:bg-white/10 text-[#0F0F0F] dark:text-white px-3 sm:px-4 py-2.5 sm:py-3 rounded-full text-sm font-medium hover:bg-[#0F0F0F]/20 dark:hover:bg-white/20 transition-colors"
               title="Copy image"
             >
-              {copied ? <Check className="w-4 h-4 text-[#8B9A7D]" /> : <Copy className="w-4 h-4" />}
+              {copied ? <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#8B9A7D]" /> : <Copy className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
             </button>
 
             <button
               onClick={handleShareX}
-              className="flex items-center justify-center gap-2 bg-[#0F0F0F]/10 dark:bg-white/10 text-[#0F0F0F] dark:text-white px-4 py-3 rounded-full text-sm font-medium hover:bg-[#0F0F0F]/20 dark:hover:bg-white/20 transition-colors"
+              className="flex items-center justify-center gap-2 bg-[#0F0F0F]/10 dark:bg-white/10 text-[#0F0F0F] dark:text-white px-3 sm:px-4 py-2.5 sm:py-3 rounded-full text-sm font-medium hover:bg-[#0F0F0F]/20 dark:hover:bg-white/20 transition-colors"
               title="Share on X"
             >
-              <Twitter className="w-4 h-4" />
+              <Twitter className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>
           </div>
 
-          <p className="text-center text-xs text-[#0F0F0F]/50 dark:text-white/50 mt-4">
+          <p className="text-center text-[10px] sm:text-xs text-[#0F0F0F]/50 dark:text-white/50 mt-3 sm:mt-4">
             {copied
-              ? "Image copied! Paste (Cmd+V) in your tweet to attach it"
-              : "Click X button to copy image & open tweet composer"
+              ? "Image copied! Paste in your tweet"
+              : "Tap X to copy image & open tweet"
             }
           </p>
         </div>

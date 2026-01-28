@@ -36,7 +36,7 @@ function UpgradeHandler() {
     const upgraded = searchParams.get("upgraded") === "true";
     if (upgraded && user) {
       fetchSubscription().then(() => {
-        toast.success("Welcome to Edge Tracker!");
+        toast.success("Welcome to Edge of ICT!");
         router.replace("/dashboard");
       });
     }
