@@ -28,7 +28,7 @@ interface LogDialogProps {
 export const LogDialog = memo(function LogDialog({ edgeName, edgeId, parentEdgeId, initialData, trigger, defaultLogType, onSave }: LogDialogProps) {
   const [open, setOpen] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
-  const { loadingStates, edges } = useEdgeStore();
+  const { loadingStates, edges, activeLogMode } = useEdgeStore();
 
   // Build parent-child map once for O(n) instead of O(n²) lookups
   const { loggableEdges, groupedEdges } = useMemo(() => {
@@ -82,7 +82,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, parentEdgeI
 
   const [result, setResult] = useState<ResultType>(initialData?.result as ResultType || DEFAULT_LOG_VALUES.result);
   const [outcome, setOutcome] = useState<OutcomeType | null>(initialData?.outcome as OutcomeType || null);
-  const [logType, setLogType] = useState<LogType>(initialData?.logType as LogType || defaultLogType || DEFAULT_LOG_VALUES.logType);
+  const [logType, setLogType] = useState<LogType>(initialData?.logType as LogType || defaultLogType || activeLogMode || DEFAULT_LOG_VALUES.logType);
   const [day, setDay] = useState<TradingDay>(initialData?.dayOfWeek as TradingDay || DEFAULT_LOG_VALUES.dayOfWeek);
   const [duration, setDuration] = useState(initialData?.durationMinutes?.toString() || DEFAULT_LOG_VALUES.durationMinutes.toString());
   const [note, setNote] = useState(initialData?.note || DEFAULT_LOG_VALUES.note);
@@ -162,7 +162,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, parentEdgeI
       } else {
         setResult(DEFAULT_LOG_VALUES.result);
         setOutcome(null);
-        setLogType(defaultLogType || DEFAULT_LOG_VALUES.logType);
+        setLogType(defaultLogType || activeLogMode || DEFAULT_LOG_VALUES.logType);
         setDuration(DEFAULT_LOG_VALUES.durationMinutes.toString());
         setNote(DEFAULT_LOG_VALUES.note);
         setTvLinks([]);
@@ -191,7 +191,7 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, parentEdgeI
         }
       }
     }
-  }, [open, initialData, defaultLogType, edgeId, edges]);
+  }, [open, initialData, defaultLogType, activeLogMode, edgeId, edges]);
 
   // Auto-calculate exit time from entry time + duration
   useEffect(() => {
@@ -306,7 +306,11 @@ export const LogDialog = memo(function LogDialog({ edgeName, edgeId, parentEdgeI
         )}
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-[440px] max-h-[90vh] bg-[#FAF7F2] border-[#0F0F0F]/10 text-[#0F0F0F] p-0 flex flex-col overflow-hidden">
+      <DialogContent
+        className="sm:max-w-[440px] max-h-[90vh] bg-[#FAF7F2] border-[#0F0F0F]/10 text-[#0F0F0F] p-0 flex flex-col overflow-hidden"
+        onInteractOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+      >
         <DialogHeader className="p-6 pb-0 shrink-0">
           <DialogTitle
             className="text-xl tracking-tight"

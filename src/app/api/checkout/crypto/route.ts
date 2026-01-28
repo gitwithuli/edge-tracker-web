@@ -2,6 +2,12 @@ import { createServerClient } from '@supabase/ssr';
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
+
+const invoiceResponseSchema = z.object({
+  id: z.union([z.string(), z.number()]).transform(String),
+  invoice_url: z.string().url(),
+});
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://edgeofict.com';
 const PRICE_AMOUNT = parseFloat(process.env.CHECKOUT_PRICE_AMOUNT || '14.50');
@@ -77,14 +83,25 @@ export async function POST() {
       );
     }
 
-    const invoice = await invoiceResponse.json();
+    const rawInvoice = await invoiceResponse.json();
+    const parseResult = invoiceResponseSchema.safeParse(rawInvoice);
+
+    if (!parseResult.success) {
+      console.error('[Crypto Checkout] Invalid NOWPayments response:', parseResult.error.message);
+      return NextResponse.json(
+        { error: 'Payment provider returned invalid response' },
+        { status: 502 }
+      );
+    }
+
+    const invoice = parseResult.data;
 
     // 4. Store payment reference in subscription record
     await supabaseAdmin
       .from('user_subscriptions')
       .update({
         payment_provider: 'nowpayments',
-        payment_id: invoice.id?.toString() || null,
+        payment_id: invoice.id,
         payment_status: 'waiting',
       })
       .eq('user_id', user.id);

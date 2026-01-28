@@ -120,7 +120,11 @@ export function EdgeFormDialog({ edge, trigger, onSuccess, defaultParentEdgeId }
     }}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
 
-      <DialogContent className="sm:max-w-[425px] bg-[#FAF7F2] border-[#0F0F0F]/10 text-[#0F0F0F] p-0 overflow-hidden">
+      <DialogContent
+        className="sm:max-w-[425px] bg-[#FAF7F2] border-[#0F0F0F]/10 text-[#0F0F0F] p-0 overflow-hidden"
+        onInteractOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+      >
         <DialogHeader className="p-6 pb-0">
           <DialogTitle
             className="text-xl tracking-tight"

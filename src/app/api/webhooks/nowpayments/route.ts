@@ -64,10 +64,26 @@ export async function POST(request: Request) {
     const userId = order_id.replace('edgetracker_', '');
     const supabaseAdmin = getSupabaseAdmin();
 
+    const paymentIdStr = payment_id?.toString() || null;
+
+    // Idempotency check: if this payment_id was already processed for a paid upgrade, skip
+    if (paymentIdStr) {
+      const { data: existing } = await supabaseAdmin
+        .from('user_subscriptions')
+        .select('payment_id, subscription_tier')
+        .eq('user_id', userId)
+        .single();
+
+      if (existing?.payment_id === paymentIdStr && existing?.subscription_tier === 'paid') {
+        console.log(`[NOWPayments Webhook] Already processed payment ${paymentIdStr} for user ${userId}, skipping`);
+        return NextResponse.json({ ok: true });
+      }
+    }
+
     // Update payment status on all status changes
     const updateData: Record<string, unknown> = {
       payment_status,
-      payment_id: payment_id?.toString() || null,
+      payment_id: paymentIdStr,
       payment_provider: 'nowpayments',
     };
 

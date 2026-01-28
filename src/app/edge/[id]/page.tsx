@@ -29,9 +29,10 @@ export default function EdgeDetailPage() {
   const searchParams = useSearchParams();
   const edgeId = params.id as string;
 
-  const { edges, logs, isLoaded, user, addLog, deleteLog, updateLog, getSubEdges, getParentEdge } = useEdgeStore();
+  const { edges, logs, isLoaded, user, addLog, deleteLog, updateLog, getSubEdges, getParentEdge, activeLogMode, setActiveLogMode } = useEdgeStore();
   const [mounted, setMounted] = useState(false);
-  const [activeView, setActiveView] = useState<LogType>("FRONTTEST");
+  const activeView = activeLogMode;
+  const setActiveView = setActiveLogMode;
   const [dateRange, setDateRange] = useState<DateRange>(getDefaultDateRange);
 
   // Get log ID from URL query param for auto-opening history

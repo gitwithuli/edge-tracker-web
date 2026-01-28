@@ -46,9 +46,10 @@ function UpgradeHandler() {
 }
 
 export default function DashboardPage() {
-  const { edges, logs, isLoaded, logout, user, addLog, deleteLog, updateLog, getEdgesWithLogs, canAccess, subscription } = useEdgeStore();
+  const { edges, logs, isLoaded, logout, user, addLog, deleteLog, updateLog, getEdgesWithLogs, canAccess, subscription, activeLogMode, setActiveLogMode } = useEdgeStore();
   const [mounted, setMounted] = useState(false);
-  const [activeView, setActiveView] = useState<LogType>("FRONTTEST");
+  const activeView = activeLogMode;
+  const setActiveView = setActiveLogMode;
   const [liveDateRange, setLiveDateRange] = useState<DateRange>(getDefaultDateRange);
   const router = useRouter();
 
@@ -59,9 +60,9 @@ export default function DashboardPage() {
   // Free tier defaults to backtest view
   useEffect(() => {
     if (subscription && !canAccess('forwardtest')) {
-      setActiveView("BACKTEST");
+      setActiveLogMode("BACKTEST");
     }
-  }, [subscription, canAccess]);
+  }, [subscription, canAccess, setActiveLogMode]);
 
   // Filter by log type first
   const logsByType = useMemo(() => {

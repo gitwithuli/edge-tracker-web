@@ -14,9 +14,10 @@ import Link from "next/link";
 import type { LogType } from "@/lib/types";
 
 export default function CalendarPage() {
-  const { logs, edges, isLoaded, logout, user, addLog, deleteLog, updateLog, getEdgesWithLogs, canAccess, subscription } = useEdgeStore();
+  const { logs, edges, isLoaded, logout, user, addLog, deleteLog, updateLog, getEdgesWithLogs, canAccess, subscription, activeLogMode, setActiveLogMode } = useEdgeStore();
   const [mounted, setMounted] = useState(false);
-  const [activeView, setActiveView] = useState<LogType>("FRONTTEST");
+  const activeView = activeLogMode;
+  const setActiveView = setActiveLogMode;
   const router = useRouter();
 
   useEffect(() => {
@@ -26,9 +27,9 @@ export default function CalendarPage() {
   // Free tier defaults to backtest view
   useEffect(() => {
     if (subscription && !canAccess('forwardtest')) {
-      setActiveView("BACKTEST");
+      setActiveLogMode("BACKTEST");
     }
-  }, [subscription, canAccess]);
+  }, [subscription, canAccess, setActiveLogMode]);
 
   // Filter logs by log type
   const filteredLogs = useMemo(() => {

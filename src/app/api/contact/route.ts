@@ -46,8 +46,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Basic email validation
-    if (!email.includes("@")) {
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
       return NextResponse.json(
         { error: "Valid email is required" },
         { status: 400 }

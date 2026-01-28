@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import type { User } from '@supabase/supabase-js';
-import type { Edge, EdgeInput, TradeLog, TradeLogInput, EdgeWithLogs, UserSubscription, Feature } from '@/lib/types';
+import type { Edge, EdgeInput, TradeLog, TradeLogInput, EdgeWithLogs, UserSubscription, Feature, LogType } from '@/lib/types';
 import { enqueue, dequeue, getQueue, markRetried } from '@/lib/request-queue';
 import { mapEdgeFromDb, mapLogFromDb, mapSubscriptionFromDb } from '@/lib/database.types';
 
@@ -37,6 +37,7 @@ interface EdgeStore {
   loadingStates: LoadingStates;
   mfaEnabled: boolean;
   subscription: UserSubscription | null;
+  activeLogMode: LogType;
 
   // Computed
   getEdgesWithLogs: () => EdgeWithLogs[];
@@ -53,6 +54,7 @@ interface EdgeStore {
   setUser: (user: User | null) => void;
   setError: (error: string | null) => void;
   clearError: () => void;
+  setActiveLogMode: (mode: LogType) => void;
 
   // Auth
   initializeAuth: () => Promise<void>;
@@ -105,6 +107,21 @@ const mapDbToEdge = mapEdgeFromDb;
 const mapDbToLog = mapLogFromDb;
 const mapDbToSubscription = mapSubscriptionFromDb;
 
+/**
+ * Wraps a promise-like with a timeout to prevent operations from hanging indefinitely.
+ * If the operation doesn't complete within the timeout, rejects with 'Operation timed out'.
+ * Used for Supabase queries that may hang without resolving (e.g., on connection issues).
+ */
+const OPERATION_TIMEOUT_MS = 15000;
+function withTimeout<T>(promiseLike: PromiseLike<T>, timeoutMs: number = OPERATION_TIMEOUT_MS): Promise<T> {
+  return Promise.race([
+    Promise.resolve(promiseLike),
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error('Operation timed out')), timeoutMs)
+    )
+  ]);
+}
+
 // Shared helper to map TradeLogInput to DB column format (avoids duplication across addLog, updateLog, processPendingOperations)
 function mapLogToDbRow(logData: TradeLogInput, defaults?: { edgeId?: string; originalLog?: TradeLog }) {
   const orig = defaults?.originalLog;
@@ -154,6 +171,7 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
   loadingStates: initialLoadingStates,
   mfaEnabled: false,
   subscription: null,
+  activeLogMode: 'FRONTTEST' as LogType,
 
   // Computed: Get edges with their logs attached
   getEdgesWithLogs: () => {
@@ -220,6 +238,7 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
   setUser: (user) => set({ user, isLoaded: true }),
   setError: (error) => set({ error }),
   clearError: () => set({ error: null }),
+  setActiveLogMode: (mode) => set({ activeLogMode: mode }),
 
   initializeAuth: async () => {
     // Prevent multiple initializations (e.g., from multiple tabs or re-renders)
@@ -447,16 +466,18 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
     set({ edges: edges.map(e => e.id === edgeId ? updatedEdge : e) });
 
     try {
-      const { error } = await supabase
-        .from('edges')
-        .update({
-          name: data.name,
-          description: data.description || '',
-          enabled_fields: data.enabledFields || [],
-          symbol: data.symbol || null,
-          parent_edge_id: data.parentEdgeId || null,
-        })
-        .eq('id', edgeId);
+      const { error } = await withTimeout(
+        supabase
+          .from('edges')
+          .update({
+            name: data.name,
+            description: data.description || '',
+            enabled_fields: data.enabledFields || [],
+            symbol: data.symbol || null,
+            parent_edge_id: data.parentEdgeId || null,
+          })
+          .eq('id', edgeId)
+      );
 
       if (error) {
         console.error('updateEdge error:', error.message);
@@ -469,7 +490,8 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
     } catch (err) {
       console.error('updateEdge error:', err);
       set({ edges });
-      toast.error('Failed to update edge');
+      const isTimeout = err instanceof Error && err.message === 'Operation timed out';
+      toast.error(isTimeout ? 'Update timed out. Please try again.' : 'Failed to update edge');
     } finally {
       set({ loadingStates: { ...get().loadingStates, updatingEdgeId: null } });
     }
@@ -784,20 +806,15 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
     // Optimistic update
     set({ logs: logs.map(l => l.id === logId ? updatedLog : l) });
 
-    // Timeout warning for long-running operations
-    const timeoutId = setTimeout(() => {
-      console.warn('[updateLog] Operation taking longer than 30s');
-    }, 30000);
-
     try {
-      const { data, error } = await supabase
-        .from('logs')
-        .update(mapLogToDbRow(logData, { edgeId: targetEdgeId, originalLog }))
-        .eq('id', logId)
-        .select()
-        .single();
-
-      clearTimeout(timeoutId);
+      const { data, error } = await withTimeout(
+        supabase
+          .from('logs')
+          .update(mapLogToDbRow(logData, { edgeId: targetEdgeId, originalLog }))
+          .eq('id', logId)
+          .select()
+          .single()
+      );
 
       if (error) {
         dequeue(queueId); // Server error - not retryable
@@ -819,14 +836,18 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
       set({ logs: get().logs.map(l => l.id === logId ? confirmedLog : l) });
       toast.success('Trade log updated');
     } catch (err) {
-      clearTimeout(timeoutId);
       console.error('updateLog error:', err);
-      // Keep in queue for retry - don't revert optimistic update
-      // The queue will recover this operation when tab becomes active
-      toast.error('Update pending - will retry when connection restored', {
-        duration: 5000,
-        description: 'Keep this tab open or return later',
-      });
+      const isTimeout = err instanceof Error && err.message === 'Operation timed out';
+      if (isTimeout) {
+        dequeue(queueId);
+        toast.error('Update timed out. Please try again.');
+      } else {
+        // Keep in queue for retry - don't revert optimistic update
+        toast.error('Update pending - will retry when connection restored', {
+          duration: 5000,
+          description: 'Keep this tab open or return later',
+        });
+      }
     } finally {
       set({ loadingStates: { ...get().loadingStates, updatingLogId: null } });
     }
@@ -999,12 +1020,12 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
 
           const { data: newSub, error: insertError } = await supabase
             .from('user_subscriptions')
-            .insert({
+            .upsert({
               user_id: user.id,
               subscription_tier: 'trial',
               trial_started_at: new Date().toISOString(),
               trial_ends_at: trialEnds.toISOString(),
-            })
+            }, { onConflict: 'user_id', ignoreDuplicates: true })
             .select()
             .single();
 
