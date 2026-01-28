@@ -674,22 +674,17 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
 
     set({ logs: [optimisticLog, ...logs] });
 
-    // Create timeout to prevent indefinite hanging
-    const timeoutId = setTimeout(() => {
-      console.warn('[addLog] Operation timed out after 30s');
-    }, 30000);
-
     try {
-      const { data, error } = await supabase
-        .from('logs')
-        .insert([{
-          user_id: user.id,
-          ...mapLogToDbRow(logData, { edgeId }),
-        }])
-        .select()
-        .single();
-
-      clearTimeout(timeoutId);
+      const { data, error } = await withTimeout(
+        supabase
+          .from('logs')
+          .insert([{
+            user_id: user.id,
+            ...mapLogToDbRow(logData, { edgeId }),
+          }])
+          .select()
+          .single()
+      );
 
       if (error) {
         dequeue(queueId); // Server error - not retryable
@@ -711,14 +706,20 @@ export const useEdgeStore = create<EdgeStore>((set, get) => ({
       set({ logs: get().logs.map(l => l.id === tempId ? newLog : l) });
       toast.success('Trade logged');
     } catch (err) {
-      clearTimeout(timeoutId);
-      // Keep in queue for retry on visibility change
       console.error('addLog error:', err);
-      // Keep the optimistic log visible - it will be synced when tab becomes active
-      toast.error('Save pending - will retry when connection restored', {
-        duration: 5000,
-        description: 'Keep this tab open or return later',
-      });
+      const isTimeout = err instanceof Error && err.message === 'Operation timed out';
+      if (isTimeout) {
+        dequeue(queueId);
+        set({ logs: logs.filter(l => l.id !== tempId) });
+        toast.error('Save timed out. Please try again.');
+      } else {
+        // Keep in queue for retry on visibility change
+        // Keep the optimistic log visible - it will be synced when tab becomes active
+        toast.error('Save pending - will retry when connection restored', {
+          duration: 5000,
+          description: 'Keep this tab open or return later',
+        });
+      }
     } finally {
       set({ loadingStates: { ...get().loadingStates, addingLog: false } });
     }
